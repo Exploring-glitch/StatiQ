@@ -30,7 +30,7 @@ export default function JobDetailPage() {
 
   const apply = async () => {
     if (!user) {
-      nav(`/login?next=${encodeURIComponent(`/jobs/${id}`)}`);
+      nav(`/login/job?next=${encodeURIComponent(`/jobs/${id}`)}`);
       return;
     }
     setMsg('');

@@ -17,7 +17,7 @@ export default function ForCompaniesPage() {
           Post free, source with AI, or let a dedicated recruiter run the search for you.
         </p>
         <div className="mt-4 flex gap-3">
-          <Link to="/signup?type=hire" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
+          <Link to="/signup/hire" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
             Start hiring →
           </Link>
           <Link to="/jobs" className="rounded-md border border-white/15 px-4 py-2 text-sm text-white">

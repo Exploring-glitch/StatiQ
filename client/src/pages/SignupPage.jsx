@@ -1,82 +1,25 @@
-import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function SignupPage() {
-  const [params] = useSearchParams();
-  const initial = params.get('type') === 'hire' ? 'hire' : 'job';
-  const [tab, setTab] = useState(initial);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [company, setCompany] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const { register } = useAuth();
-  const nav = useNavigate();
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setBusy(true);
-    try {
-      const user = await register({
-        name,
-        email,
-        password,
-        role: tab === 'hire' ? 'employer' : 'jobseeker',
-        company: tab === 'hire' ? company : '',
-      });
-      nav(user.role === 'employer' ? '/post-job' : '/jobs', { replace: true });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
-    <section className="mx-auto grid max-w-5xl gap-0 px-4 py-10 md:grid-cols-2">
-      <div className="hidden rounded-l-2xl border border-white/10 bg-surface p-8 md:block">
-        <p className="text-xl font-extrabold text-white">Stati<span className="text-accent">Q</span></p>
-        <h2 className="mt-6 text-2xl font-bold text-white">Where great companies meet great people.</h2>
-        <p className="mt-2 text-sm text-slate-400">One account for jobs and hiring. Free for candidates, free to post.</p>
+    <section className="mx-auto max-w-4xl px-4 py-14 text-center">
+      <h1 className="text-3xl font-bold text-white">Join StatiQ.</h1>
+      <p className="mt-2 text-sm text-slate-400">One platform, two doors. Pick yours.</p>
+      <div className="mt-8 grid gap-4 text-left md:grid-cols-2">
+        <Link to="/signup/job" className="rounded-xl border border-white/10 bg-surface p-6 hover:border-accent">
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent">I&apos;m looking for a job</p>
+          <p className="mt-2 text-lg font-bold text-white">Create seeker account →</p>
+          <p className="mt-1 text-sm text-slate-400">Free forever. Get discovered by 27,000+ startups.</p>
+        </Link>
+        <Link to="/signup/hire" className="rounded-xl border border-white/10 bg-surface p-6 hover:border-accent">
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent">I&apos;m looking to hire</p>
+          <p className="mt-2 text-lg font-bold text-white">Create employer account →</p>
+          <p className="mt-1 text-sm text-slate-400">Post jobs free. Reach 10M+ candidates.</p>
+        </Link>
       </div>
-      <div className="rounded-2xl border border-white/10 bg-card p-8 md:rounded-l-none">
-        <h1 className="text-xl font-bold text-white">Create account</h1>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
-            type="button" onClick={() => setTab('job')}
-            className={`rounded-md border px-3 py-2 text-sm ${tab === 'job' ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
-          >
-            I&apos;m looking for a job
-          </button>
-          <button
-            type="button" onClick={() => setTab('hire')}
-            className={`rounded-md border px-3 py-2 text-sm ${tab === 'hire' ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
-          >
-            I&apos;m looking to hire
-          </button>
-        </div>
-        <form className="mt-4 space-y-3" onSubmit={submit}>
-          <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
-          <input value={email} onChange={(e) => setEmail(e.target.value)} required type="email" placeholder="Email" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
-          <input value={password} onChange={(e) => setPassword(e.target.value)} required type="password" minLength={8} placeholder="Password (8+ chars)" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
-          {tab === 'hire' && (
-            <input value={company} onChange={(e) => setCompany(e.target.value)} required placeholder="Company name" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
-          )}
-          {error && <p className="rounded-md bg-red-500/10 p-2 text-xs text-red-400">{error}</p>}
-          <button
-            disabled={busy}
-            className="w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover disabled:opacity-60"
-          >
-            {busy ? 'Creating…' : 'Sign up →'}
-          </button>
-        </form>
-        <p className="mt-3 text-center text-xs text-slate-500">
-          Have an account? <Link to="/login" className="text-accent">Log in</Link>
-        </p>
-      </div>
+      <p className="mt-6 text-xs text-slate-500">
+        Have an account? <Link to="/login" className="text-accent">Log in</Link>
+      </p>
     </section>
   );
 }

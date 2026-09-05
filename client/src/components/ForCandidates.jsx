@@ -40,7 +40,7 @@ export default function ForCandidates() {
               </div>
             ))}
             <div className="flex gap-3 sm:col-span-2">
-              <Link to="/signup?type=job" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">Sign up for free →</Link>
+              <Link to="/signup/job" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">Sign up for free →</Link>
               <Link to="/for-job-seekers" className="rounded-md border border-white/15 px-4 py-2 text-sm text-white">Learn more</Link>
             </div>
           </div>

@@ -40,10 +40,10 @@ export default function Navbar() {
               <Link to="/signup" className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
                 Sign up
               </Link>
-              <Link to="/signup?type=job" className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-base hover:bg-accentHover">
+              <Link to="/signup/job" className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-base hover:bg-accentHover">
                 I&apos;m looking for a job
               </Link>
-              <Link to="/signup?type=hire" className="rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-base hover:bg-slate-200">
+              <Link to="/signup/hire" className="rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-base hover:bg-slate-200">
                 I&apos;m hiring
               </Link>
             </>

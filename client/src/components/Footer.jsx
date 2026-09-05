@@ -16,7 +16,7 @@ const cols = [
       { label: 'Candidate overview', to: '/for-job-seekers' },
       { label: 'Startup jobs', to: '/jobs' },
       { label: 'Remote jobs', to: '/jobs' },
-      { label: 'Get discovered', to: '/signup?type=job' },
+      { label: 'Get discovered', to: '/signup/job' },
     ],
   },
   {

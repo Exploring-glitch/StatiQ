@@ -8,6 +8,10 @@ import ForCompaniesPage from './pages/ForCompaniesPage';
 import ForSeekersPage from './pages/ForSeekersPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import JobSeekerLoginPage from './pages/JobSeekerLoginPage';
+import EmployerLoginPage from './pages/EmployerLoginPage';
+import JobSeekerSignupPage from './pages/JobSeekerSignupPage';
+import EmployerSignupPage from './pages/EmployerSignupPage';
 import PostJobPage from './pages/PostJobPage';
 import MyApplicationsPage from './pages/MyApplicationsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -22,7 +26,11 @@ function App() {
         <Route path="/for-companies" element={<ForCompaniesPage />} />
         <Route path="/for-job-seekers" element={<ForSeekersPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/login/job" element={<JobSeekerLoginPage />} />
+        <Route path="/login/hire" element={<EmployerLoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signup/job" element={<JobSeekerSignupPage />} />
+        <Route path="/signup/hire" element={<EmployerSignupPage />} />
         <Route
           path="/post-job"
           element={<ProtectedRoute roles={['employer', 'admin']}><PostJobPage /></ProtectedRoute>}
