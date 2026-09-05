@@ -1,24 +1,40 @@
-import { useMemo, useState } from 'react';
-import { jobs } from '../data/mock';
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api';
+import { normalizeJob, filterMock } from '../lib/jobs';
 import JobCard from '../components/JobCard';
 
 export default function JobsPage() {
   const [q, setQ] = useState('');
   const [remoteOnly, setRemoteOnly] = useState(false);
+  const [items, setItems] = useState([]);
+  const [live, setLive] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return jobs.filter((j) => {
-      if (remoteOnly && !j.remote) return false;
-      if (!needle) return true;
-      return `${j.role} ${j.company} ${j.location}`.toLowerCase().includes(needle);
-    });
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const data = await api.jobs({ q, remote: remoteOnly ? 'true' : '' });
+        if (!alive) return;
+        const list = (data.items || data).map(normalizeJob);
+        setItems(list);
+        setLive(true);
+      } catch {
+        if (!alive) return;
+        setItems(filterMock(q, remoteOnly));
+        setLive(false);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }, 300); // debounce search
+    return () => { alive = false; clearTimeout(t); };
   }, [q, remoteOnly]);
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Startup jobs</p>
-      <h1 className="mt-2 text-3xl font-bold text-white">Browse {jobs.length}+ startup roles</h1>
+      <h1 className="mt-2 text-3xl font-bold text-white">Browse startup roles</h1>
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <input
           value={q}
@@ -33,13 +49,16 @@ export default function JobsPage() {
           {remoteOnly ? 'Remote ✓' : 'Remote only'}
         </button>
       </div>
-      <p className="mt-3 text-xs text-slate-500">{filtered.length} roles found (UI-only demo)</p>
+      <p className="mt-3 text-xs text-slate-500">
+        {loading ? 'Loading…' : `${items.length} roles found`} ·{' '}
+        <span className={live ? 'text-accent' : 'text-slate-500'}>{live ? '● Live from API' : '○ Demo data (API offline)'}</span>
+      </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {filtered.map((j) => (
+        {items.map((j) => (
           <JobCard key={j.id} job={j} />
         ))}
       </div>
-      {filtered.length === 0 && (
+      {!loading && items.length === 0 && (
         <p className="mt-8 rounded-xl border border-white/10 bg-surface p-6 text-center text-sm text-slate-400">
           No roles match. Try clearing search.
         </p>

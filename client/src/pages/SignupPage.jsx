@@ -1,11 +1,39 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function SignupPage() {
   const [params] = useSearchParams();
   const initial = params.get('type') === 'hire' ? 'hire' : 'job';
-  const [role, setRole] = useState(initial);
+  const [tab, setTab] = useState(initial);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [company, setCompany] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const { register } = useAuth();
   const nav = useNavigate();
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setBusy(true);
+    try {
+      const user = await register({
+        name,
+        email,
+        password,
+        role: tab === 'hire' ? 'employer' : 'jobseeker',
+        company: tab === 'hire' ? company : '',
+      });
+      nav(user.role === 'employer' ? '/post-job' : '/jobs', { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <section className="mx-auto grid max-w-5xl gap-0 px-4 py-10 md:grid-cols-2">
@@ -18,28 +46,35 @@ export default function SignupPage() {
         <h1 className="text-xl font-bold text-white">Create account</h1>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
-            onClick={() => setRole('job')}
-            className={`rounded-md border px-3 py-2 text-sm ${role === 'job' ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
+            type="button" onClick={() => setTab('job')}
+            className={`rounded-md border px-3 py-2 text-sm ${tab === 'job' ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
           >
             I&apos;m looking for a job
           </button>
           <button
-            onClick={() => setRole('hire')}
-            className={`rounded-md border px-3 py-2 text-sm ${role === 'hire' ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
+            type="button" onClick={() => setTab('hire')}
+            className={`rounded-md border px-3 py-2 text-sm ${tab === 'hire' ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
           >
             I&apos;m looking to hire
           </button>
         </div>
-        <form className="mt-4 space-y-3" onSubmit={(e) => { e.preventDefault(); nav(role === 'hire' ? '/for-companies' : '/jobs'); }}>
-          <input required placeholder="Full name" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
-          <input required type="email" placeholder="Email" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
-          <input required type="password" placeholder="Password (8+ chars)" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
-          <button className="w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
-            Sign up →
+        <form className="mt-4 space-y-3" onSubmit={submit}>
+          <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} required type="email" placeholder="Email" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
+          <input value={password} onChange={(e) => setPassword(e.target.value)} required type="password" minLength={8} placeholder="Password (8+ chars)" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
+          {tab === 'hire' && (
+            <input value={company} onChange={(e) => setCompany(e.target.value)} required placeholder="Company name" className="w-full rounded-md border border-white/10 bg-base px-3 py-2 text-sm text-white" />
+          )}
+          {error && <p className="rounded-md bg-red-500/10 p-2 text-xs text-red-400">{error}</p>}
+          <button
+            disabled={busy}
+            className="w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover disabled:opacity-60"
+          >
+            {busy ? 'Creating…' : 'Sign up →'}
           </button>
         </form>
         <p className="mt-3 text-center text-xs text-slate-500">
-          UI-only demo. Have an account? <Link to="/login" className="text-accent">Log in</Link>
+          Have an account? <Link to="/login" className="text-accent">Log in</Link>
         </p>
       </div>
     </section>
