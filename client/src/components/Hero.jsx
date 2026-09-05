@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Hero() {
   return (
     <section className="mx-auto max-w-6xl px-4 pb-10 pt-14 text-center">
@@ -18,9 +20,9 @@ export default function Hero() {
           <p className="mt-2 text-sm text-slate-400">
             Post jobs free, deploy AI sourcing agents, or hand it to an Autopilot recruiter.
           </p>
-          <a href="#companies" className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
+          <Link to="/for-companies" className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
             Start hiring →
-          </a>
+          </Link>
           <div className="mt-4 rounded-lg border border-white/10 bg-card p-3 text-xs text-slate-300">
             Reach agent · working now — Priya Shah (Sr Eng, 7 YOE) replied · Marcus Bennett (Staff, 9 YOE) pitched
           </div>
@@ -31,9 +33,9 @@ export default function Hero() {
           <p className="mt-2 text-sm text-slate-400">
             Apply directly to founders and hiring managers at 27,000+ startups building what&apos;s next.
           </p>
-          <a href="#candidates" className="mt-4 inline-block rounded-md bg-white px-4 py-2 text-sm font-semibold text-base hover:bg-slate-200">
+          <Link to="/jobs" className="mt-4 inline-block rounded-md bg-white px-4 py-2 text-sm font-semibold text-base hover:bg-slate-200">
             Browse jobs →
-          </a>
+          </Link>
           <div className="mt-4 rounded-lg border border-white/10 bg-card p-3 text-xs text-slate-300">
             Matched to you · today — Senior Backend Engineer @ Chime · $180–240K · Founding Designer @ Lovable
           </div>

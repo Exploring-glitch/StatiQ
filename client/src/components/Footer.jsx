@@ -1,19 +1,40 @@
+import { Link } from 'react-router-dom';
+
 const cols = [
   {
     h: 'For companies',
-    links: ['Recruiting platform', 'Post jobs for free', 'AI candidate sourcing', 'Managed recruiting', 'Plans and pricing'],
+    links: [
+      { label: 'Recruiting platform', to: '/for-companies' },
+      { label: 'Post jobs for free', to: '/for-companies' },
+      { label: 'AI candidate sourcing', to: '/for-companies' },
+      { label: 'Plans and pricing', to: '/for-companies' },
+    ],
   },
   {
     h: 'For candidates',
-    links: ['Candidate overview', 'Startup jobs', 'Remote jobs', 'Get discovered', 'Salary calculator'],
+    links: [
+      { label: 'Candidate overview', to: '/for-job-seekers' },
+      { label: 'Startup jobs', to: '/jobs' },
+      { label: 'Remote jobs', to: '/jobs' },
+      { label: 'Get discovered', to: '/signup?type=job' },
+    ],
   },
   {
     h: 'Company',
-    links: ['About StatiQ', 'Customer stories', 'Blog', 'Careers', 'Contact'],
+    links: [
+      { label: 'About StatiQ', to: '/' },
+      { label: 'For companies', to: '/for-companies' },
+      { label: 'For job seekers', to: '/for-job-seekers' },
+      { label: 'Contact', to: '/signup' },
+    ],
   },
   {
-    h: 'Trust & support',
-    links: ['Help center', 'Trust center', 'Platform status', 'Privacy & cookies', 'Terms & risks'],
+    h: 'Account',
+    links: [
+      { label: 'Log in', to: '/login' },
+      { label: 'Sign up', to: '/signup' },
+      { label: 'Browse jobs', to: '/jobs' },
+    ],
   },
 ];
 
@@ -30,7 +51,7 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-8 md:grid-cols-5">
           <div>
-            <p className="text-xl font-extrabold text-white">Stati<span className="text-accent">Q</span></p>
+            <Link to="/" className="text-xl font-extrabold text-white">Stati<span className="text-accent">Q</span></Link>
             <p className="mt-2 text-xs text-slate-400">The AI recruiting platform and talent marketplace for startups.</p>
           </div>
           {cols.map((c) => (
@@ -38,7 +59,7 @@ export default function Footer() {
               <p className="text-sm font-bold text-white">{c.h}</p>
               <ul className="mt-3 space-y-2">
                 {c.links.map((l) => (
-                  <li key={l}><a href="#" className="text-xs text-slate-400 hover:text-white">{l}</a></li>
+                  <li key={l.label}><Link to={l.to} className="text-xs text-slate-400 hover:text-white">{l.label}</Link></li>
                 ))}
               </ul>
             </div>
@@ -50,7 +71,7 @@ export default function Footer() {
               <p className="text-xs font-bold uppercase tracking-wide text-slate-300">{b.h}</p>
               <ul className="mt-2 space-y-1.5">
                 {b.links.map((l) => (
-                  <li key={l}><a href="#" className="text-xs text-slate-500 hover:text-white">{l}</a></li>
+                  <li key={l}><Link to="/jobs" className="text-xs text-slate-500 hover:text-white">{l}</Link></li>
                 ))}
               </ul>
             </div>

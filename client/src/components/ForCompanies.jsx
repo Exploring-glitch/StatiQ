@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const items = [
   {
     n: '01',
@@ -38,12 +40,12 @@ export default function ForCompanies() {
         ))}
       </div>
       <div className="mt-6 flex flex-wrap gap-3">
-        <a href="#cta" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
+        <Link to="/for-companies" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
           Find your next hire →
-        </a>
-        <a href="#cta" className="rounded-md border border-white/15 px-4 py-2 text-sm text-white hover:border-accent">
+        </Link>
+        <Link to="/signup?type=hire" className="rounded-md border border-white/15 px-4 py-2 text-sm text-white hover:border-accent">
           Schedule a demo
-        </a>
+        </Link>
       </div>
     </section>
   );

@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom';
 import { jobs } from '../data/mock';
+import JobCard from './JobCard';
 
 const points = [
   { t: 'Dream roles at the companies building what\u2019s next.', d: 'High-growth teams in AI, infra, robotics, fintech, and frontier categories.' },
@@ -25,32 +27,8 @@ export default function ForCandidates() {
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <div className="space-y-4">
-            {jobs.map((j) => (
-              <article key={j.id} className="rounded-xl border border-white/10 bg-card p-5">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-md bg-accent/15 font-bold text-accent">
-                    {j.logo}
-                  </span>
-                  <div>
-                    <p className="text-sm font-bold text-white">{j.company} <span className="ml-1 text-xs font-normal text-accent">● {j.status}</span></p>
-                    <p className="text-xs text-slate-400">{j.tagline}</p>
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {j.tags.map((t) => (
-                    <span key={t} className="rounded-full border border-white/10 px-2 py-0.5 text-xs text-slate-300">{t}</span>
-                  ))}
-                </div>
-                <p className="mt-3 text-sm font-semibold text-white">{j.role}</p>
-                <p className="text-xs text-slate-400">{j.meta}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">{j.note}</span>
-                  <div className="flex gap-2">
-                    <button className="rounded-md border border-white/15 px-3 py-1 text-xs text-white">Save</button>
-                    <button className="rounded-md bg-white px-3 py-1 text-xs font-semibold text-base">View role</button>
-                  </div>
-                </div>
-              </article>
+            {jobs.slice(0, 3).map((j) => (
+              <JobCard key={j.id} job={j} />
             ))}
           </div>
           <div className="grid content-start gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
@@ -62,8 +40,8 @@ export default function ForCandidates() {
               </div>
             ))}
             <div className="flex gap-3 sm:col-span-2">
-              <a href="#cta" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">Sign up for free →</a>
-              <a href="#faq" className="rounded-md border border-white/15 px-4 py-2 text-sm text-white">Learn more</a>
+              <Link to="/signup?type=job" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">Sign up for free →</Link>
+              <Link to="/for-job-seekers" className="rounded-md border border-white/15 px-4 py-2 text-sm text-white">Learn more</Link>
             </div>
           </div>
         </div>
