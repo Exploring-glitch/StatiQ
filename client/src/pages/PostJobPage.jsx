@@ -13,10 +13,7 @@ export default function PostJobPage() {
   const [mine, setMine] = useState([]);
 
   const refreshMine = () => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/jobs/mine/posted`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('statiq_token')}` },
-    })
-      .then((r) => (r.ok ? r.json() : []))
+    api.myPostedJobs()
       .then((d) => setMine(Array.isArray(d) ? d : d.items || []))
       .catch(() => {});
   };

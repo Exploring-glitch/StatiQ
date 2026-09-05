@@ -52,3 +52,26 @@ export const login = asyncHandler(async (req, res) => {
 export const me = asyncHandler(async (req, res) => {
   res.json(req.user.toSafeJSON());
 });
+
+export const updateMeRules = [
+  body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+  body('title').optional().trim(),
+  body('location').optional().trim(),
+  body('company').optional().trim(),
+  body('skills').optional().isArray().withMessage('Skills must be an array'),
+];
+
+// PUT /api/auth/me (protected) — edit own profile
+export const updateMe = asyncHandler(async (req, res) => {
+  check(req, res);
+  const allowed = ['name', 'title', 'location', 'company', 'skills'];
+  const updates = {};
+  for (const k of allowed) {
+    if (req.body[k] !== undefined) updates[k] = req.body[k];
+  }
+  if (Array.isArray(updates.skills)) {
+    updates.skills = updates.skills.map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  }
+  const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
+  res.json(user.toSafeJSON());
+});

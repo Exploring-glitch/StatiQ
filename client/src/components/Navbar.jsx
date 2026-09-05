@@ -29,7 +29,7 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
-              <span className="text-sm text-slate-300">Hi, {user.name?.split(' ')[0]}</span>
+              <Link to="/profile" className="text-sm text-slate-300 hover:text-white">Hi, {user.name?.split(' ')[0]}</Link>
               <button onClick={out} className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
                 Log out
               </button>

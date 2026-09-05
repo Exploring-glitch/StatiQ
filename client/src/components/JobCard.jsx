@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isSaved, toggleSaved } from '../lib/saved';
 
 export default function JobCard({ job }) {
+  const [saved, setSaved] = useState(() => isSaved(job.id));
   return (
     <article className="rounded-xl border border-white/10 bg-card p-5">
       <div className="flex items-center gap-3">
@@ -24,7 +27,12 @@ export default function JobCard({ job }) {
       <div className="mt-3 flex items-center justify-between">
         <span className="text-xs text-slate-500">{job.note}</span>
         <div className="flex gap-2">
-          <button className="rounded-md border border-white/15 px-3 py-1 text-xs text-white">Save</button>
+          <button
+            onClick={() => setSaved(toggleSaved(job.id))}
+            className={`rounded-md border px-3 py-1 text-xs ${saved ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
+          >
+            {saved ? 'Saved ✓' : 'Save'}
+          </button>
           <Link to={`/jobs/${job.id}`} className="rounded-md bg-white px-3 py-1 text-xs font-semibold text-base">
             View role
           </Link>

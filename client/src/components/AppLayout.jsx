@@ -1,18 +1,16 @@
 import { Outlet } from 'react-router-dom';
-import Navbar from './Navbar';
-import Footer from './Footer';
 import { ScrollToTop } from './AuthLayout';
+import AppNavbar from './AppNavbar';
 
-// Public marketing shell: Navbar + Footer
-export default function Layout() {
+// Logged-in shell: app nav, NO footer
+export default function AppLayout() {
   return (
     <div className="min-h-screen bg-base">
       <ScrollToTop />
-      <Navbar />
+      <AppNavbar />
       <main>
         <Outlet />
       </main>
-      <Footer />
     </div>
   );
 }
