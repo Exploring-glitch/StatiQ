@@ -18,6 +18,40 @@ const userSchema = new mongoose.Schema(
     location: { type: String, trim: true, default: '' },
     skills: { type: [String], default: [] },
     company: { type: String, trim: true, default: '' }, // employer org name
+
+    // ── Job-seeker profile (needed to get discovered + hired) ──
+    bio: { type: String, trim: true, default: '', maxlength: 1000 },
+    phone: { type: String, trim: true, default: '' },
+    resumeUrl: { type: String, trim: true, default: '' },
+    portfolioUrl: { type: String, trim: true, default: '' },
+    linkedinUrl: { type: String, trim: true, default: '' },
+    githubUrl: { type: String, trim: true, default: '' },
+
+    experienceYears: { type: Number, min: 0, max: 50, default: null },
+    experienceLevel: {
+      type: String,
+      enum: ['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive'],
+      default: '',
+    },
+    openToWork: { type: Boolean, default: true },
+
+    desiredRoles: { type: [String], default: [] }, // e.g. ["Backend Engineer", "DevOps"]
+    jobTypes: { type: [String], default: [] }, // Full-time, Part-time, Contract, Internship
+    workModes: { type: [String], default: [] }, // Remote, Hybrid, On-site
+    desiredLocation: { type: String, trim: true, default: '' },
+    languages: { type: [String], default: [] },
+
+    expectedSalaryMin: { type: Number, min: 0, default: null },
+    expectedSalaryMax: { type: Number, min: 0, default: null },
+    availability: {
+      type: String,
+      enum: ['', 'immediate', '2-weeks', '1-month', '2-months', 'open'],
+      default: '',
+    },
+
+    educationDegree: { type: String, trim: true, default: '' },
+    educationInstitution: { type: String, trim: true, default: '' },
+    graduationYear: { type: Number, min: 1950, max: 2100, default: null },
   },
   { timestamps: true }
 );
@@ -33,8 +67,22 @@ userSchema.methods.comparePassword = function (candidate) {
 };
 
 userSchema.methods.toSafeJSON = function () {
-  const { _id, name, email, role, title, location, skills, company, createdAt } = this;
-  return { id: _id, name, email, role, title, location, skills, company, createdAt };
+  const {
+    _id, name, email, role, title, location, skills, company, createdAt,
+    bio, phone, resumeUrl, portfolioUrl, linkedinUrl, githubUrl,
+    experienceYears, experienceLevel, openToWork,
+    desiredRoles, jobTypes, workModes, desiredLocation, languages,
+    expectedSalaryMin, expectedSalaryMax, availability,
+    educationDegree, educationInstitution, graduationYear,
+  } = this;
+  return {
+    id: _id, name, email, role, title, location, skills, company, createdAt,
+    bio, phone, resumeUrl, portfolioUrl, linkedinUrl, githubUrl,
+    experienceYears, experienceLevel, openToWork,
+    desiredRoles, jobTypes, workModes, desiredLocation, languages,
+    expectedSalaryMin, expectedSalaryMax, availability,
+    educationDegree, educationInstitution, graduationYear,
+  };
 };
 
 export default mongoose.model('User', userSchema);

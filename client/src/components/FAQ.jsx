@@ -10,7 +10,7 @@ export default function FAQ() {
         {faqs.map((f, i) => {
           const open = openIdx === i;
           return (
-            <div key={i} className="rounded-xl border border-white/10 bg-surface">
+            <div key={i} className="rounded-xl border border-white/10 bg-panel">
               <button
                 onClick={() => setOpenIdx(open ? -1 : i)}
                 className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-semibold text-white"
@@ -18,7 +18,7 @@ export default function FAQ() {
                 {f.q}
                 <span className="text-accent">{open ? '−' : '+'}</span>
               </button>
-              {open && <p className="px-5 pb-5 text-sm text-slate-400">{f.a}</p>}
+              {open && <p className="px-5 pb-5 text-sm text-neutral-400">{f.a}</p>}
             </div>
           );
         })}

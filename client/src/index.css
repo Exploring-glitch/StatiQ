@@ -5,7 +5,61 @@
 @tailwind utilities;
 
 body {
-  @apply bg-base text-slate-200 font-sans antialiased;
+  @apply bg-ink text-neutral-300 font-sans antialiased;
+  color-scheme: dark;
+}
+
+::selection {
+  background: rgba(229, 72, 58, 0.35);
+}
+
+/* Dark scrollbars */
+* {
+  scrollbar-color: #2a2f37 #0b0d10;
+}
+
+/* Safety-net: remap any leftover light-theme utilities to dark so
+   every page reads as dark theme even if a class was missed. */
+.bg-white {
+  background-color: #14171c !important;
+}
+.bg-\[#F4F4F2\] {
+  background-color: #14171c !important;
+}
+.bg-white\/95 {
+  background-color: rgba(11, 13, 16, 0.92) !important;
+}
+.text-neutral-900 {
+  color: #f4f4f5 !important;
+}
+.text-neutral-700 {
+  color: #d4d4d8 !important;
+}
+.text-neutral-600 {
+  color: #a1a1aa !important;
+}
+.border-neutral-200 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.border-neutral-300 {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+.bg-neutral-900 {
+  background-color: #f4f4f5 !important;
+  color: #0b0d10 !important;
+}
+.hover\:bg-neutral-700:hover {
+  background-color: #d4d4d8 !important;
+}
+.hover\:text-neutral-900:hover {
+  color: #ffffff !important;
+}
+.placeholder\:text-neutral-400::placeholder {
+  color: #63666b !important;
+}
+
+input, select, textarea {
+  color-scheme: dark;
 }
 
 @keyframes marquee {

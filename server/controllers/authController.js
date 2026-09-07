@@ -32,7 +32,18 @@ export const register = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Email already registered');
   }
-  const user = await User.create({ name, email, password, role, title, location, company });
+  // Accept optional rich-profile fields at signup too (all optional, validated by schema)
+  const extra = {};
+  for (const k of [
+    'bio', 'phone', 'resumeUrl', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
+    'experienceYears', 'experienceLevel', 'openToWork',
+    'desiredRoles', 'jobTypes', 'workModes', 'desiredLocation', 'languages',
+    'expectedSalaryMin', 'expectedSalaryMax', 'availability',
+    'educationDegree', 'educationInstitution', 'graduationYear', 'skills',
+  ]) {
+    if (req.body[k] !== undefined) extra[k] = req.body[k];
+  }
+  const user = await User.create({ name, email, password, role, title, location, company, ...extra });
   res.status(201).json(tokenResponse(user));
 });
 
@@ -59,18 +70,50 @@ export const updateMeRules = [
   body('location').optional().trim(),
   body('company').optional().trim(),
   body('skills').optional().isArray().withMessage('Skills must be an array'),
+  body('bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio must be under 1000 characters'),
+  body('phone').optional().trim(),
+  body('resumeUrl').optional().trim(),
+  body('portfolioUrl').optional().trim(),
+  body('linkedinUrl').optional().trim(),
+  body('githubUrl').optional().trim(),
+  body('experienceYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Experience must be 0–50 years'),
+  body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
+  body('openToWork').optional().toBoolean().isBoolean().withMessage('openToWork must be true/false'),
+  body('desiredRoles').optional().isArray().withMessage('Desired roles must be an array'),
+  body('jobTypes').optional().isArray().withMessage('Job types must be an array'),
+  body('workModes').optional().isArray().withMessage('Work modes must be an array'),
+  body('desiredLocation').optional().trim(),
+  body('languages').optional().isArray().withMessage('Languages must be an array'),
+  body('expectedSalaryMin').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Min salary must be positive'),
+  body('expectedSalaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive'),
+  body('availability').optional().isIn(['', 'immediate', '2-weeks', '1-month', '2-months', 'open']).withMessage('Invalid availability'),
+  body('educationDegree').optional().trim(),
+  body('educationInstitution').optional().trim(),
+  body('graduationYear').optional({ nullable: true }).toInt().isInt({ min: 1950, max: 2100 }).withMessage('Graduation year looks off'),
 ];
 
 // PUT /api/auth/me (protected) — edit own profile
 export const updateMe = asyncHandler(async (req, res) => {
   check(req, res);
-  const allowed = ['name', 'title', 'location', 'company', 'skills'];
+  const allowed = [
+    'name', 'title', 'location', 'company', 'skills',
+    'bio', 'phone', 'resumeUrl', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
+    'experienceYears', 'experienceLevel', 'openToWork',
+    'desiredRoles', 'jobTypes', 'workModes', 'desiredLocation', 'languages',
+    'expectedSalaryMin', 'expectedSalaryMax', 'availability',
+    'educationDegree', 'educationInstitution', 'graduationYear',
+  ];
   const updates = {};
   for (const k of allowed) {
     if (req.body[k] !== undefined) updates[k] = req.body[k];
   }
-  if (Array.isArray(updates.skills)) {
-    updates.skills = updates.skills.map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  for (const k of ['skills', 'desiredRoles', 'jobTypes', 'workModes', 'languages']) {
+    if (Array.isArray(updates[k])) {
+      updates[k] = updates[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+    }
+  }
+  for (const k of ['experienceYears', 'expectedSalaryMin', 'expectedSalaryMax', 'graduationYear']) {
+    if (updates[k] === '' || updates[k] === null) updates[k] = null;
   }
   const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
   res.json(user.toSafeJSON());

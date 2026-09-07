@@ -11,16 +11,16 @@ const points = [
 
 export default function ForCandidates() {
   return (
-    <section id="candidates" className="border-y border-white/10 bg-surface/40">
+    <section id="candidates" className="border-y border-white/10 bg-[#0E1114]">
       <div className="mx-auto max-w-6xl px-4 py-14">
         <p className="text-xs font-semibold uppercase tracking-wide text-accent">For candidates</p>
         <h2 className="mt-2 text-3xl font-bold text-white">Find work that matters.</h2>
         <div className="mt-4 flex max-w-xl flex-col gap-2 sm:flex-row">
           <input
-            className="w-full rounded-md border border-white/10 bg-card px-3 py-2 text-sm text-white placeholder:text-slate-500"
+            className="w-full rounded-md border border-white/10 bg-panel px-3 py-2 text-sm text-white placeholder:text-neutral-500"
             placeholder="Show me Software Engineer roles hiring in San Francisco"
           />
-          <button className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">
+          <button className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300">
             Search
           </button>
         </div>
@@ -33,14 +33,14 @@ export default function ForCandidates() {
           </div>
           <div className="grid content-start gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             {points.map((p, i) => (
-              <div key={i} className="rounded-xl border border-white/10 bg-card p-5">
+              <div key={i} className="rounded-xl border border-white/10 bg-panel p-5">
                 <p className="text-xs font-bold text-accent">0{i + 1}</p>
                 <p className="mt-1 text-sm font-bold text-white">{p.t}</p>
-                <p className="mt-1 text-xs text-slate-400">{p.d}</p>
+                <p className="mt-1 text-xs text-neutral-400">{p.d}</p>
               </div>
             ))}
             <div className="flex gap-3 sm:col-span-2">
-              <Link to="/signup/job" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base hover:bg-accentHover">Sign up for free →</Link>
+              <Link to="/signup/job" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accentHover">Sign up for free →</Link>
               <Link to="/for-job-seekers" className="rounded-md border border-white/15 px-4 py-2 text-sm text-white">Learn more</Link>
             </div>
           </div>

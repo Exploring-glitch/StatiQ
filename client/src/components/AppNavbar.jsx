@@ -15,12 +15,12 @@ export default function AppNavbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-base/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link to={user?.role === 'employer' ? '/post-job' : '/jobs'} className="text-xl font-extrabold tracking-tight text-white">
           Stati<span className="text-accent">Q</span>
         </Link>
-        <nav className="hidden items-center gap-5 text-sm text-slate-300 md:flex">
+        <nav className="hidden items-center gap-5 text-sm text-neutral-400 md:flex">
           <Link to="/jobs" className="hover:text-white">Jobs</Link>
           {user?.role === 'employer' && (
             <>
@@ -45,7 +45,7 @@ export default function AppNavbar() {
             </span>
             {user?.name?.split(' ')[0]}
           </Link>
-          <button onClick={out} className="text-sm text-slate-400 hover:text-white">Log out</button>
+          <button onClick={out} className="text-sm text-neutral-400 hover:text-white">Log out</button>
         </div>
         <button
           className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white md:hidden"
@@ -56,22 +56,22 @@ export default function AppNavbar() {
         </button>
       </div>
       {open && (
-        <div className="space-y-2 border-t border-white/10 px-4 py-4 text-sm md:hidden">
-          <Link to="/jobs" onClick={() => setOpen(false)} className="block text-slate-200">Jobs</Link>
+        <div className="space-y-2 border-t border-white/10 bg-ink px-4 py-4 text-sm md:hidden">
+          <Link to="/jobs" onClick={() => setOpen(false)} className="block text-neutral-300">Jobs</Link>
           {user?.role === 'employer' && (
             <>
-              <Link to="/post-job" onClick={() => setOpen(false)} className="block text-slate-200">Post a job</Link>
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="block text-slate-200">Dashboard</Link>
+              <Link to="/post-job" onClick={() => setOpen(false)} className="block text-neutral-300">Post a job</Link>
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="block text-neutral-300">Dashboard</Link>
             </>
           )}
           {(user?.role === 'jobseeker' || user?.role === 'admin') && (
             <>
-              <Link to="/my-applications" onClick={() => setOpen(false)} className="block text-slate-200">My applications</Link>
-              <Link to="/saved" onClick={() => setOpen(false)} className="block text-slate-200">Saved</Link>
+              <Link to="/my-applications" onClick={() => setOpen(false)} className="block text-neutral-300">My applications</Link>
+              <Link to="/saved" onClick={() => setOpen(false)} className="block text-neutral-300">Saved</Link>
             </>
           )}
           <Link to="/profile" onClick={() => setOpen(false)} className="block font-semibold text-accent">Profile →</Link>
-          <button onClick={out} className="block text-slate-400">Log out</button>
+          <button onClick={out} className="block text-neutral-400">Log out</button>
         </div>
       )}
     </header>

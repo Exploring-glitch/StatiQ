@@ -39,19 +39,19 @@ export default function JobsPage() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-full rounded-md border border-white/10 bg-card px-3 py-2 text-sm text-white placeholder:text-slate-500"
+          className="w-full rounded-md border border-white/10 bg-panel px-3 py-2 text-sm text-white placeholder:text-neutral-500"
           placeholder="Search role, company, or location..."
         />
         <button
           onClick={() => setRemoteOnly(!remoteOnly)}
-          className={`rounded-md border px-4 py-2 text-sm ${remoteOnly ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white'}`}
+          className={`rounded-md border px-4 py-2 text-sm ${remoteOnly ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white hover:border-accent'}`}
         >
           {remoteOnly ? 'Remote ✓' : 'Remote only'}
         </button>
       </div>
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-neutral-500">
         {loading ? 'Loading…' : `${items.length} roles found`} ·{' '}
-        <span className={live ? 'text-accent' : 'text-slate-500'}>{live ? '● Live from API' : '○ Demo data (API offline)'}</span>
+        <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Live from API' : '○ Demo data (API offline)'}</span>
       </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {items.map((j) => (
@@ -59,7 +59,7 @@ export default function JobsPage() {
         ))}
       </div>
       {!loading && items.length === 0 && (
-        <p className="mt-8 rounded-xl border border-white/10 bg-surface p-6 text-center text-sm text-slate-400">
+        <p className="mt-8 rounded-xl border border-white/10 bg-panel p-6 text-center text-sm text-neutral-400">
           No roles match. Try clearing search.
         </p>
       )}
