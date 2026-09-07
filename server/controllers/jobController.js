@@ -14,23 +14,46 @@ export const jobRules = [
   body('title').trim().notEmpty().withMessage('Title is required'),
   body('company').trim().notEmpty().withMessage('Company is required'),
   body('location').trim().notEmpty().withMessage('Location is required'),
+  body('salaryMin').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Min salary must be positive'),
+  body('salaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive'),
+  body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
+  body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
 ];
 
-// GET /api/jobs?q=&location=&remote=&type=&page=&limit=
+// GET /api/jobs?q=&location=&remote=&type=&workMode=&experienceLevel=&minSalary=&sort=&page=&limit=
 export const listJobs = asyncHandler(async (req, res) => {
-  const { q = '', location = '', remote, type = '', page = 1, limit = 12 } = req.query;
-  const filter = { status: 'open' };
-  if (q) filter.$text = { $search: q };
-  if (location) filter.location = new RegExp(location, 'i');
-  if (remote === 'true') filter.remote = true;
-  if (type) filter.type = type;
+  const {
+    q = '', location = '', remote, type = '', workMode = '',
+    experienceLevel = '', minSalary = '', sort = 'newest',
+    page = 1, limit = 12,
+  } = req.query;
+  const and = [{ status: 'open' }];
+  if (q) and.push({ $text: { $search: q } });
+  if (location) and.push({ location: new RegExp(location, 'i') });
+  // workMode is the modern filter; legacy `remote=true` maps to Remote.
+  const mode = workMode || (remote === 'true' ? 'Remote' : '');
+  if (mode === 'Remote') and.push({ $or: [{ workMode: 'Remote' }, { remote: true }] });
+  else if (mode) and.push({ workMode: mode });
+  if (type) {
+    const types = String(type).split(',').map((t) => t.trim()).filter(Boolean);
+    if (types.length) and.push({ type: { $in: types } });
+  }
+  if (experienceLevel) and.push({ experienceLevel });
+  const min = Number(minSalary);
+  if (minSalary !== '' && !Number.isNaN(min)) {
+    // Jobs without salary data still show (don't punish missing data).
+    and.push({ $or: [{ salaryMax: null }, { salaryMax: { $gte: min } }] });
+  }
 
-  const skip = (Math.max(1, Number(page)) - 1) * Number(limit);
+  const filter = and.length === 1 ? and[0] : { $and: and };
+  const sortBy = sort === 'salary' ? { salaryMax: -1, createdAt: -1 } : { createdAt: -1 };
+  const lim = Math.min(50, Math.max(1, Number(limit) || 12));
+  const skip = (Math.max(1, Number(page)) - 1) * lim;
   const [items, total] = await Promise.all([
-    Job.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate('postedBy', 'name company'),
+    Job.find(filter).sort(sortBy).skip(skip).limit(lim).populate('postedBy', 'name company'),
     Job.countDocuments(filter),
   ]);
-  res.json({ items, total, page: Number(page), pages: Math.ceil(total / Number(limit)) || 1 });
+  res.json({ items, total, page: Number(page), pages: Math.ceil(total / lim) || 1 });
 });
 
 // GET /api/jobs/:id
@@ -46,7 +69,11 @@ export const getJob = asyncHandler(async (req, res) => {
 // POST /api/jobs (employer/admin)
 export const createJob = asyncHandler(async (req, res) => {
   check(req, res);
-  const job = await Job.create({ ...req.body, postedBy: req.user._id });
+  const body = { ...req.body };
+  for (const k of ['salaryMin', 'salaryMax']) {
+    if (body[k] === '' || body[k] === undefined) body[k] = null;
+  }
+  const job = await Job.create({ ...body, postedBy: req.user._id });
   res.status(201).json(job);
 });
 
