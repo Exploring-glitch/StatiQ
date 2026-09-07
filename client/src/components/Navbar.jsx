@@ -1,17 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
+// Public landing navbar — guests only. Logged-in users never see this shell:
+// `/` and auth pages bounce them to their role home, and all other pages
+// render inside AppLayout/AppNavbar instead.
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user, logout } = useAuth();
-  const nav = useNavigate();
-
-  const out = () => {
-    logout();
-    setOpen(false);
-    nav('/');
-  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur">
@@ -19,35 +13,17 @@ export default function Navbar() {
         <Link to="/" className="text-xl font-extrabold tracking-tight text-white">
           Stati<span className="text-accent">Q</span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm text-neutral-400 md:flex">
-          <Link to="/for-companies" className="hover:text-white">For companies</Link>
-          <Link to="/for-job-seekers" className="hover:text-white">For job seekers</Link>
-          <Link to="/jobs" className="hover:text-white">Jobs</Link>
-          {user?.role === 'employer' && <Link to="/post-job" className="text-accent hover:text-white">Post a job</Link>}
-          {user?.role === 'jobseeker' && <Link to="/my-applications" className="text-accent hover:text-white">My applications</Link>}
-        </nav>
         <div className="hidden items-center gap-3 md:flex">
-          {user ? (
-            <>
-              <Link to="/profile" className="text-sm text-neutral-400 hover:text-white">Hi, {user.name?.split(' ')[0]}</Link>
-              <button onClick={out} className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="text-sm text-neutral-400 hover:text-white">Log in</Link>
-              <Link to="/signup" className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
-                Sign up
-              </Link>
-              <Link to="/signup/job" className="rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-black hover:bg-neutral-300">
-                I&apos;m looking for a job
-              </Link>
-              <Link to="/signup/hire" className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accentHover">
-                I&apos;m hiring
-              </Link>
-            </>
-          )}
+          <Link to="/login" className="text-sm text-neutral-400 hover:text-white">Log in</Link>
+          <Link to="/signup" className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
+            Sign up
+          </Link>
+          <Link to="/signup/job" className="rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-black hover:bg-neutral-300">
+            I&apos;m looking for a job
+          </Link>
+          <Link to="/signup/hire" className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accentHover">
+            I&apos;m hiring
+          </Link>
         </div>
         <button
           className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white md:hidden"
@@ -59,19 +35,10 @@ export default function Navbar() {
       </div>
       {open && (
         <div className="space-y-2 border-t border-white/10 bg-ink px-4 py-4 text-sm md:hidden">
-          <Link to="/for-companies" onClick={() => setOpen(false)} className="block text-neutral-300">For companies</Link>
-          <Link to="/for-job-seekers" onClick={() => setOpen(false)} className="block text-neutral-300">For job seekers</Link>
-          <Link to="/jobs" onClick={() => setOpen(false)} className="block text-neutral-300">Jobs</Link>
-          {user?.role === 'employer' && <Link to="/post-job" onClick={() => setOpen(false)} className="block text-accent">Post a job</Link>}
-          {user?.role === 'jobseeker' && <Link to="/my-applications" onClick={() => setOpen(false)} className="block text-accent">My applications</Link>}
-          {user ? (
-            <button onClick={out} className="block text-neutral-300">Log out ({user.name})</button>
-          ) : (
-            <>
-              <Link to="/login" onClick={() => setOpen(false)} className="block text-neutral-300">Log in</Link>
-              <Link to="/signup" onClick={() => setOpen(false)} className="block font-semibold text-accent">Sign up →</Link>
-            </>
-          )}
+          <Link to="/login" onClick={() => setOpen(false)} className="block text-neutral-300">Log in</Link>
+          <Link to="/signup" onClick={() => setOpen(false)} className="block text-neutral-300">Sign up</Link>
+          <Link to="/signup/job" onClick={() => setOpen(false)} className="block font-semibold text-white">I&apos;m looking for a job →</Link>
+          <Link to="/signup/hire" onClick={() => setOpen(false)} className="block font-semibold text-accent">I&apos;m hiring →</Link>
         </div>
       )}
     </header>

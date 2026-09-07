@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import AuthLayout from './components/AuthLayout';
 import AppLayout from './components/AppLayout';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute, { GuestOnly } from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import JobsPage from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
@@ -25,31 +25,33 @@ import NotFoundPage from './pages/NotFoundPage';
 const seeker = ['jobseeker', 'admin'];
 const employer = ['employer', 'admin'];
 
+// Guests: landing (/) + auth pages + 404 only. Everything else → login.
+// Logged-in users visiting / or auth pages → role home (/jobs or /post-job).
 function App() {
   return (
     <Routes>
-      {/* Landing + public browsing (footer) */}
+      {/* Public: landing only (+ 404). Logged-in users bounce to role home. */}
       <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/jobs" element={<JobsPage />} />
-        <Route path="/jobs/:id" element={<JobDetailPage />} />
-        <Route path="/for-companies" element={<ForCompaniesPage />} />
-        <Route path="/for-job-seekers" element={<ForSeekersPage />} />
+        <Route path="/" element={<GuestOnly><HomePage /></GuestOnly>} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
-      {/* Auth — no footer */}
+      {/* Auth — guests only; logged-in users bounce to role home */}
       <Route element={<AuthLayout />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/login/job" element={<JobSeekerLoginPage />} />
-        <Route path="/login/hire" element={<EmployerLoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/signup/job" element={<JobSeekerSignupPage />} />
-        <Route path="/signup/hire" element={<EmployerSignupPage />} />
+        <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
+        <Route path="/login/job" element={<GuestOnly><JobSeekerLoginPage /></GuestOnly>} />
+        <Route path="/login/hire" element={<GuestOnly><EmployerLoginPage /></GuestOnly>} />
+        <Route path="/signup" element={<GuestOnly><SignupPage /></GuestOnly>} />
+        <Route path="/signup/job" element={<GuestOnly><JobSeekerSignupPage /></GuestOnly>} />
+        <Route path="/signup/hire" element={<GuestOnly><EmployerSignupPage /></GuestOnly>} />
       </Route>
 
-      {/* Signed-in app — no footer */}
+      {/* Signed-in app — no footer. Browsing pages need login; role pages need a role. */}
       <Route element={<AppLayout />}>
+        <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
+        <Route path="/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
+        <Route path="/for-companies" element={<ProtectedRoute><ForCompaniesPage /></ProtectedRoute>} />
+        <Route path="/for-job-seekers" element={<ProtectedRoute><ForSeekersPage /></ProtectedRoute>} />
         <Route path="/post-job" element={<ProtectedRoute roles={employer}><PostJobPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute roles={employer}><DashboardPage /></ProtectedRoute>} />
         <Route path="/jobs/:id/applicants" element={<ProtectedRoute roles={employer}><ApplicantsPage /></ProtectedRoute>} />
