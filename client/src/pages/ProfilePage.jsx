@@ -73,6 +73,62 @@ const normExp = (w) => ({
   description: w?.description || '',
 });
 
+// Per-section server snapshots (used for init + Cancel) and option labels.
+const snapBasics = (u) => ({ name: u?.name || '', title: u?.title || '', location: u?.location || '', company: u?.company || '', bio: u?.bio || '', phone: u?.phone || '', desiredLocation: u?.desiredLocation || '' });
+const snapIdentity = (u) => ({ pronouns: u?.pronouns || '', gender: u?.gender || '', ethnicity: u?.ethnicity || '' });
+const snapExperience = (u) => ({ experienceYears: numOrEmpty(u?.experienceYears), experienceLevel: u?.experienceLevel || '', workExperiences: arr(u?.workExperiences).map(normExp) });
+const snapSkills = (u) => ({ skills: arr(u?.skills).join(', '), languages: arr(u?.languages).join(', ') });
+const snapPrefs = (u) => ({ openToWork: u?.openToWork ?? true, desiredRoles: arr(u?.desiredRoles).join(', '), jobTypes: arr(u?.jobTypes), workModes: arr(u?.workModes), expectedSalaryMin: numOrEmpty(u?.expectedSalaryMin), expectedSalaryMax: numOrEmpty(u?.expectedSalaryMax), availability: u?.availability || '' });
+const snapLinks = (u) => ({ resumeUrl: u?.resumeUrl || '', portfolioUrl: u?.portfolioUrl || '', linkedinUrl: u?.linkedinUrl || '', githubUrl: u?.githubUrl || '' });
+const snapEducation = (u) => ({ educationDegree: u?.educationDegree || '', educationInstitution: u?.educationInstitution || '', graduationYear: numOrEmpty(u?.graduationYear) });
+const SNAPS = { basics: snapBasics, identity: snapIdentity, experience: snapExperience, skills: snapSkills, prefs: snapPrefs, links: snapLinks, education: snapEducation };
+
+const optLabel = (list, v) => (list.find((o) => o.v === v)?.l || '');
+
+// Card header with per-section Edit / Cancel + Save.
+function SecHead({ title, sub, isEditing, busy, msg, onEdit, onCancel, onSave }) {
+  return (
+    <div>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold text-white">{title}</h2>
+          {sub && <p className="text-xs text-neutral-500">{sub}</p>}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {isEditing ? (
+            <>
+              <button type="button" onClick={onCancel} className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-neutral-300 hover:border-accent">
+                Cancel
+              </button>
+              <button type="button" onClick={onSave} disabled={busy} className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accentHover disabled:opacity-60">
+                {busy ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={onEdit} className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-white hover:border-accent">
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
+      {msg && <p className="mt-2 rounded-md border border-accent/30 bg-accent/10 p-2 text-xs text-accent">{msg}</p>}
+    </div>
+  );
+}
+
+// Read-only label/value row for view mode.
+function Row({ k, v, link }) {
+  const body = link && v
+    ? <a href={link} target="_blank" rel="noreferrer" className="break-all text-accent hover:underline">{v}</a>
+    : (v || <span className="text-neutral-600">—</span>);
+  return (
+    <div className="flex gap-2 border-b border-white/5 py-1.5 text-sm last:border-0">
+      <span className="w-28 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{k}</span>
+      <span className="min-w-0 flex-1 break-words text-neutral-200">{body}</span>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { user, updateProfile, refresh } = useAuth();
   const isEmployer = user?.role === 'employer';
@@ -81,35 +137,13 @@ export default function ProfilePage() {
 
   const [form, setForm] = useState(() => {
     const fresh = {
-      name: user?.name || '',
-      title: user?.title || '',
-      location: user?.location || '',
-      company: user?.company || '',
-      bio: user?.bio || '',
-      phone: user?.phone || '',
-      resumeUrl: user?.resumeUrl || '',
-      portfolioUrl: user?.portfolioUrl || '',
-      linkedinUrl: user?.linkedinUrl || '',
-      githubUrl: user?.githubUrl || '',
-      experienceYears: numOrEmpty(user?.experienceYears),
-      experienceLevel: user?.experienceLevel || '',
-      workExperiences: arr(user?.workExperiences).map(normExp),
-      openToWork: user?.openToWork ?? true,
-      desiredRoles: arr(user?.desiredRoles).join(', '),
-      jobTypes: arr(user?.jobTypes),
-      workModes: arr(user?.workModes),
-      desiredLocation: user?.desiredLocation || '',
-      languages: arr(user?.languages).join(', '),
-      skills: arr(user?.skills).join(', '),
-      expectedSalaryMin: numOrEmpty(user?.expectedSalaryMin),
-      expectedSalaryMax: numOrEmpty(user?.expectedSalaryMax),
-      availability: user?.availability || '',
-      pronouns: user?.pronouns || '',
-      gender: user?.gender || '',
-      ethnicity: user?.ethnicity || '',
-      educationDegree: user?.educationDegree || '',
-      educationInstitution: user?.educationInstitution || '',
-      graduationYear: numOrEmpty(user?.graduationYear),
+      ...snapBasics(user),
+      ...snapIdentity(user),
+      ...snapExperience(user),
+      ...snapSkills(user),
+      ...snapPrefs(user),
+      ...snapLinks(user),
+      ...snapEducation(user),
     };
     // Restore unsaved edits surviving a refresh; server data wins for the
     // résumé since uploads save immediately.
@@ -134,11 +168,120 @@ export default function ProfilePage() {
       localStorage.setItem(draftKey, JSON.stringify(form));
     } catch { /* storage full/blocked → form still works in memory */ }
   }, [form, draftKey]);
-  const [msg, setMsg] = useState('');
-  const [busy, setBusy] = useState(false);
   const [resumeName, setResumeName] = useState(user?.resumeName || '');
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadMsg, setUploadMsg] = useState('');
+
+  // Per-section edit mode (sections with data start collapsed in view mode),
+  // per-section save state. Each card saves only its own fields.
+  const [editing, setEditing] = useState(() => ({
+    basics: isEmployer
+      ? !(user?.name && user?.company && user?.bio)
+      : !(user?.title && user?.bio),
+    identity: !(user?.pronouns || user?.gender || user?.ethnicity),
+    experience: !(user?.experienceYears != null || user?.experienceLevel || (user?.workExperiences || []).length),
+    skills: !((user?.skills || []).length || (user?.languages || []).length),
+    prefs: !((user?.desiredRoles || []).length || user?.availability),
+    links: !(user?.resumeUrl || user?.portfolioUrl || user?.linkedinUrl || user?.githubUrl),
+    education: !(user?.educationDegree || user?.educationInstitution || user?.graduationYear != null),
+  }));
+  const [secBusy, setSecBusy] = useState('');
+  const [secMsg, setSecMsg] = useState({});
+
+  const startEdit = (key) => {
+    setSecMsg((m) => ({ ...m, [key]: '' }));
+    setEditing((e) => ({ ...e, [key]: true }));
+  };
+  const cancelEdit = (key) => {
+    setForm((f) => ({ ...f, ...SNAPS[key](user) }));
+    if (key === 'links') setResumeName(user?.resumeName || '');
+    setSecMsg((m) => ({ ...m, [key]: '' }));
+    setEditing((e) => ({ ...e, [key]: false }));
+  };
+
+  const sectionPayload = (key) => {
+    switch (key) {
+      case 'basics': {
+        const p = {
+          name: form.name.trim(),
+          title: form.title.trim(),
+          location: form.location.trim(),
+          company: form.company.trim(),
+          bio: form.bio.trim(),
+        };
+        if (!isEmployer) {
+          p.phone = form.phone.trim();
+          p.desiredLocation = form.desiredLocation.trim();
+        }
+        return p;
+      }
+      case 'identity':
+        return { pronouns: form.pronouns, gender: form.gender, ethnicity: form.ethnicity };
+      case 'experience':
+        return {
+          experienceYears: form.experienceYears === '' ? null : Number(form.experienceYears),
+          experienceLevel: form.experienceLevel,
+          workExperiences: form.workExperiences,
+        };
+      case 'skills':
+        return {
+          skills: skillsList,
+          languages: form.languages.split(',').map((s) => s.trim()).filter(Boolean),
+        };
+      case 'prefs':
+        return {
+          openToWork: !!form.openToWork,
+          desiredRoles: form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean),
+          jobTypes: form.jobTypes,
+          workModes: form.workModes,
+          expectedSalaryMin: form.expectedSalaryMin === '' ? null : Number(form.expectedSalaryMin),
+          expectedSalaryMax: form.expectedSalaryMax === '' ? null : Number(form.expectedSalaryMax),
+          availability: form.availability,
+        };
+      case 'links':
+        return {
+          resumeUrl: form.resumeUrl.trim(),
+          portfolioUrl: form.portfolioUrl.trim(),
+          linkedinUrl: form.linkedinUrl.trim(),
+          githubUrl: form.githubUrl.trim(),
+        };
+      case 'education':
+        return {
+          educationDegree: form.educationDegree.trim(),
+          educationInstitution: form.educationInstitution.trim(),
+          graduationYear: form.graduationYear === '' ? null : Number(form.graduationYear),
+        };
+      default:
+        return {};
+    }
+  };
+
+  const saveSection = async (key) => {
+    setSecMsg((m) => ({ ...m, [key]: '' }));
+    setSecBusy(key);
+    try {
+      await updateProfile(sectionPayload(key));
+      setEditing((e) => ({ ...e, [key]: false }));
+      setSecMsg((m) => ({ ...m, [key]: 'Saved ✓' }));
+    } catch (err) {
+      setSecMsg((m) => ({ ...m, [key]: err.message }));
+    } finally {
+      setSecBusy('');
+    }
+  };
+
+  const head = (key, title, sub) => (
+    <SecHead
+      title={title}
+      sub={sub}
+      isEditing={editing[key]}
+      busy={secBusy === key}
+      msg={secMsg[key]}
+      onEdit={() => startEdit(key)}
+      onCancel={() => cancelEdit(key)}
+      onSave={() => saveSection(key)}
+    />
+  );
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const toggleList = (k, v) =>
@@ -235,53 +378,7 @@ export default function ProfilePage() {
     !form.educationDegree && 'Add education',
   ].filter(Boolean);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setMsg('');
-    setBusy(true);
-    try {
-      const payload = {
-        name: form.name.trim(),
-        title: form.title.trim(),
-        location: form.location.trim(),
-        company: form.company.trim(),
-        bio: form.bio.trim(),
-        phone: form.phone.trim(),
-        resumeUrl: form.resumeUrl.trim(),
-        portfolioUrl: form.portfolioUrl.trim(),
-        linkedinUrl: form.linkedinUrl.trim(),
-        githubUrl: form.githubUrl.trim(),
-        experienceYears: form.experienceYears === '' ? null : Number(form.experienceYears),
-        experienceLevel: form.experienceLevel,
-        workExperiences: form.workExperiences,
-        openToWork: !!form.openToWork,
-        desiredRoles: form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean),
-        jobTypes: form.jobTypes,
-        workModes: form.workModes,
-        desiredLocation: form.desiredLocation.trim(),
-        languages: form.languages.split(',').map((s) => s.trim()).filter(Boolean),
-        skills: skillsList,
-        expectedSalaryMin: form.expectedSalaryMin === '' ? null : Number(form.expectedSalaryMin),
-        expectedSalaryMax: form.expectedSalaryMax === '' ? null : Number(form.expectedSalaryMax),
-        availability: form.availability,
-        pronouns: form.pronouns,
-        gender: form.gender,
-        ethnicity: form.ethnicity,
-        educationDegree: form.educationDegree.trim(),
-        educationInstitution: form.educationInstitution.trim(),
-        graduationYear: form.graduationYear === '' ? null : Number(form.graduationYear),
-      };
-      await updateProfile(payload);
-      try {
-        localStorage.removeItem(draftKey);
-      } catch { /* ignore */ }
-      setMsg('Profile saved.');
-    } catch (err) {
-      setMsg(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
+  // (Section saves go through saveSection() above — one Save button per card.)
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
@@ -324,13 +421,14 @@ export default function ProfilePage() {
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        {/* Form */}
-        <form onSubmit={submit} className="space-y-4 lg:col-span-2">
+        {/* Sections — each card has its own Edit + Save */}
+        <div className="space-y-4 lg:col-span-2">
           {/* Basics */}
           <div className={card}>
-            <h2 className="text-sm font-bold text-white">Basics</h2>
-            <p className="text-xs text-neutral-500">How you appear in search and applications.</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {head('basics', 'Basics', 'How you appear in search and applications.')}
+            {editing.basics ? (
+              <>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div><span className={label}>Full name *</span><input value={form.name} onChange={set('name')} required placeholder="Full name" className={input} /></div>
               <div><span className={label}>{isEmployer ? 'Your title' : 'Headline *'}</span><input value={form.title} onChange={set('title')} placeholder={isEmployer ? 'Founder, Hiring Manager…' : 'Senior Backend Engineer'} className={input} /></div>
               <div><span className={label}>Location</span><input value={form.location} onChange={set('location')} placeholder="Bengaluru, India" className={input} /></div>
@@ -348,46 +446,70 @@ export default function ProfilePage() {
                 placeholder={isEmployer ? 'What are you building? What roles are you hiring for?' : '2–4 lines: what you do, years of experience, standout work, what you want next.'}
                 className={`${input} resize-y`} />
               <p className="mt-1 text-right text-[11px] text-neutral-500">{form.bio.length}/1000</p>
-            </div>
+                </div>
+              </>
+            ) : (
+              <div className="mt-3">
+                <Row k="Name" v={form.name} />
+                <Row k={isEmployer ? 'Title' : 'Headline'} v={form.title} />
+                <Row k="Location" v={form.location} />
+                <Row k="Company" v={form.company} />
+                {!isEmployer && <Row k="Phone" v={form.phone} />}
+                {!isEmployer && <Row k="Wants" v={form.desiredLocation} />}
+                {form.bio ? (
+                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-neutral-200">{form.bio}</p>
+                ) : (
+                  <p className="mt-2 text-sm text-neutral-600">No summary yet — click Edit to add one.</p>
+                )}
+              </div>
+            )}
           </div>
 
           {!isEmployer && (
             <>
               {/* Identity */}
               <div className={card}>
-                <h2 className="text-sm font-bold text-white">Identity</h2>
-                <p className="text-xs text-neutral-500">Optional — helps employers address you correctly. Never shown to recruiters.</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div><span className={label}>Pronouns</span>
-                    <select value={form.pronouns} onChange={set('pronouns')} className={input}>
-                      {PRONOUNS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-                    </select>
+                {head('identity', 'Identity', 'Optional — helps employers address you correctly. Never shown to recruiters.')}
+                {editing.identity ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div><span className={label}>Pronouns</span>
+                      <select value={form.pronouns} onChange={set('pronouns')} className={input}>
+                        {PRONOUNS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                      </select>
+                    </div>
+                    <div><span className={label}>Gender</span>
+                      <select value={form.gender} onChange={set('gender')} className={input}>
+                        {GENDERS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                      </select>
+                    </div>
+                    <div><span className={label}>Race / ethnicity</span>
+                      <select value={form.ethnicity} onChange={set('ethnicity')} className={input}>
+                        {ETHNICITIES.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                      </select>
+                    </div>
                   </div>
-                  <div><span className={label}>Gender</span>
-                    <select value={form.gender} onChange={set('gender')} className={input}>
-                      {GENDERS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-                    </select>
+                ) : (
+                  <div className="mt-3">
+                    <Row k="Pronouns" v={optLabel(PRONOUNS, form.pronouns)} />
+                    <Row k="Gender" v={optLabel(GENDERS, form.gender)} />
+                    <Row k="Race" v={optLabel(ETHNICITIES, form.ethnicity)} />
                   </div>
-                  <div><span className={label}>Race / ethnicity</span>
-                    <select value={form.ethnicity} onChange={set('ethnicity')} className={input}>
-                      {ETHNICITIES.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-                    </select>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Work experience */}
               <div className={card}>
-                <h2 className="text-sm font-bold text-white">Work experience</h2>
-                <p className="text-xs text-neutral-500">Recruiters filter on these first.</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div><span className={label}>Total experience (years)</span><input type="number" min="0" max="50" step="0.5" value={form.experienceYears} onChange={set('experienceYears')} placeholder="e.g. 3" className={input} /></div>
-                  <div><span className={label}>Experience level</span>
-                    <select value={form.experienceLevel} onChange={set('experienceLevel')} className={input}>
-                      {LEVELS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-                    </select>
-                  </div>
-                </div>
+                {head('experience', 'Work experience', 'Recruiters filter on these first.')}
+                {editing.experience ? (
+                  <>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div><span className={label}>Total experience (years)</span><input type="number" min="0" max="50" step="0.5" value={form.experienceYears} onChange={set('experienceYears')} placeholder="e.g. 3" className={input} /></div>
+                      <div><span className={label}>Experience level</span>
+                        <select value={form.experienceLevel} onChange={set('experienceLevel')} className={input}>
+                          {LEVELS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                        </select>
+                      </div>
+                    </div>
                 <div className="mt-4 space-y-3">
                   {form.workExperiences.map((w, i) => (
                     <div key={i} className="rounded-lg border border-white/10 bg-panel2 p-4">
@@ -419,44 +541,88 @@ export default function ProfilePage() {
                 <button type="button" onClick={addExp} className="mt-3 w-full rounded-md border border-dashed border-white/20 px-3 py-2 text-sm text-neutral-300 hover:border-accent">
                   + Add work experience
                 </button>
+                  </>
+                ) : (
+                  <div className="mt-3">
+                    <Row k="Total exp" v={form.experienceYears !== '' ? `${form.experienceYears} yrs` : ''} />
+                    <Row k="Level" v={optLabel(LEVELS, form.experienceLevel)} />
+                    {form.workExperiences.length > 0 ? (
+                      <div className="mt-2 space-y-2">
+                        {form.workExperiences.map((w, i) => (
+                          <div key={i} className="rounded-lg border border-white/10 bg-panel2 p-3">
+                            <p className="text-sm font-semibold text-white">
+                              {[w.title, w.company].filter(Boolean).join(' @ ') || `Role ${i + 1}`}
+                            </p>
+                            {(w.startDate || w.endDate || w.current) && (
+                              <p className="text-xs text-neutral-500">
+                                {w.startDate || '?'} – {w.current ? 'Present' : w.endDate || '?'}
+                                {w.current && ' · Currently here'}
+                              </p>
+                            )}
+                            {w.description && (
+                              <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-neutral-400">{w.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-neutral-600">No work experience added yet — click Edit to add roles.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Skills */}
               <div className={card}>
-                <h2 className="text-sm font-bold text-white">Skills</h2>
-                <p className="text-xs text-neutral-500">Recruiters search on these — add your strongest first.</p>
-                <div className="mt-4">
-                  <span className={label}>Skills * (comma separated)</span>
-                  <input value={form.skills} onChange={set('skills')} placeholder="React, Node, Postgres, AWS" className={input} />
-                  {skillsList.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {skillsList.map((s) => (
-                        <span key={s} className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{s}</span>
-                      ))}
+                {head('skills', 'Skills', 'Recruiters search on these — add your strongest first.')}
+                {editing.skills ? (
+                  <>
+                    <div className="mt-4">
+                      <span className={label}>Skills * (comma separated)</span>
+                      <input value={form.skills} onChange={set('skills')} placeholder="React, Node, Postgres, AWS" className={input} />
+                      {skillsList.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {skillsList.map((s) => (
+                            <span key={s} className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{s}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="mt-3">
-                  <span className={label}>Languages (comma separated)</span>
-                  <input value={form.languages} onChange={set('languages')} placeholder="English, Hindi" className={input} />
-                </div>
+                    <div className="mt-3">
+                      <span className={label}>Languages (comma separated)</span>
+                      <input value={form.languages} onChange={set('languages')} placeholder="English, Hindi" className={input} />
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-3">
+                    {skillsList.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {skillsList.map((s) => (
+                          <span key={s} className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{s}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-600">No skills added yet — click Edit to add some.</p>
+                    )}
+                    <div className="mt-2">
+                      <Row k="Languages" v={form.languages} />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Job preferences */}
               <div className={card}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-sm font-bold text-white">Job preferences</h2>
-                    <p className="text-xs text-neutral-500">Match yourself to the right roles.</p>
-                  </div>
-                  <label className="flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
-                    <button type="button" onClick={() => setForm({ ...form, openToWork: !form.openToWork })}
-                      className={`relative h-5 w-9 rounded-full transition ${form.openToWork ? 'bg-emerald-500' : 'bg-neutral-600'}`}>
-                      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${form.openToWork ? 'left-4' : 'left-0.5'}`} />
-                    </button>
-                    Open to work
-                  </label>
-                </div>
+                {head('prefs', 'Job preferences', 'Match yourself to the right roles.')}
+                {editing.prefs ? (
+                  <>
+                    <label className="mt-4 flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
+                      <button type="button" onClick={() => setForm({ ...form, openToWork: !form.openToWork })}
+                        className={`relative h-5 w-9 rounded-full transition ${form.openToWork ? 'bg-emerald-500' : 'bg-neutral-600'}`}>
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${form.openToWork ? 'left-4' : 'left-0.5'}`} />
+                      </button>
+                      Open to work
+                    </label>
                 <div className="mt-4">
                   <span className={label}>Desired roles * (comma separated)</span>
                   <input value={form.desiredRoles} onChange={set('desiredRoles')} placeholder="Backend Engineer, Platform Engineer" className={input} />
@@ -488,13 +654,29 @@ export default function ProfilePage() {
                     </select>
                   </div>
                 </div>
+                  </>
+                ) : (
+                  <div className="mt-3">
+                    <Row k="Status" v={form.openToWork ? '● Open to work' : 'Not looking right now'} />
+                    <Row k="Roles" v={form.desiredRoles} />
+                    {(form.jobTypes.length > 0 || form.workModes.length > 0) && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {[...form.jobTypes, ...form.workModes].map((t) => (
+                          <span key={t} className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-300">{t}</span>
+                        ))}
+                      </div>
+                    )}
+                    <Row k="Salary" v={(form.expectedSalaryMin !== '' || form.expectedSalaryMax !== '') ? `${form.expectedSalaryMin || '?'} – ${form.expectedSalaryMax || '?'}` : ''} />
+                    <Row k="Notice" v={optLabel(AVAIL, form.availability)} />
+                  </div>
+                )}
               </div>
 
               {/* Links */}
               <div className={card}>
-                <h2 className="text-sm font-bold text-white">Links & résumé</h2>
-                <p className="text-xs text-neutral-500">Profiles with a résumé + one proof-of-work link get far more replies.</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {head('links', 'Links & résumé', 'Profiles with a résumé + one proof-of-work link get far more replies.')}
+                {editing.links ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <span className={label}>Résumé * — upload file (PDF, DOC, DOCX · max 5 MB)</span>
                     <input
@@ -564,27 +746,40 @@ export default function ProfilePage() {
                   <div><span className={label}>LinkedIn</span><input value={form.linkedinUrl} onChange={set('linkedinUrl')} placeholder="https://linkedin.com/in/…" className={input} /></div>
                   <div><span className={label}>GitHub</span><input value={form.githubUrl} onChange={set('githubUrl')} placeholder="https://github.com/…" className={input} /></div>
                 </div>
+                ) : (
+                  <div className="mt-3">
+                    <Row
+                      k="Résumé"
+                      v={isUploadedResume ? (resumeName || 'Uploaded file') : form.resumeUrl}
+                      link={form.resumeUrl ? fileUrl(form.resumeUrl) : ''}
+                    />
+                    <Row k="Portfolio" v={form.portfolioUrl} link={form.portfolioUrl} />
+                    <Row k="LinkedIn" v={form.linkedinUrl} link={form.linkedinUrl} />
+                    <Row k="GitHub" v={form.githubUrl} link={form.githubUrl} />
+                  </div>
+                )}
               </div>
 
               {/* Education */}
               <div className={card}>
-                <h2 className="text-sm font-bold text-white">Education</h2>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div><span className={label}>Degree</span><input value={form.educationDegree} onChange={set('educationDegree')} placeholder="B.Tech, CSE" className={input} /></div>
-                  <div><span className={label}>Institution</span><input value={form.educationInstitution} onChange={set('educationInstitution')} placeholder="College / university" className={input} /></div>
-                  <div><span className={label}>Graduation year</span><input type="number" min="1950" max="2100" value={form.graduationYear} onChange={set('graduationYear')} placeholder="2023" className={input} /></div>
-                </div>
+                {head('education', 'Education', '')}
+                {editing.education ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div><span className={label}>Degree</span><input value={form.educationDegree} onChange={set('educationDegree')} placeholder="B.Tech, CSE" className={input} /></div>
+                    <div><span className={label}>Institution</span><input value={form.educationInstitution} onChange={set('educationInstitution')} placeholder="College / university" className={input} /></div>
+                    <div><span className={label}>Graduation year</span><input type="number" min="1950" max="2100" value={form.graduationYear} onChange={set('graduationYear')} placeholder="2023" className={input} /></div>
+                  </div>
+                ) : (
+                  <div className="mt-3">
+                    <Row k="Degree" v={form.educationDegree} />
+                    <Row k="School" v={form.educationInstitution} />
+                    <Row k="Year" v={form.graduationYear} />
+                  </div>
+                )}
               </div>
             </>
           )}
-
-          {msg && <p className="rounded-md border border-accent/30 bg-accent/10 p-2 text-xs text-accent">{msg}</p>}
-          <div className="flex gap-3">
-            <button disabled={busy} className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accentHover disabled:opacity-60">
-              {busy ? 'Saving…' : 'Save profile'}
-            </button>
-          </div>
-        </form>
+        </div>
 
         {/* Live preview */}
         <aside className="h-fit space-y-4 lg:sticky lg:top-20">
