@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const link = ({ isActive }) =>
   `rounded-full px-3 py-1.5 text-sm transition ${
-    isActive ? 'bg-white text-black font-semibold' : 'text-neutral-400 hover:text-white'
+    isActive ? 'bg-accent font-semibold text-white' : 'text-neutral-400 hover:text-white'
   }`;
 
 // ── Job-seeker shell header: job-board style top nav ──
