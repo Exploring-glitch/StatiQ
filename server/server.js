@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import jobRoutes from './routes/jobs.js';
@@ -12,7 +13,22 @@ const app = express();
 app.use(cors({ origin: (process.env.CLIENT_URL || 'http://localhost:5173').split(',') }));
 app.use(express.json({ limit: '1mb' }));
 
-await connectDB();
+// Never let a DB outage kill the API: stay up in degraded mode so the
+// site loads and API errors are readable JSON (not "Failed to fetch").
+try {
+  await connectDB();
+} catch (err) {
+  console.error('MongoDB unreachable — running in DEGRADED mode (browsing works, signup/login/apply disabled).');
+  console.error(`DB reason: ${String(err?.message || err).split('\n')[0]}`);
+  console.error('Fix: whitelist this machine IP in Atlas → Network Access, or point MONGODB_URI at a reachable database.');
+}
+
+const dbGate = (req, res, next) => {
+  if (mongoose.connection.readyState === 1) return next();
+  return res.status(503).json({
+    message: 'Database unavailable — the server cannot reach MongoDB right now. Browsing still works; signup, login, posting jobs and applying are paused until the database is reachable.',
+  });
+};
 
 app.get('/api/health', (req, res) =>
   res.json({ ok: true, service: 'StatiQ API', db: !!Job.db?.readyState })
@@ -27,7 +43,7 @@ const demoJobs = [
 
 app.get('/api/demo-jobs', (req, res) => res.json(demoJobs));
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', dbGate, authRoutes);
 app.use('/api/jobs', async (req, res, next) => {
   // Graceful fallback: no DB yet → serve demo data for public GETs
   if (req.method === 'GET' && !Job.db?.readyState) {
@@ -37,9 +53,11 @@ app.use('/api/jobs', async (req, res, next) => {
     if (one) return res.json(one);
     return res.status(503).json({ message: 'Database not configured — set MONGODB_URI in server/.env' });
   }
+  // Mutations always need the DB; public GETs already handled above or fall to jobRoutes.
+  if (req.method !== 'GET') return dbGate(req, res, next);
   next();
 }, jobRoutes);
-app.use('/api/applications', applicationRoutes);
+app.use('/api/applications', dbGate, applicationRoutes);
 
 app.use('/api', notFound);
 app.use(errorHandler);

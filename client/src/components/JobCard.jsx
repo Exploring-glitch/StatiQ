@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { isSaved, toggleSaved } from '../lib/saved';
+import { useAuth } from '../context/AuthContext';
 
 export default function JobCard({ job }) {
   const [saved, setSaved] = useState(() => isSaved(job.id));
+  const { user } = useAuth();
+  const isEmployer = user?.role === 'employer';
   return (
     <article className="rounded-xl border border-white/10 bg-panel p-5 transition hover:border-accent/50">
       <div className="flex items-center gap-3">
@@ -27,15 +30,22 @@ export default function JobCard({ job }) {
       <div className="mt-3 flex items-center justify-between">
         <span className="text-xs text-neutral-500">{job.note}</span>
         <div className="flex gap-2">
-          <button
-            onClick={() => setSaved(toggleSaved(job.id))}
-            className={`rounded-md border px-3 py-1 text-xs ${saved ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white hover:border-accent'}`}
-          >
-            {saved ? 'Saved ✓' : 'Save'}
-          </button>
+          {!isEmployer && (
+            <button
+              onClick={() => setSaved(toggleSaved(job.id))}
+              className={`rounded-md border px-3 py-1 text-xs ${saved ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white hover:border-accent'}`}
+            >
+              {saved ? 'Saved ✓' : 'Save'}
+            </button>
+          )}
           <Link to={`/jobs/${job.id}`} className="rounded-md bg-white px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">
             View role
           </Link>
+          {isEmployer && (
+            <Link to={`/jobs/${job.id}/applicants`} className="rounded-md border border-accent/40 px-3 py-1 text-xs font-semibold text-accent hover:bg-accent/10">
+              Applicants →
+            </Link>
+          )}
         </div>
       </div>
     </article>

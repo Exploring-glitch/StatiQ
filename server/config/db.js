@@ -7,7 +7,9 @@ export default async function connectDB() {
     return null;
   }
   mongoose.set('strictQuery', true);
-  await mongoose.connect(uri);
+  // Fail fast (5s) instead of hanging ~30s when the cluster is unreachable,
+  // so the API boots into degraded mode quickly. Tune up for slow networks.
+  await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
   console.log("Connected to MongoDB");
   return mongoose.connection;
 }

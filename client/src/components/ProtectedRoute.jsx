@@ -1,10 +1,10 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Role landing page after login. Matches the post-login defaults
-// used by the seeker/employer login + signup pages.
+// Role landing page after login. Each role gets its own home:
+// jobseeker/admin → job board, employer → hiring dashboard.
 export function roleHome(user) {
-  if (user?.role === 'employer') return '/post-job';
+  if (user?.role === 'employer') return '/dashboard';
   return '/jobs'; // jobseeker + admin
 }
 
@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children, roles }) {
     return <p className="mx-auto max-w-6xl px-4 py-16 text-center text-sm text-neutral-500">Loading…</p>;
   }
   if (!user) return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  if (roles && !roles.includes(user.role)) return <Navigate to={roleHome(user)} replace />;
   return children;
 }
 

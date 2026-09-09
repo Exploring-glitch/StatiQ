@@ -10,7 +10,7 @@ export default function EmployerLoginPage() {
   const { login } = useAuth();
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const next = params.get('next') || '/post-job';
+  const next = params.get('next') || '/dashboard';
 
   const submit = async (e) => {
     e.preventDefault();
@@ -49,7 +49,7 @@ export default function EmployerLoginPage() {
         </form>
         <p className="mt-3 text-center text-xs text-neutral-400">
           No employer account? <Link to="/signup/hire" className="text-accent">Create one</Link> · Looking for a job?{' '}
-          <Link to={`/login/job${next !== '/post-job' ? `?next=${encodeURIComponent(next)}` : ''}`} className="text-accent">Seeker log in</Link>
+          <Link to={`/login/job${next !== '/dashboard' ? `?next=${encodeURIComponent(next)}` : ''}`} className="text-accent">Seeker log in</Link>
         </p>
       </div>
     </section>

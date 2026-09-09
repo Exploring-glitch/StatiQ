@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 export default function JobDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const isEmployer = user?.role === 'employer';
   const nav = useNavigate();
   const [job, setJob] = useState(null);
   const [missing, setMissing] = useState(false);
@@ -59,7 +60,14 @@ export default function JobDetailPage() {
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
-      <Link to="/jobs" className="text-sm text-neutral-400 hover:text-white">← All jobs</Link>
+      <Link to={isEmployer ? '/dashboard' : '/jobs'} className="text-sm text-neutral-400 hover:text-white">
+        {isEmployer ? '← Back to dashboard' : '← All jobs'}
+      </Link>
+      {isEmployer && (
+        <p className="mt-3 rounded-lg border border-accent/30 bg-accent/10 p-3 text-xs text-accent">
+          👁 Hiring-mode preview — seekers see an <strong>Apply now</strong> button here. You see applicant actions below.
+        </p>
+      )}
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <div className="rounded-xl border border-white/10 bg-panel p-6 lg:col-span-2">
           <p className="text-sm font-bold text-white">{job.role}</p>
@@ -89,7 +97,22 @@ export default function JobDetailPage() {
           <p className="mt-3 text-sm font-bold text-white">{job.company}</p>
           <p className="text-xs text-neutral-400">{job.tagline}</p>
           <p className="mt-2 text-xs text-neutral-500">{job.note}</p>
-          {applied ? (
+          {isEmployer ? (
+            <div className="mt-4 space-y-2">
+              <Link
+                to={`/jobs/${id}/applicants`}
+                className="block w-full rounded-md bg-white px-4 py-2 text-center text-sm font-semibold text-black hover:bg-neutral-300"
+              >
+                View applicants →
+              </Link>
+              <Link
+                to="/dashboard"
+                className="block w-full rounded-md border border-white/15 px-4 py-2 text-center text-sm text-white hover:border-accent"
+              >
+                Back to dashboard
+              </Link>
+            </div>
+          ) : applied ? (
             <p className="mt-4 rounded-md bg-accent/15 p-3 text-sm text-accent">
               Application sent. The hiring team will reach out soon.
             </p>

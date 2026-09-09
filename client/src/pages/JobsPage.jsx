@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { normalizeJob, filterMock } from '../lib/jobs';
+import { useAuth } from '../context/AuthContext';
 import JobCard from '../components/JobCard';
 
 const MODES = ['Remote', 'Hybrid', 'On-site'];
@@ -30,6 +31,8 @@ const SORTS = [
 const csv = (sp, k) => (sp.get(k) || '').split(',').map((s) => s.trim()).filter(Boolean);
 
 export default function JobsPage() {
+  const { user } = useAuth();
+  const isEmployer = user?.role === 'employer';
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get('q') || '');
   const [location, setLocation] = useState(params.get('location') || '');
@@ -135,8 +138,18 @@ export default function JobsPage() {
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
-      <p className="text-xs font-semibold uppercase tracking-wide text-accent">Startup jobs</p>
-      <h1 className="mt-2 text-3xl font-bold text-white">Browse startup roles</h1>
+      {isEmployer && (
+        <p className="mb-4 rounded-lg border border-accent/30 bg-accent/10 p-3 text-xs text-accent">
+          👁 You&apos;re in <strong>hiring mode</strong> — this is how seekers see live listings. Manage your roles from the{' '}
+          <a href="/dashboard" className="font-semibold underline">Dashboard</a>.
+        </p>
+      )}
+      <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+        {isEmployer ? 'Live listings preview' : 'Startup jobs'}
+      </p>
+      <h1 className="mt-2 text-3xl font-bold text-white">
+        {isEmployer ? 'How your roles appear to seekers' : 'Browse startup roles'}
+      </h1>
 
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <input

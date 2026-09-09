@@ -18,7 +18,7 @@ export default function EmployerSignupPage() {
     setBusy(true);
     try {
       await register({ name, email, password, role: 'employer', company });
-      nav('/post-job', { replace: true });
+      nav('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

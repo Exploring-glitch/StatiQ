@@ -17,7 +17,7 @@ export default function AppNavbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to={user?.role === 'employer' ? '/post-job' : '/jobs'} className="text-xl font-extrabold tracking-tight text-white">
+        <Link to={user?.role === 'employer' ? '/dashboard' : '/jobs'} className="text-xl font-extrabold tracking-tight text-white">
           Stati<span className="text-accent">Q</span>
         </Link>
         <nav className="hidden items-center gap-5 text-sm text-neutral-400 md:flex">
