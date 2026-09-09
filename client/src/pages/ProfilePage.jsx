@@ -31,6 +31,16 @@ const chipOff = 'rounded-full border border-white/15 px-3 py-1 text-xs text-neut
 const arr = (v) => (Array.isArray(v) ? v : []);
 const numOrEmpty = (v) => (v === null || v === undefined ? '' : String(v));
 
+const emptyExp = { company: '', title: '', startDate: '', endDate: '', current: false, description: '' };
+const normExp = (w) => ({
+  company: w?.company || '',
+  title: w?.title || '',
+  startDate: w?.startDate || '',
+  endDate: w?.endDate || '',
+  current: !!w?.current,
+  description: w?.description || '',
+});
+
 export default function ProfilePage() {
   const { user, updateProfile, refresh } = useAuth();
   const isEmployer = user?.role === 'employer';
@@ -49,6 +59,7 @@ export default function ProfilePage() {
     githubUrl: user?.githubUrl || '',
     experienceYears: numOrEmpty(user?.experienceYears),
     experienceLevel: user?.experienceLevel || '',
+    workExperiences: arr(user?.workExperiences).map(normExp),
     openToWork: user?.openToWork ?? true,
     desiredRoles: arr(user?.desiredRoles).join(', '),
     jobTypes: arr(user?.jobTypes),
@@ -74,6 +85,19 @@ export default function ProfilePage() {
     setForm((f) => ({ ...f, [k]: f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v] }));
 
   const isUploadedResume = form.resumeUrl.startsWith('/uploads/');
+
+  const setExp = (i, k, v) =>
+    setForm((f) => ({ ...f, workExperiences: f.workExperiences.map((w, j) => (j === i ? { ...w, [k]: v } : w)) }));
+  const addExp = () => setForm((f) => ({ ...f, workExperiences: [...f.workExperiences, { ...emptyExp }] }));
+  const removeExp = (i) =>
+    setForm((f) => ({ ...f, workExperiences: f.workExperiences.filter((_, j) => j !== i) }));
+  const toggleCurrent = (i) =>
+    setForm((f) => ({
+      ...f,
+      workExperiences: f.workExperiences.map((w, j) =>
+        j === i ? { ...w, current: !w.current, endDate: !w.current ? '' : w.endDate } : w
+      ),
+    }));
 
   const pickFile = async (file) => {
     if (!file) return;
@@ -127,6 +151,7 @@ export default function ProfilePage() {
       form.name, form.title, form.location, form.bio, form.phone,
       form.skills.trim(), form.desiredRoles.trim(),
       form.experienceYears !== '', form.experienceLevel,
+      form.workExperiences.length > 0,
       form.jobTypes.length > 0, form.workModes.length > 0,
       form.availability, (form.resumeUrl || form.portfolioUrl || form.linkedinUrl),
       form.educationDegree, form.expectedSalaryMin !== '' || form.expectedSalaryMax !== '',
@@ -135,10 +160,14 @@ export default function ProfilePage() {
   }, [form, isEmployer]);
 
   const skillsList = form.skills.split(',').map((s) => s.trim()).filter(Boolean);
+  const latestExp =
+    form.workExperiences.find((w) => w.current && (w.title || w.company)) ||
+    form.workExperiences.find((w) => w.title || w.company);
 
   const missing = [
     !form.bio.trim() && 'Add a 2–4 line summary',
     !skillsList.length && 'Add at least 5 skills',
+    form.workExperiences.length === 0 && 'Add work experience',
     !(form.resumeUrl || form.portfolioUrl) && 'Upload your résumé or add a portfolio link',
     form.jobTypes.length === 0 && 'Pick job types',
     form.workModes.length === 0 && 'Pick work modes',
@@ -164,6 +193,7 @@ export default function ProfilePage() {
         githubUrl: form.githubUrl.trim(),
         experienceYears: form.experienceYears === '' ? null : Number(form.experienceYears),
         experienceLevel: form.experienceLevel,
+        workExperiences: form.workExperiences,
         openToWork: !!form.openToWork,
         desiredRoles: form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean),
         jobTypes: form.jobTypes,
@@ -257,9 +287,9 @@ export default function ProfilePage() {
 
           {!isEmployer && (
             <>
-              {/* Experience + skills */}
+              {/* Work experience */}
               <div className={card}>
-                <h2 className="text-sm font-bold text-white">Experience & skills</h2>
+                <h2 className="text-sm font-bold text-white">Work experience</h2>
                 <p className="text-xs text-neutral-500">Recruiters filter on these first.</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div><span className={label}>Total experience (years)</span><input type="number" min="0" max="50" step="0.5" value={form.experienceYears} onChange={set('experienceYears')} placeholder="e.g. 3" className={input} /></div>
@@ -269,7 +299,44 @@ export default function ProfilePage() {
                     </select>
                   </div>
                 </div>
-                <div className="mt-3">
+                <div className="mt-4 space-y-3">
+                  {form.workExperiences.map((w, i) => (
+                    <div key={i} className="rounded-lg border border-white/10 bg-panel2 p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-white">Role {i + 1}</p>
+                        <button type="button" onClick={() => removeExp(i)} className="text-xs text-neutral-500 hover:text-red-400">
+                          Remove
+                        </button>
+                      </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div><span className={label}>Job title</span><input value={w.title} onChange={(e) => setExp(i, 'title', e.target.value)} placeholder="Senior Backend Engineer" className={input} /></div>
+                        <div><span className={label}>Company</span><input value={w.company} onChange={(e) => setExp(i, 'company', e.target.value)} placeholder="Acme Inc" className={input} /></div>
+                        <div><span className={label}>Start date</span><input type="month" value={w.startDate} onChange={(e) => setExp(i, 'startDate', e.target.value)} className={input} /></div>
+                        <div><span className={label}>End date</span><input type="month" value={w.endDate} disabled={w.current} onChange={(e) => setExp(i, 'endDate', e.target.value)} className={`${input} disabled:opacity-40`} /></div>
+                      </div>
+                      <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
+                        <input type="checkbox" checked={w.current} onChange={() => toggleCurrent(i)} className="h-4 w-4 accent-[#E5483A]" />
+                        I currently work here
+                      </label>
+                      <div className="mt-3">
+                        <span className={label}>Job description</span>
+                        <textarea value={w.description} onChange={(e) => setExp(i, 'description', e.target.value)} rows={3} maxLength={2000}
+                          placeholder="What you owned, built, shipped…"
+                          className={`${input} resize-y`} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={addExp} className="mt-3 w-full rounded-md border border-dashed border-white/20 px-3 py-2 text-sm text-neutral-300 hover:border-accent">
+                  + Add work experience
+                </button>
+              </div>
+
+              {/* Skills */}
+              <div className={card}>
+                <h2 className="text-sm font-bold text-white">Skills</h2>
+                <p className="text-xs text-neutral-500">Recruiters search on these — add your strongest first.</p>
+                <div className="mt-4">
                   <span className={label}>Skills * (comma separated)</span>
                   <input value={form.skills} onChange={set('skills')} placeholder="React, Node, Postgres, AWS" className={input} />
                   {skillsList.length > 0 && (
@@ -446,6 +513,13 @@ export default function ProfilePage() {
             {form.bio && <p className="mt-3 line-clamp-4 text-xs leading-relaxed text-neutral-400">{form.bio}</p>}
             <div className="mt-3 space-y-1 text-xs text-neutral-400">
               {form.location && <p>📍 {form.location}{form.desiredLocation ? ` · wants ${form.desiredLocation}` : ''}</p>}
+              {latestExp && (
+                <p>🏢 {[latestExp.title, latestExp.company].filter(Boolean).join(' @ ')}
+                  {(latestExp.startDate || latestExp.endDate || latestExp.current) && (
+                    <> · {latestExp.startDate || '?'} – {latestExp.current ? 'Present' : latestExp.endDate || '?'}</>
+                  )}
+                </p>
+              )}
               {(form.experienceYears !== '' || form.experienceLevel) && (
                 <p>💼 {form.experienceYears !== '' ? `${form.experienceYears} yrs` : ''}{form.experienceLevel ? ` · ${form.experienceLevel}` : ''}</p>
               )}

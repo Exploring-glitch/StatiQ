@@ -52,6 +52,7 @@ export default function ApplicantsPage() {
       <div className="mt-6 space-y-3">
         {apps.map((a) => {
           const c = a.applicant || {};
+          const jobs = Array.isArray(c.workExperiences) ? c.workExperiences : [];
           return (
             <div key={a._id} className="rounded-xl border border-white/10 bg-panel p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -77,6 +78,20 @@ export default function ApplicantsPage() {
                     )}
                   </p>
                   {c.bio && <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-neutral-400">{c.bio}</p>}
+                  {jobs.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {jobs.slice(0, 3).map((w, i) => (
+                        <p key={i} className="text-xs text-neutral-400">
+                          🏢 <span className="font-medium text-neutral-200">{[w.title, w.company].filter(Boolean).join(' @ ') || 'Role'}</span>
+                          {(w.startDate || w.endDate || w.current) && (
+                            <span className="text-neutral-500"> · {w.startDate || '?'} – {w.current ? 'Present' : w.endDate || '?'}</span>
+                          )}
+                          {w.description && <span className="block truncate text-neutral-500">{w.description}</span>}
+                        </p>
+                      ))}
+                      {jobs.length > 3 && <p className="text-[11px] text-neutral-600">+{jobs.length - 3} more on profile</p>}
+                    </div>
+                  )}
                   {(c.skills || []).length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {c.skills.map((s) => (

@@ -1,6 +1,18 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+const workExperienceSchema = new mongoose.Schema(
+  {
+    company: { type: String, trim: true, default: '', maxlength: 120 },
+    title: { type: String, trim: true, default: '', maxlength: 120 },
+    startDate: { type: String, trim: true, default: '' }, // YYYY-MM
+    endDate: { type: String, trim: true, default: '' }, // YYYY-MM, empty when current
+    current: { type: Boolean, default: false },
+    description: { type: String, trim: true, default: '', maxlength: 2000 },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: [true, 'Name is required'], trim: true, maxlength: 80 },
@@ -34,6 +46,7 @@ const userSchema = new mongoose.Schema(
       enum: ['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive'],
       default: '',
     },
+    workExperiences: { type: [workExperienceSchema], default: [] },
     openToWork: { type: Boolean, default: true },
 
     desiredRoles: { type: [String], default: [] }, // e.g. ["Backend Engineer", "DevOps"]
@@ -71,7 +84,7 @@ userSchema.methods.toSafeJSON = function () {
   const {
     _id, name, email, role, title, location, skills, company, createdAt,
     bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
-    experienceYears, experienceLevel, openToWork,
+    experienceYears, experienceLevel, workExperiences, openToWork,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
     educationDegree, educationInstitution, graduationYear,
@@ -79,7 +92,7 @@ userSchema.methods.toSafeJSON = function () {
   return {
     id: _id, name, email, role, title, location, skills, company, createdAt,
     bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
-    experienceYears, experienceLevel, openToWork,
+    experienceYears, experienceLevel, workExperiences, openToWork,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
     educationDegree, educationInstitution, graduationYear,

@@ -39,7 +39,7 @@ export const register = asyncHandler(async (req, res) => {
   const extra = {};
   for (const k of [
     'bio', 'phone', 'resumeUrl', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
-    'experienceYears', 'experienceLevel', 'openToWork',
+    'experienceYears', 'experienceLevel', 'workExperiences', 'openToWork',
     'desiredRoles', 'jobTypes', 'workModes', 'desiredLocation', 'languages',
     'expectedSalaryMin', 'expectedSalaryMax', 'availability',
     'educationDegree', 'educationInstitution', 'graduationYear', 'skills',
@@ -113,6 +113,7 @@ export const updateMeRules = [
   body('githubUrl').optional().trim(),
   body('experienceYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Experience must be 0–50 years'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
+  body('workExperiences').optional().isArray({ max: 10 }).withMessage('Work experience must be a list (max 10)'),
   body('openToWork').optional().toBoolean().isBoolean().withMessage('openToWork must be true/false'),
   body('desiredRoles').optional().isArray().withMessage('Desired roles must be an array'),
   body('jobTypes').optional().isArray().withMessage('Job types must be an array'),
@@ -133,7 +134,7 @@ export const updateMe = asyncHandler(async (req, res) => {
   const allowed = [
     'name', 'title', 'location', 'company', 'skills',
     'bio', 'phone', 'resumeUrl', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
-    'experienceYears', 'experienceLevel', 'openToWork',
+    'experienceYears', 'experienceLevel', 'workExperiences', 'openToWork',
     'desiredRoles', 'jobTypes', 'workModes', 'desiredLocation', 'languages',
     'expectedSalaryMin', 'expectedSalaryMax', 'availability',
     'educationDegree', 'educationInstitution', 'graduationYear',
@@ -146,6 +147,23 @@ export const updateMe = asyncHandler(async (req, res) => {
     if (Array.isArray(updates[k])) {
       updates[k] = updates[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
     }
+  }
+  if (Array.isArray(updates.workExperiences)) {
+    const str = (v, max) => String(v ?? '').trim().slice(0, max);
+    updates.workExperiences = updates.workExperiences
+      .slice(0, 10)
+      .map((w) => {
+        const current = !!w?.current;
+        return {
+          company: str(w?.company, 120),
+          title: str(w?.title, 120),
+          startDate: str(w?.startDate, 7),
+          endDate: current ? '' : str(w?.endDate, 7),
+          current,
+          description: str(w?.description, 2000),
+        };
+      })
+      .filter((w) => w.company || w.title || w.startDate || w.description);
   }
   for (const k of ['experienceYears', 'expectedSalaryMin', 'expectedSalaryMax', 'graduationYear']) {
     if (updates[k] === '' || updates[k] === null) updates[k] = null;
