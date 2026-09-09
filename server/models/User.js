@@ -49,6 +49,23 @@ const userSchema = new mongoose.Schema(
     workExperiences: { type: [workExperienceSchema], default: [] },
     openToWork: { type: Boolean, default: true },
 
+    // ── Identity (voluntary, seeker-only; never shown to recruiters) ──
+    pronouns: {
+      type: String,
+      enum: ['', 'she-her', 'he-him', 'they-them', 'she-they', 'he-they', 'xe-xem', 'prefer-not-to-say'],
+      default: '',
+    },
+    gender: {
+      type: String,
+      enum: ['', 'woman', 'man', 'non-binary', 'transgender', 'genderfluid', 'agender', 'prefer-not-to-say'],
+      default: '',
+    },
+    ethnicity: {
+      type: String,
+      enum: ['', 'asian', 'black', 'hispanic', 'middle-eastern', 'native', 'pacific-islander', 'white', 'mixed', 'prefer-not-to-say'],
+      default: '',
+    },
+
     desiredRoles: { type: [String], default: [] }, // e.g. ["Backend Engineer", "DevOps"]
     jobTypes: { type: [String], default: [] }, // Full-time, Part-time, Contract, Internship
     workModes: { type: [String], default: [] }, // Remote, Hybrid, On-site
@@ -85,6 +102,7 @@ userSchema.methods.toSafeJSON = function () {
     _id, name, email, role, title, location, skills, company, createdAt,
     bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, workExperiences, openToWork,
+    pronouns, gender, ethnicity,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
     educationDegree, educationInstitution, graduationYear,
@@ -93,6 +111,7 @@ userSchema.methods.toSafeJSON = function () {
     id: _id, name, email, role, title, location, skills, company, createdAt,
     bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, workExperiences, openToWork,
+    pronouns, gender, ethnicity,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
     educationDegree, educationInstitution, graduationYear,

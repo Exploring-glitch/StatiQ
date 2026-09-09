@@ -21,6 +21,38 @@ const AVAIL = [
   { v: '2-months', l: '2 months notice' },
   { v: 'open', l: 'Open / flexible' },
 ];
+const PRONOUNS = [
+  { v: '', l: 'Select pronouns' },
+  { v: 'she-her', l: 'She / Her' },
+  { v: 'he-him', l: 'He / Him' },
+  { v: 'they-them', l: 'They / Them' },
+  { v: 'she-they', l: 'She / They' },
+  { v: 'he-they', l: 'He / They' },
+  { v: 'xe-xem', l: 'Xe / Xem' },
+  { v: 'prefer-not-to-say', l: 'Prefer not to say' },
+];
+const GENDERS = [
+  { v: '', l: 'Select gender' },
+  { v: 'woman', l: 'Woman' },
+  { v: 'man', l: 'Man' },
+  { v: 'non-binary', l: 'Non-binary' },
+  { v: 'transgender', l: 'Transgender' },
+  { v: 'genderfluid', l: 'Genderfluid' },
+  { v: 'agender', l: 'Agender' },
+  { v: 'prefer-not-to-say', l: 'Prefer not to say' },
+];
+const ETHNICITIES = [
+  { v: '', l: 'Select race / ethnicity' },
+  { v: 'asian', l: 'Asian' },
+  { v: 'black', l: 'Black or African' },
+  { v: 'hispanic', l: 'Hispanic or Latino' },
+  { v: 'middle-eastern', l: 'Middle Eastern or North African' },
+  { v: 'native', l: 'Native / Indigenous' },
+  { v: 'pacific-islander', l: 'Native Hawaiian or Pacific Islander' },
+  { v: 'white', l: 'White or Caucasian' },
+  { v: 'mixed', l: 'Mixed / Multiple' },
+  { v: 'prefer-not-to-say', l: 'Prefer not to say' },
+];
 
 const input = 'w-full rounded-md border border-white/10 bg-panel2 px-3 py-2 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-accent/60';
 const label = 'mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-400';
@@ -70,6 +102,9 @@ export default function ProfilePage() {
     expectedSalaryMin: numOrEmpty(user?.expectedSalaryMin),
     expectedSalaryMax: numOrEmpty(user?.expectedSalaryMax),
     availability: user?.availability || '',
+    pronouns: user?.pronouns || '',
+    gender: user?.gender || '',
+    ethnicity: user?.ethnicity || '',
     educationDegree: user?.educationDegree || '',
     educationInstitution: user?.educationInstitution || '',
     graduationYear: numOrEmpty(user?.graduationYear),
@@ -204,6 +239,9 @@ export default function ProfilePage() {
         expectedSalaryMin: form.expectedSalaryMin === '' ? null : Number(form.expectedSalaryMin),
         expectedSalaryMax: form.expectedSalaryMax === '' ? null : Number(form.expectedSalaryMax),
         availability: form.availability,
+        pronouns: form.pronouns,
+        gender: form.gender,
+        ethnicity: form.ethnicity,
         educationDegree: form.educationDegree.trim(),
         educationInstitution: form.educationInstitution.trim(),
         graduationYear: form.graduationYear === '' ? null : Number(form.graduationYear),
@@ -287,6 +325,29 @@ export default function ProfilePage() {
 
           {!isEmployer && (
             <>
+              {/* Identity */}
+              <div className={card}>
+                <h2 className="text-sm font-bold text-white">Identity</h2>
+                <p className="text-xs text-neutral-500">Optional — helps employers address you correctly. Never shown to recruiters.</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div><span className={label}>Pronouns</span>
+                    <select value={form.pronouns} onChange={set('pronouns')} className={input}>
+                      {PRONOUNS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                    </select>
+                  </div>
+                  <div><span className={label}>Gender</span>
+                    <select value={form.gender} onChange={set('gender')} className={input}>
+                      {GENDERS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                    </select>
+                  </div>
+                  <div><span className={label}>Race / ethnicity</span>
+                    <select value={form.ethnicity} onChange={set('ethnicity')} className={input}>
+                      {ETHNICITIES.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               {/* Work experience */}
               <div className={card}>
                 <h2 className="text-sm font-bold text-white">Work experience</h2>
