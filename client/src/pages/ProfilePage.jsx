@@ -74,11 +74,11 @@ const normExp = (w) => ({
 });
 
 // Per-section server snapshots (used for init + Cancel) and option labels.
-const snapBasics = (u) => ({ name: u?.name || '', title: u?.title || '', location: u?.location || '', company: u?.company || '', bio: u?.bio || '', phone: u?.phone || '', desiredLocation: u?.desiredLocation || '' });
+const snapBasics = (u) => ({ name: u?.name || '', title: u?.title || '', location: u?.location || '', company: u?.company || '', bio: u?.bio || '', phone: u?.phone || '', desiredLocation: u?.desiredLocation || '', desiredRoles: arr(u?.desiredRoles).join(', ') });
 const snapIdentity = (u) => ({ pronouns: u?.pronouns || '', gender: u?.gender || '', ethnicity: u?.ethnicity || '' });
 const snapExperience = (u) => ({ experienceYears: numOrEmpty(u?.experienceYears), experienceLevel: u?.experienceLevel || '', workExperiences: arr(u?.workExperiences).map(normExp) });
 const snapSkills = (u) => ({ skills: arr(u?.skills).join(', '), languages: arr(u?.languages).join(', ') });
-const snapPrefs = (u) => ({ openToWork: u?.openToWork ?? true, desiredRoles: arr(u?.desiredRoles).join(', '), jobTypes: arr(u?.jobTypes), workModes: arr(u?.workModes), expectedSalaryMin: numOrEmpty(u?.expectedSalaryMin), expectedSalaryMax: numOrEmpty(u?.expectedSalaryMax), availability: u?.availability || '' });
+const snapPrefs = (u) => ({ openToWork: u?.openToWork ?? true, jobTypes: arr(u?.jobTypes), workModes: arr(u?.workModes), expectedSalaryMin: numOrEmpty(u?.expectedSalaryMin), expectedSalaryMax: numOrEmpty(u?.expectedSalaryMax), availability: u?.availability || '' });
 const snapLinks = (u) => ({ resumeUrl: u?.resumeUrl || '', portfolioUrl: u?.portfolioUrl || '', linkedinUrl: u?.linkedinUrl || '', githubUrl: u?.githubUrl || '' });
 const snapEducation = (u) => ({ educationDegree: u?.educationDegree || '', educationInstitution: u?.educationInstitution || '', graduationYear: numOrEmpty(u?.graduationYear) });
 const SNAPS = { basics: snapBasics, identity: snapIdentity, experience: snapExperience, skills: snapSkills, prefs: snapPrefs, links: snapLinks, education: snapEducation };
@@ -190,7 +190,7 @@ export default function ProfilePage() {
     identity: !(user?.pronouns || user?.gender || user?.ethnicity),
     experience: !(user?.experienceYears != null || user?.experienceLevel || (user?.workExperiences || []).length),
     skills: !((user?.skills || []).length || (user?.languages || []).length),
-    prefs: !((user?.desiredRoles || []).length || user?.availability),
+    prefs: !((user?.jobTypes || []).length || (user?.workModes || []).length || user?.availability),
     links: !(user?.resumeUrl || user?.portfolioUrl || user?.linkedinUrl || user?.githubUrl),
     education: !(user?.educationDegree || user?.educationInstitution || user?.graduationYear != null),
   }));
@@ -234,6 +234,7 @@ export default function ProfilePage() {
           location: form.location.trim(),
           company: form.company.trim(),
           bio: form.bio.trim(),
+          desiredRoles: form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean),
         };
         if (!isEmployer) {
           p.phone = form.phone.trim();
@@ -257,7 +258,6 @@ export default function ProfilePage() {
       case 'prefs':
         return {
           openToWork: !!form.openToWork,
-          desiredRoles: form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean),
           jobTypes: form.jobTypes,
           workModes: form.workModes,
           expectedSalaryMin: form.expectedSalaryMin === '' ? null : Number(form.expectedSalaryMin),
@@ -390,6 +390,7 @@ export default function ProfilePage() {
   }, [form, isEmployer]);
 
   const skillsList = form.skills.split(',').map((s) => s.trim()).filter(Boolean);
+  const desiredRolesList = form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean);
   const latestExp =
     form.workExperiences.find((w) => w.current && (w.title || w.company)) ||
     form.workExperiences.find((w) => w.title || w.company);
@@ -467,6 +468,19 @@ export default function ProfilePage() {
                 <div><span className={label}>Desired location</span><input value={form.desiredLocation} onChange={set('desiredLocation')} placeholder="Remote / Bengaluru / NYC…" className={input} /></div>
               )}
             </div>
+            {!isEmployer && (
+              <div className="mt-3">
+                <span className={label}>Open to the following roles (comma separated)</span>
+                <input value={form.desiredRoles} onChange={set('desiredRoles')} placeholder="Backend Engineer, Platform Engineer" className={input} />
+                {desiredRolesList.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {desiredRolesList.map((r) => (
+                      <span key={r} className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{r}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="mt-3">
               <span className={label}>{isEmployer ? 'About the company / hiring note' : 'Professional summary *'}</span>
               <textarea value={form.bio} onChange={set('bio')} rows={4} maxLength={1000}
@@ -483,6 +497,22 @@ export default function ProfilePage() {
                 <Row k="Company" v={form.company} />
                 {!isEmployer && <Row k="Phone" v={form.phone} />}
                 {!isEmployer && <Row k="Wants" v={form.desiredLocation} />}
+                {!isEmployer && (
+                  <div className="py-1.5">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                      Open to the following roles
+                    </p>
+                    {desiredRolesList.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {desiredRolesList.map((r) => (
+                          <span key={r} className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{r}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-600">—</p>
+                    )}
+                  </div>
+                )}
                 {form.bio ? (
                   <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-neutral-200">{form.bio}</p>
                 ) : (
@@ -650,11 +680,7 @@ export default function ProfilePage() {
                       </button>
                       Open to work
                     </label>
-                <div className="mt-4">
-                  <span className={label}>Desired roles * (comma separated)</span>
-                  <input value={form.desiredRoles} onChange={set('desiredRoles')} placeholder="Backend Engineer, Platform Engineer" className={input} />
-                </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div>
                     <span className={label}>Job type</span>
                     <div className="flex flex-wrap gap-2">
@@ -685,7 +711,6 @@ export default function ProfilePage() {
                 ) : (
                   <div className="mt-3">
                     <Row k="Status" v={form.openToWork ? '● Open to work' : 'Not looking right now'} />
-                    <Row k="Roles" v={form.desiredRoles} />
                     {(form.jobTypes.length > 0 || form.workModes.length > 0) && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {[...form.jobTypes, ...form.workModes].map((t) => (
