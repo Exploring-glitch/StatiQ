@@ -136,6 +136,16 @@ export default function ProfilePage() {
 
   const skillsList = form.skills.split(',').map((s) => s.trim()).filter(Boolean);
 
+  const missing = [
+    !form.bio.trim() && 'Add a 2–4 line summary',
+    !skillsList.length && 'Add at least 5 skills',
+    !(form.resumeUrl || form.portfolioUrl) && 'Upload your résumé or add a portfolio link',
+    form.jobTypes.length === 0 && 'Pick job types',
+    form.workModes.length === 0 && 'Pick work modes',
+    !form.availability && 'Set availability / notice period',
+    !form.educationDegree && 'Add education',
+  ].filter(Boolean);
+
   const submit = async (e) => {
     e.preventDefault();
     setMsg('');
@@ -467,16 +477,18 @@ export default function ProfilePage() {
           </div>
           {!isEmployer && (
             <div className="rounded-xl border border-white/10 bg-panel p-5 text-xs text-neutral-400">
-              <p className="font-bold text-white">Missing for better matches:</p>
-              <ul className="mt-2 list-disc space-y-1 pl-4">
-                {!form.bio.trim() && <li>Add a 2–4 line summary</li>}
-                {!skillsList.length && <li>Add at least 5 skills</li>}
-                {!(form.resumeUrl || form.portfolioUrl) && <li>Upload your résumé or add a portfolio link</li>}
-                {form.jobTypes.length === 0 && <li>Pick job types</li>}
-                {form.workModes.length === 0 && <li>Pick work modes</li>}
-                {!form.availability && <li>Set availability / notice period</li>}
-                {!form.educationDegree && <li>Add education</li>}
-              </ul>
+              {missing.length > 0 ? (
+                <>
+                  <p className="font-bold text-white">Missing for better matches:</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-4">
+                    {missing.map((tip) => (
+                      <li key={tip}>{tip}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="font-bold text-emerald-400">✓ All set — your profile is complete and ready to get discovered.</p>
+              )}
             </div>
           )}
         </aside>
