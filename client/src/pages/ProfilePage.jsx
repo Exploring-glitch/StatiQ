@@ -111,7 +111,17 @@ function SecHead({ title, sub, isEditing, busy, msg, onEdit, onCancel, onSave })
           )}
         </div>
       </div>
-      {msg && <p className="mt-2 rounded-md border border-accent/30 bg-accent/10 p-2 text-xs text-accent">{msg}</p>}
+      {msg?.text && (
+        <p
+          className={`mt-2 rounded-md border p-2 text-xs ${
+            msg.error
+              ? 'border-red-500/30 bg-red-500/10 text-red-400'
+              : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+          }`}
+        >
+          {msg.error ? msg.text : `✓ ${msg.text}`}
+        </p>
+      )}
     </div>
   );
 }
@@ -170,7 +180,6 @@ export default function ProfilePage() {
   }, [form, draftKey]);
   const [resumeName, setResumeName] = useState(user?.resumeName || '');
   const [uploadBusy, setUploadBusy] = useState(false);
-  const [uploadMsg, setUploadMsg] = useState('');
 
   // Per-section edit mode (sections with data start collapsed in view mode),
   // per-section save state. Each card saves only its own fields.
@@ -187,15 +196,32 @@ export default function ProfilePage() {
   }));
   const [secBusy, setSecBusy] = useState('');
   const [secMsg, setSecMsg] = useState({});
+  const msgTimers = useRef({});
+
+  // Success notes auto-dismiss after a moment; errors stay until acted on.
+  const flashMsg = (key, text, error = false, dismissMs = 1800) => {
+    if (msgTimers.current[key]) clearTimeout(msgTimers.current[key]);
+    setSecMsg((m) => ({ ...m, [key]: text ? { text, error } : '' }));
+    if (text && !error) {
+      msgTimers.current[key] = setTimeout(() => {
+        setSecMsg((m) => ({ ...m, [key]: '' }));
+      }, dismissMs);
+    }
+  };
+
+  useEffect(() => {
+    const timers = msgTimers.current;
+    return () => Object.values(timers).forEach(clearTimeout);
+  }, []);
 
   const startEdit = (key) => {
-    setSecMsg((m) => ({ ...m, [key]: '' }));
+    flashMsg(key, '');
     setEditing((e) => ({ ...e, [key]: true }));
   };
   const cancelEdit = (key) => {
     setForm((f) => ({ ...f, ...SNAPS[key](user) }));
     if (key === 'links') setResumeName(user?.resumeName || '');
-    setSecMsg((m) => ({ ...m, [key]: '' }));
+    flashMsg(key, '');
     setEditing((e) => ({ ...e, [key]: false }));
   };
 
@@ -257,14 +283,14 @@ export default function ProfilePage() {
   };
 
   const saveSection = async (key) => {
-    setSecMsg((m) => ({ ...m, [key]: '' }));
+    flashMsg(key, '');
     setSecBusy(key);
     try {
       await updateProfile(sectionPayload(key));
       setEditing((e) => ({ ...e, [key]: false }));
-      setSecMsg((m) => ({ ...m, [key]: 'Saved ✓' }));
+      flashMsg(key, 'Saved');
     } catch (err) {
-      setSecMsg((m) => ({ ...m, [key]: err.message }));
+      flashMsg(key, err.message, true);
     } finally {
       setSecBusy('');
     }
@@ -304,13 +330,13 @@ export default function ProfilePage() {
 
   const pickFile = async (file) => {
     if (!file) return;
-    setUploadMsg('');
+    flashMsg('__resume', '');
     if (!/\.(pdf|doc|docx)$/i.test(file.name)) {
-      setUploadMsg('Only PDF, DOC or DOCX files are allowed.');
+      flashMsg('__resume', 'Only PDF, DOC or DOCX files are allowed.', true);
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setUploadMsg('File is too big — max 5 MB.');
+      flashMsg('__resume', 'File is too big — max 5 MB.', true);
       return;
     }
     setUploadBusy(true);
@@ -319,9 +345,9 @@ export default function ProfilePage() {
       await refresh();
       setForm((f) => ({ ...f, resumeUrl: updated.resumeUrl || '' }));
       setResumeName(updated.resumeName || file.name);
-      setUploadMsg('Résumé uploaded.');
+      flashMsg('__resume', 'Résumé uploaded.');
     } catch (err) {
-      setUploadMsg(err.message);
+      flashMsg('__resume', err.message, true);
     } finally {
       setUploadBusy(false);
       if (fileInput.current) fileInput.current.value = '';
@@ -329,7 +355,7 @@ export default function ProfilePage() {
   };
 
   const removeResume = async () => {
-    setUploadMsg('');
+    flashMsg('__resume', '');
     setUploadBusy(true);
     try {
       if (isUploadedResume) {
@@ -338,8 +364,9 @@ export default function ProfilePage() {
       }
       setForm((f) => ({ ...f, resumeUrl: '' }));
       setResumeName('');
+      flashMsg('__resume', 'Résumé removed.');
     } catch (err) {
-      setUploadMsg(err.message);
+      flashMsg('__resume', err.message, true);
     } finally {
       setUploadBusy(false);
     }
@@ -729,7 +756,11 @@ export default function ProfilePage() {
                         {uploadBusy ? 'Uploading…' : '📎 Click to choose your résumé file'}
                       </button>
                     )}
-                    {uploadMsg && <p className="mt-1 text-xs text-accent">{uploadMsg}</p>}
+                    {secMsg.__resume?.text && (
+                      <p className={`mt-1 text-xs ${secMsg.__resume.error ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {secMsg.__resume.error ? secMsg.__resume.text : `✓ ${secMsg.__resume.text}`}
+                      </p>
+                    )}
                     <details className="mt-2">
                       <summary className="cursor-pointer text-xs text-neutral-500 hover:text-white">
                         …or paste a résumé link instead
