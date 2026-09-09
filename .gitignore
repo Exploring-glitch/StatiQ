@@ -22,6 +22,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Uploaded résumés (local disk storage)
+server/uploads/
+
 # Editor & OS files
 .vscode/*
 !.vscode/extensions.json

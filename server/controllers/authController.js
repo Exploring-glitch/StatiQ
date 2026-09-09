@@ -1,6 +1,9 @@
 import { body, validationResult } from 'express-validator';
+import fs from 'fs';
+import path from 'path';
 import User from '../models/User.js';
 import { asyncHandler, signToken } from '../middleware/auth.js';
+import { uploadsDir } from '../middleware/upload.js';
 
 const check = (req, res) => {
   const errors = validationResult(req);
@@ -62,6 +65,38 @@ export const login = asyncHandler(async (req, res) => {
 // GET /api/auth/me (protected)
 export const me = asyncHandler(async (req, res) => {
   res.json(req.user.toSafeJSON());
+});
+
+// POST /api/auth/resume (protected, multipart/form-data, field: "resume")
+// Stores the file on disk, points user.resumeUrl at /uploads/<file>.
+export const uploadResume = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error('No file received — attach it as the "resume" field');
+  }
+  const user = await User.findById(req.user._id);
+  // Remove the previous upload so disk doesn't fill with orphaned résumés.
+  if (user.resumeUrl && user.resumeUrl.startsWith('/uploads/')) {
+    const old = path.join(uploadsDir, path.basename(user.resumeUrl));
+    fs.unlink(old, () => {});
+  }
+  user.resumeUrl = `/uploads/${req.file.filename}`;
+  user.resumeName = req.file.originalname;
+  await user.save();
+  res.status(201).json(user.toSafeJSON());
+});
+
+// DELETE /api/auth/resume (protected) — remove uploaded résumé
+export const deleteResume = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (user.resumeUrl && user.resumeUrl.startsWith('/uploads/')) {
+    const old = path.join(uploadsDir, path.basename(user.resumeUrl));
+    fs.unlink(old, () => {});
+  }
+  user.resumeUrl = '';
+  user.resumeName = '';
+  await user.save();
+  res.json(user.toSafeJSON());
 });
 
 export const updateMeRules = [

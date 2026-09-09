@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { api, fileUrl } from '../lib/api';
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
 const WORK_MODES = ['Remote', 'Hybrid', 'On-site'];
@@ -31,8 +32,9 @@ const arr = (v) => (Array.isArray(v) ? v : []);
 const numOrEmpty = (v) => (v === null || v === undefined ? '' : String(v));
 
 export default function ProfilePage() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, refresh } = useAuth();
   const isEmployer = user?.role === 'employer';
+  const fileInput = useRef(null);
 
   const [form, setForm] = useState({
     name: user?.name || '',
@@ -63,10 +65,58 @@ export default function ProfilePage() {
   });
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
+  const [resumeName, setResumeName] = useState(user?.resumeName || '');
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState('');
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const toggleList = (k, v) =>
     setForm((f) => ({ ...f, [k]: f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v] }));
+
+  const isUploadedResume = form.resumeUrl.startsWith('/uploads/');
+
+  const pickFile = async (file) => {
+    if (!file) return;
+    setUploadMsg('');
+    if (!/\.(pdf|doc|docx)$/i.test(file.name)) {
+      setUploadMsg('Only PDF, DOC or DOCX files are allowed.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadMsg('File is too big — max 5 MB.');
+      return;
+    }
+    setUploadBusy(true);
+    try {
+      const updated = await api.uploadResume(file);
+      await refresh();
+      setForm((f) => ({ ...f, resumeUrl: updated.resumeUrl || '' }));
+      setResumeName(updated.resumeName || file.name);
+      setUploadMsg('Résumé uploaded.');
+    } catch (err) {
+      setUploadMsg(err.message);
+    } finally {
+      setUploadBusy(false);
+      if (fileInput.current) fileInput.current.value = '';
+    }
+  };
+
+  const removeResume = async () => {
+    setUploadMsg('');
+    setUploadBusy(true);
+    try {
+      if (isUploadedResume) {
+        await api.deleteResume();
+        await refresh();
+      }
+      setForm((f) => ({ ...f, resumeUrl: '' }));
+      setResumeName('');
+    } catch (err) {
+      setUploadMsg(err.message);
+    } finally {
+      setUploadBusy(false);
+    }
+  };
 
   const completion = useMemo(() => {
     if (isEmployer) {
@@ -279,7 +329,71 @@ export default function ProfilePage() {
                 <h2 className="text-sm font-bold text-white">Links & résumé</h2>
                 <p className="text-xs text-neutral-500">Profiles with a résumé + one proof-of-work link get far more replies.</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div><span className={label}>Résumé URL *</span><input value={form.resumeUrl} onChange={set('resumeUrl')} placeholder="https://…/resume.pdf" className={input} /></div>
+                  <div className="sm:col-span-2">
+                    <span className={label}>Résumé * — upload file (PDF, DOC, DOCX · max 5 MB)</span>
+                    <input
+                      ref={fileInput}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                      onChange={(e) => pickFile(e.target.files?.[0])}
+                    />
+                    {form.resumeUrl ? (
+                      <div className="flex flex-wrap items-center gap-2 rounded-md border border-white/10 bg-panel2 px-3 py-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded bg-accent/15 text-sm font-bold text-accent">PDF</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-white">
+                            {isUploadedResume ? (resumeName || 'resume') : form.resumeUrl}
+                          </p>
+                          <a
+                            href={fileUrl(form.resumeUrl)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-accent hover:underline"
+                          >
+                            View ↗
+                          </a>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={uploadBusy}
+                          onClick={() => fileInput.current?.click()}
+                          className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-white hover:border-accent disabled:opacity-60"
+                        >
+                          {uploadBusy ? 'Working…' : 'Replace'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={uploadBusy}
+                          onClick={removeResume}
+                          className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-neutral-400 hover:border-red-500 hover:text-red-400 disabled:opacity-60"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={uploadBusy}
+                        onClick={() => fileInput.current?.click()}
+                        className="w-full rounded-md border border-dashed border-white/20 bg-panel2 px-3 py-4 text-center text-sm text-neutral-300 hover:border-accent disabled:opacity-60"
+                      >
+                        {uploadBusy ? 'Uploading…' : '📎 Click to choose your résumé file'}
+                      </button>
+                    )}
+                    {uploadMsg && <p className="mt-1 text-xs text-accent">{uploadMsg}</p>}
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs text-neutral-500 hover:text-white">
+                        …or paste a résumé link instead
+                      </summary>
+                      <input
+                        value={isUploadedResume ? '' : form.resumeUrl}
+                        onChange={(e) => { setForm({ ...form, resumeUrl: e.target.value }); setResumeName(''); }}
+                        placeholder="https://…/resume.pdf"
+                        className={`${input} mt-2`}
+                      />
+                    </details>
+                  </div>
                   <div><span className={label}>Portfolio / website</span><input value={form.portfolioUrl} onChange={set('portfolioUrl')} placeholder="https://your-work.dev" className={input} /></div>
                   <div><span className={label}>LinkedIn</span><input value={form.linkedinUrl} onChange={set('linkedinUrl')} placeholder="https://linkedin.com/in/…" className={input} /></div>
                   <div><span className={label}>GitHub</span><input value={form.githubUrl} onChange={set('githubUrl')} placeholder="https://github.com/…" className={input} /></div>
@@ -345,7 +459,7 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-              {form.resumeUrl && <a href={form.resumeUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">Résumé ↗</a>}
+              {form.resumeUrl && <a href={fileUrl(form.resumeUrl)} target="_blank" rel="noreferrer" className="text-accent hover:underline">Résumé ↗</a>}
               {form.portfolioUrl && <a href={form.portfolioUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">Portfolio ↗</a>}
               {form.linkedinUrl && <a href={form.linkedinUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">LinkedIn ↗</a>}
               {form.githubUrl && <a href={form.githubUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">GitHub ↗</a>}
@@ -357,7 +471,7 @@ export default function ProfilePage() {
               <ul className="mt-2 list-disc space-y-1 pl-4">
                 {!form.bio.trim() && <li>Add a 2–4 line summary</li>}
                 {!skillsList.length && <li>Add at least 5 skills</li>}
-                {!(form.resumeUrl || form.portfolioUrl) && <li>Add résumé or portfolio link</li>}
+                {!(form.resumeUrl || form.portfolioUrl) && <li>Upload your résumé or add a portfolio link</li>}
                 {form.jobTypes.length === 0 && <li>Pick job types</li>}
                 {form.workModes.length === 0 && <li>Pick work modes</li>}
                 {!form.availability && <li>Set availability / notice period</li>}

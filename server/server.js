@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import jobRoutes from './routes/jobs.js';
@@ -12,6 +14,11 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
 const app = express();
 app.use(cors({ origin: (process.env.CLIENT_URL || 'http://localhost:5173').split(',') }));
 app.use(express.json({ limit: '1mb' }));
+
+// Uploaded résumés live on disk under /uploads and are served publicly
+// (filenames are unguessable: resume-<userId>-<timestamp>.<ext>).
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Never let a DB outage kill the API: stay up in degraded mode so the
 // site loads and API errors are readable JSON (not "Failed to fetch").

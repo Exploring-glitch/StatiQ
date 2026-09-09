@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, trim: true, default: '', maxlength: 1000 },
     phone: { type: String, trim: true, default: '' },
     resumeUrl: { type: String, trim: true, default: '' },
+    resumeName: { type: String, trim: true, default: '' }, // original filename of uploaded résumé
     portfolioUrl: { type: String, trim: true, default: '' },
     linkedinUrl: { type: String, trim: true, default: '' },
     githubUrl: { type: String, trim: true, default: '' },
@@ -69,7 +70,7 @@ userSchema.methods.comparePassword = function (candidate) {
 userSchema.methods.toSafeJSON = function () {
   const {
     _id, name, email, role, title, location, skills, company, createdAt,
-    bio, phone, resumeUrl, portfolioUrl, linkedinUrl, githubUrl,
+    bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, openToWork,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
@@ -77,7 +78,7 @@ userSchema.methods.toSafeJSON = function () {
   } = this;
   return {
     id: _id, name, email, role, title, location, skills, company, createdAt,
-    bio, phone, resumeUrl, portfolioUrl, linkedinUrl, githubUrl,
+    bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, openToWork,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
