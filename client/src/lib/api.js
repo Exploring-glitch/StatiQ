@@ -55,6 +55,27 @@ export const api = {
     if (!res.ok) throw new Error(data.message || `Delete failed (${res.status})`);
     return data;
   },
+  uploadAvatar: async (file) => {
+    const fd = new FormData();
+    fd.append('avatar', file);
+    const res = await fetch(`${BASE}/auth/avatar`, {
+      method: 'POST',
+      headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+      body: fd,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Upload failed (${res.status})`);
+    return data;
+  },
+  deleteAvatar: async () => {
+    const res = await fetch(`${BASE}/auth/avatar`, {
+      method: 'DELETE',
+      headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Delete failed (${res.status})`);
+    return data;
+  },
   jobs: (params = {}) => {
     const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
     return request(`/jobs${qs ? `?${qs}` : ''}`);

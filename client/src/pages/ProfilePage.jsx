@@ -143,6 +143,8 @@ export default function ProfilePage() {
   const { user, updateProfile, refresh } = useAuth();
   const isEmployer = user?.role === 'employer';
   const fileInput = useRef(null);
+  const avatarInput = useRef(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
   const draftKey = `statiq_profile_draft_${user?.id || 'guest'}`;
 
   const [form, setForm] = useState(() => {
@@ -372,6 +374,44 @@ export default function ProfilePage() {
     }
   };
 
+  const pickAvatar = async (file) => {
+    if (!file) return;
+    flashMsg('__avatar', '');
+    if (!/\.(jpe?g|png|webp)$/i.test(file.name)) {
+      flashMsg('__avatar', 'Only JPG, PNG or WebP images are allowed.', true);
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      flashMsg('__avatar', 'Image is too big — max 2 MB.', true);
+      return;
+    }
+    setAvatarBusy(true);
+    try {
+      await api.uploadAvatar(file);
+      await refresh();
+      flashMsg('__avatar', 'Photo updated.');
+    } catch (err) {
+      flashMsg('__avatar', err.message, true);
+    } finally {
+      setAvatarBusy(false);
+      if (avatarInput.current) avatarInput.current.value = '';
+    }
+  };
+
+  const removeAvatar = async () => {
+    flashMsg('__avatar', '');
+    setAvatarBusy(true);
+    try {
+      await api.deleteAvatar();
+      await refresh();
+      flashMsg('__avatar', 'Photo removed.');
+    } catch (err) {
+      flashMsg('__avatar', err.message, true);
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
   const completion = useMemo(() => {
     if (isEmployer) {
       const checks = [form.name, form.title, form.company, form.location, form.bio];
@@ -412,9 +452,45 @@ export default function ProfilePage() {
     <section className="mx-auto max-w-6xl px-4 py-10">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-4">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/20 text-2xl font-bold text-accent">
-          {(user?.name || '?').charAt(0).toUpperCase()}
-        </span>
+        <div className="flex flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={() => avatarInput.current?.click()}
+            disabled={avatarBusy}
+            title="Upload profile picture"
+            className="relative h-16 w-16 overflow-hidden rounded-full bg-accent/20 text-2xl font-bold text-accent hover:ring-2 hover:ring-accent disabled:opacity-60"
+          >
+            {user?.avatarUrl ? (
+              <img src={fileUrl(user.avatarUrl)} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center">
+                {(user?.name || '?').charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-center text-[10px] font-semibold text-white">
+              {avatarBusy ? '…' : '📷'}
+            </span>
+          </button>
+          {user?.avatarUrl ? (
+            <button type="button" onClick={removeAvatar} disabled={avatarBusy} className="text-[11px] text-neutral-500 hover:text-red-400 disabled:opacity-60">
+              Remove
+            </button>
+          ) : (
+            <span className="text-[11px] text-neutral-600">Add photo</span>
+          )}
+          {secMsg.__avatar?.text && (
+            <p className={`text-[11px] ${secMsg.__avatar.error ? 'text-red-400' : 'text-emerald-400'}`}>
+              {secMsg.__avatar.error ? secMsg.__avatar.text : `✓ ${secMsg.__avatar.text}`}
+            </p>
+          )}
+        </div>
+        <input
+          ref={avatarInput}
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          className="hidden"
+          onChange={(e) => pickAvatar(e.target.files?.[0])}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="truncate text-2xl font-bold text-white">{user?.name}</h1>
@@ -842,8 +918,12 @@ export default function ProfilePage() {
           <div className="rounded-xl border border-white/10 bg-panel p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Recruiter preview</p>
             <div className="mt-3 flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/20 text-lg font-bold text-accent">
-                {(form.name || '?').charAt(0).toUpperCase()}
+              <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-accent/20 text-lg font-bold text-accent">
+                {user?.avatarUrl ? (
+                  <img src={fileUrl(user.avatarUrl)} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  (form.name || '?').charAt(0).toUpperCase()
+                )}
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-white">{form.name || 'Your name'}</p>

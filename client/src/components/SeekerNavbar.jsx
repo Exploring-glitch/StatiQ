@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { fileUrl } from '../lib/api';
 
 const link = ({ isActive }) =>
   `rounded-full px-3 py-1.5 text-sm transition ${
@@ -43,8 +44,12 @@ export default function SeekerNavbar() {
             to="/profile"
             className="flex items-center gap-2 rounded-full border border-white/15 py-1 pl-1 pr-3 text-sm text-white hover:border-accent"
           >
-            <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-accent">
-              {(user?.name || '?').charAt(0).toUpperCase()}
+            <span className="relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-accent/20 text-xs font-bold text-accent">
+              {user?.avatarUrl ? (
+                <img src={fileUrl(user.avatarUrl)} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                (user?.name || '?').charAt(0).toUpperCase()
+              )}
               {user?.openToWork !== false && (
                 <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-ink bg-emerald-500" />
               )}

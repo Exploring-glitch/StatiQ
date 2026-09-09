@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema(
     },
     password: { type: String, required: [true, 'Password is required'], minlength: 8, select: false },
     role: { type: String, enum: ['jobseeker', 'employer', 'admin'], default: 'jobseeker' },
+    avatarUrl: { type: String, trim: true, default: '' }, // /uploads/avatar-…
     title: { type: String, trim: true, default: '' }, // e.g. "Senior Backend Engineer"
     location: { type: String, trim: true, default: '' },
     skills: { type: [String], default: [] },
@@ -100,7 +101,7 @@ userSchema.methods.comparePassword = function (candidate) {
 userSchema.methods.toSafeJSON = function () {
   const {
     _id, name, email, role, title, location, skills, company, createdAt,
-    bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
+    avatarUrl, bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, workExperiences, openToWork,
     pronouns, gender, ethnicity,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
@@ -109,7 +110,7 @@ userSchema.methods.toSafeJSON = function () {
   } = this;
   return {
     id: _id, name, email, role, title, location, skills, company, createdAt,
-    bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
+    avatarUrl, bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, workExperiences, openToWork,
     pronouns, gender, ethnicity,
     desiredRoles, jobTypes, workModes, desiredLocation, languages,

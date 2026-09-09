@@ -100,6 +100,35 @@ export const deleteResume = asyncHandler(async (req, res) => {
   res.json(user.toSafeJSON());
 });
 
+// POST /api/auth/avatar (protected, multipart/form-data, field: "avatar")
+// Stores the image on disk, points user.avatarUrl at /uploads/<file>.
+export const uploadAvatar = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error('No file received — attach it as the "avatar" field');
+  }
+  const user = await User.findById(req.user._id);
+  if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/')) {
+    const old = path.join(uploadsDir, path.basename(user.avatarUrl));
+    fs.unlink(old, () => {});
+  }
+  user.avatarUrl = `/uploads/${req.file.filename}`;
+  await user.save();
+  res.status(201).json(user.toSafeJSON());
+});
+
+// DELETE /api/auth/avatar (protected) — remove profile picture
+export const deleteAvatar = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/')) {
+    const old = path.join(uploadsDir, path.basename(user.avatarUrl));
+    fs.unlink(old, () => {});
+  }
+  user.avatarUrl = '';
+  await user.save();
+  res.json(user.toSafeJSON());
+});
+
 export const updateMeRules = [
   body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
   body('title').optional().trim(),
