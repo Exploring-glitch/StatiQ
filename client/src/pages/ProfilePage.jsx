@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api, fileUrl } from '../lib/api';
 
@@ -77,38 +77,63 @@ export default function ProfilePage() {
   const { user, updateProfile, refresh } = useAuth();
   const isEmployer = user?.role === 'employer';
   const fileInput = useRef(null);
+  const draftKey = `statiq_profile_draft_${user?.id || 'guest'}`;
 
-  const [form, setForm] = useState({
-    name: user?.name || '',
-    title: user?.title || '',
-    location: user?.location || '',
-    company: user?.company || '',
-    bio: user?.bio || '',
-    phone: user?.phone || '',
-    resumeUrl: user?.resumeUrl || '',
-    portfolioUrl: user?.portfolioUrl || '',
-    linkedinUrl: user?.linkedinUrl || '',
-    githubUrl: user?.githubUrl || '',
-    experienceYears: numOrEmpty(user?.experienceYears),
-    experienceLevel: user?.experienceLevel || '',
-    workExperiences: arr(user?.workExperiences).map(normExp),
-    openToWork: user?.openToWork ?? true,
-    desiredRoles: arr(user?.desiredRoles).join(', '),
-    jobTypes: arr(user?.jobTypes),
-    workModes: arr(user?.workModes),
-    desiredLocation: user?.desiredLocation || '',
-    languages: arr(user?.languages).join(', '),
-    skills: arr(user?.skills).join(', '),
-    expectedSalaryMin: numOrEmpty(user?.expectedSalaryMin),
-    expectedSalaryMax: numOrEmpty(user?.expectedSalaryMax),
-    availability: user?.availability || '',
-    pronouns: user?.pronouns || '',
-    gender: user?.gender || '',
-    ethnicity: user?.ethnicity || '',
-    educationDegree: user?.educationDegree || '',
-    educationInstitution: user?.educationInstitution || '',
-    graduationYear: numOrEmpty(user?.graduationYear),
+  const [form, setForm] = useState(() => {
+    const fresh = {
+      name: user?.name || '',
+      title: user?.title || '',
+      location: user?.location || '',
+      company: user?.company || '',
+      bio: user?.bio || '',
+      phone: user?.phone || '',
+      resumeUrl: user?.resumeUrl || '',
+      portfolioUrl: user?.portfolioUrl || '',
+      linkedinUrl: user?.linkedinUrl || '',
+      githubUrl: user?.githubUrl || '',
+      experienceYears: numOrEmpty(user?.experienceYears),
+      experienceLevel: user?.experienceLevel || '',
+      workExperiences: arr(user?.workExperiences).map(normExp),
+      openToWork: user?.openToWork ?? true,
+      desiredRoles: arr(user?.desiredRoles).join(', '),
+      jobTypes: arr(user?.jobTypes),
+      workModes: arr(user?.workModes),
+      desiredLocation: user?.desiredLocation || '',
+      languages: arr(user?.languages).join(', '),
+      skills: arr(user?.skills).join(', '),
+      expectedSalaryMin: numOrEmpty(user?.expectedSalaryMin),
+      expectedSalaryMax: numOrEmpty(user?.expectedSalaryMax),
+      availability: user?.availability || '',
+      pronouns: user?.pronouns || '',
+      gender: user?.gender || '',
+      ethnicity: user?.ethnicity || '',
+      educationDegree: user?.educationDegree || '',
+      educationInstitution: user?.educationInstitution || '',
+      graduationYear: numOrEmpty(user?.graduationYear),
+    };
+    // Restore unsaved edits surviving a refresh; server data wins for the
+    // résumé since uploads save immediately.
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw);
+        return {
+          ...fresh,
+          ...d,
+          resumeUrl: fresh.resumeUrl || d.resumeUrl || '',
+          workExperiences: Array.isArray(d.workExperiences) ? d.workExperiences.map(normExp) : fresh.workExperiences,
+        };
+      }
+    } catch { /* corrupt draft → start fresh */ }
+    return fresh;
   });
+
+  // Persist every keystroke so a refresh never wipes unsaved edits.
+  useEffect(() => {
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(form));
+    } catch { /* storage full/blocked → form still works in memory */ }
+  }, [form, draftKey]);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [resumeName, setResumeName] = useState(user?.resumeName || '');
@@ -247,6 +272,9 @@ export default function ProfilePage() {
         graduationYear: form.graduationYear === '' ? null : Number(form.graduationYear),
       };
       await updateProfile(payload);
+      try {
+        localStorage.removeItem(draftKey);
+      } catch { /* ignore */ }
       setMsg('Profile saved.');
     } catch (err) {
       setMsg(err.message);
