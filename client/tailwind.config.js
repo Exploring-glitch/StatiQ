@@ -11,8 +11,8 @@ export default {
         ink: '#0B0D10',
         panel: '#14171C',
         panel2: '#1C2027',
-        accent: '#E5483A',
-        accentHover: '#B3271E',
+        accent: '#6366F1',
+        accentHover: '#4F46E5',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],

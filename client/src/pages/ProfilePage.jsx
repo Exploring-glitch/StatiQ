@@ -713,7 +713,7 @@ export default function ProfilePage() {
                         <div><span className={label}>End date</span><input type="month" value={w.endDate} disabled={w.current} onChange={(e) => setExp(i, 'endDate', e.target.value)} className={`${input} disabled:opacity-40`} /></div>
                       </div>
                       <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
-                        <input type="checkbox" checked={w.current} onChange={() => toggleCurrent(i)} className="h-4 w-4 accent-[#E5483A]" />
+                        <input type="checkbox" checked={w.current} onChange={() => toggleCurrent(i)} className="h-4 w-4 accent-[#6366F1]" />
                         I currently work here
                       </label>
                       <div className="mt-3">
