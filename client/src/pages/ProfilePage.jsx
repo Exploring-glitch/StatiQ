@@ -413,21 +413,52 @@ export default function ProfilePage() {
   };
 
   const completion = useMemo(() => {
+    const has = (v) => String(v ?? '').trim().length > 0;
     if (isEmployer) {
-      const checks = [form.name, form.title, form.company, form.location, form.bio];
-      return Math.round((checks.filter((x) => String(x).trim()).length / checks.length) * 100);
+      const checks = [
+        has(form.name),
+        has(form.title),
+        has(form.company),
+        has(form.location),
+        has(form.bio),
+        Boolean(user?.avatarUrl),
+      ];
+      return Math.round((checks.filter(Boolean).length / checks.length) * 100);
     }
+    // Every fillable detail counts — 100% is reachable only when all are set.
     const checks = [
-      form.name, form.title, form.location, form.bio, form.phone,
-      form.skills.trim(), form.desiredRoles.trim(),
-      form.experienceYears !== '', form.experienceLevel,
+      has(form.name),
+      has(form.title),
+      has(form.location),
+      has(form.company),
+      has(form.bio),
+      has(form.phone),
+      has(form.desiredLocation),
+      has(form.desiredRoles),
+      has(form.pronouns),
+      has(form.gender),
+      has(form.ethnicity),
+      form.experienceYears !== '',
+      has(form.experienceLevel),
       form.workExperiences.length > 0,
-      form.jobTypes.length > 0, form.workModes.length > 0,
-      form.availability, (form.resumeUrl || form.portfolioUrl || form.linkedinUrl),
-      form.educationDegree, form.expectedSalaryMin !== '' || form.expectedSalaryMax !== '',
+      has(form.skills),
+      has(form.languages),
+      form.jobTypes.length > 0,
+      form.workModes.length > 0,
+      form.expectedSalaryMin !== '',
+      form.expectedSalaryMax !== '',
+      has(form.availability),
+      has(form.resumeUrl),
+      has(form.portfolioUrl),
+      has(form.linkedinUrl),
+      has(form.githubUrl),
+      has(form.educationDegree),
+      has(form.educationInstitution),
+      form.graduationYear !== '',
+      Boolean(user?.avatarUrl),
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  }, [form, isEmployer]);
+  }, [form, isEmployer, user?.avatarUrl]);
 
   const skillsList = form.skills.split(',').map((s) => s.trim()).filter(Boolean);
   const desiredRolesList = form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean);
@@ -436,14 +467,34 @@ export default function ProfilePage() {
     form.workExperiences.find((w) => w.title || w.company);
 
   const missing = [
+    !String(form.name ?? '').trim() && 'Add your full name',
+    !String(form.title ?? '').trim() && 'Add a headline',
+    !String(form.location ?? '').trim() && 'Add your location',
+    !String(form.company ?? '').trim() && 'Add current / last company',
     !form.bio.trim() && 'Add a 2–4 line summary',
+    !String(form.phone ?? '').trim() && 'Add phone number',
+    !String(form.desiredLocation ?? '').trim() && 'Add desired location',
     !skillsList.length && 'Add at least 5 skills',
+    !String(form.languages ?? '').trim() && 'Add languages',
+    !desiredRolesList.length && 'Add open-to roles',
+    !form.pronouns && 'Add pronouns',
+    !form.gender && 'Add gender',
+    !form.ethnicity && 'Add race / ethnicity',
+    form.experienceYears === '' && 'Add total experience (years)',
+    !form.experienceLevel && 'Select experience level',
     form.workExperiences.length === 0 && 'Add work experience',
-    !(form.resumeUrl || form.portfolioUrl) && 'Upload your résumé or add a portfolio link',
     form.jobTypes.length === 0 && 'Pick job types',
     form.workModes.length === 0 && 'Pick work modes',
+    form.expectedSalaryMin === '' && form.expectedSalaryMax === '' && 'Add expected salary',
     !form.availability && 'Set availability / notice period',
-    !form.educationDegree && 'Add education',
+    !form.resumeUrl && 'Upload your résumé',
+    !form.portfolioUrl && 'Add portfolio / website link',
+    !form.linkedinUrl && 'Add LinkedIn link',
+    !form.githubUrl && 'Add GitHub link',
+    !form.educationDegree && 'Add education degree',
+    !form.educationInstitution && 'Add education institution',
+    form.graduationYear === '' && 'Add graduation year',
+    !user?.avatarUrl && 'Add profile photo',
   ].filter(Boolean);
 
   // (Section saves go through saveSection() above — one Save button per card.)
@@ -971,7 +1022,9 @@ export default function ProfilePage() {
           </div>
           {!isEmployer && (
             <div className="rounded-xl border border-white/10 bg-panel p-5 text-xs text-neutral-400">
-              {missing.length > 0 ? (
+              {completion === 100 ? (
+                <p className="font-bold text-emerald-400">✓ All set — your profile is complete and ready to get discovered.</p>
+              ) : (
                 <>
                   <p className="font-bold text-white">Missing for better matches:</p>
                   <ul className="mt-2 list-disc space-y-1 pl-4">
@@ -980,8 +1033,6 @@ export default function ProfilePage() {
                     ))}
                   </ul>
                 </>
-              ) : (
-                <p className="font-bold text-emerald-400">✓ All set — your profile is complete and ready to get discovered.</p>
               )}
             </div>
           )}
