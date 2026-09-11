@@ -524,9 +524,6 @@ export default function ProfilePage() {
                 {(user?.name || '?').charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-center text-[10px] font-semibold text-white">
-              {avatarBusy ? '…' : '📷'}
-            </span>
           </button>
           {user?.avatarUrl ? (
             <button type="button" onClick={removeAvatar} disabled={avatarBusy} className="text-[11px] text-neutral-500 hover:text-red-400 disabled:opacity-60">
