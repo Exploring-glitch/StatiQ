@@ -3,7 +3,22 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { normalizeJob } from '../lib/jobs';
 import { jobs as mockJobs } from '../data/mock';
+import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
+import JobCard from '../components/JobCard';
+
+const timeAgo = (iso) => {
+  if (!iso) return '';
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms) || ms < 0) return '';
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return mins <= 1 ? 'Posted just now' : `Posted ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Posted ${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return days === 1 ? 'Posted yesterday' : `Posted ${days}d ago`;
+  return `Posted on ${new Date(iso).toLocaleDateString()}`;
+};
 
 export default function JobDetailPage() {
   const { id } = useParams();
@@ -15,9 +30,14 @@ export default function JobDetailPage() {
   const [applied, setApplied] = useState(false);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(() => isSaved(id));
+  const [copied, setCopied] = useState(false);
+  const [similar, setSimilar] = useState([]);
 
   useEffect(() => {
     let alive = true;
+    setSaved(isSaved(id));
+    setCopied(false);
     api.job(id)
       .then((j) => alive && setJob(normalizeJob(j)))
       .catch(() => {
@@ -28,6 +48,48 @@ export default function JobDetailPage() {
       });
     return () => { alive = false; };
   }, [id]);
+
+  // Similar roles: same type / mode / shared tags first, current job excluded.
+  useEffect(() => {
+    if (!job) return;
+    let alive = true;
+    const pick = (list) => {
+      const scored = list
+        .filter((j) => String(j.id) !== String(job.id))
+        .map((j) => {
+          let s = 0;
+          if (j.type && j.type === job.type) s += 2;
+          if (j.workMode && j.workMode === job.workMode) s += 2;
+          if (j.company && j.company === job.company) s += 3;
+          const tags = new Set(job.tags || []);
+          s += (j.tags || []).filter((t) => tags.has(t)).length;
+          return { j, s };
+        })
+        .sort((a, b) => b.s - a.s)
+        .slice(0, 3)
+        .map((x) => x.j);
+      if (alive) setSimilar(scored);
+    };
+    api.jobs({ limit: 50 })
+      .then((data) => pick((data.items || data).map(normalizeJob)))
+      .catch(() => pick(mockJobs.map(normalizeJob)));
+    return () => { alive = false; };
+  }, [job]);
+
+  const share = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = window.location.href;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
 
   const apply = async () => {
     if (!user) {
@@ -72,6 +134,7 @@ export default function JobDetailPage() {
         <div className="rounded-xl border border-white/10 bg-panel p-6 lg:col-span-2">
           <p className="text-sm font-bold text-white">{job.role}</p>
           <p className="mt-1 text-xs text-neutral-400">{job.company} · {job.location} · {job.salary} · {job.type}</p>
+          {timeAgo(job.createdAt) && <p className="mt-1 text-xs text-neutral-500">{timeAgo(job.createdAt)}</p>}
           <div className="mt-3 flex flex-wrap gap-2">
             {job.tags.map((t) => (
               <span key={t} className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-xs text-neutral-300">{t}</span>
@@ -124,11 +187,36 @@ export default function JobDetailPage() {
               >
                 {busy ? 'Applying…' : user ? 'Apply now' : 'Log in to apply'}
               </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSaved(toggleSaved(job.id))}
+                  className={`flex-1 rounded-md border px-4 py-2 text-sm ${saved ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white hover:border-accent'}`}
+                >
+                  {saved ? 'Saved ✓' : 'Save'}
+                </button>
+                <button
+                  onClick={share}
+                  title="Copy link to this role"
+                  className="flex-1 rounded-md border border-white/15 px-4 py-2 text-sm text-white hover:border-accent"
+                >
+                  {copied ? 'Copied ✓' : 'Share'}
+                </button>
+              </div>
             </div>
           )}
           {msg && <p className="mt-2 rounded-md bg-red-500/10 p-2 text-xs text-red-400">{msg}</p>}
         </aside>
       </div>
+      {similar.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-lg font-bold text-white">Similar roles</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {similar.map((j) => (
+              <JobCard key={j.id} job={j} />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
