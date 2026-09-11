@@ -39,23 +39,23 @@ export default function SavedJobsPage() {
   return (
     <section className="mx-auto max-w-4xl px-4 py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Job seeker</p>
-      <h1 className="mt-2 text-3xl font-bold text-neutral-900">Saved jobs</h1>
-      {loading && <p className="mt-6 text-sm text-neutral-500">Loading…</p>}
+      <h1 className="mt-2 text-3xl font-bold text-white">Saved jobs</h1>
+      {loading && <p className="mt-6 text-sm text-neutral-400">Loading…</p>}
       {!loading && items.length === 0 && (
-        <p className="mt-6 rounded-xl border border-neutral-200 bg-[#F4F4F2] p-6 text-sm text-neutral-500">
+        <p className="mt-6 rounded-xl border border-white/10 bg-panel p-6 text-sm text-neutral-400">
           Nothing saved yet. <Link to="/jobs" className="text-accent">Browse jobs →</Link>
         </p>
       )}
       <div className="mt-6 space-y-3">
         {items.map((j) => (
-          <div key={j.id} className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-[#F4F4F2] p-4">
+          <div key={j.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-panel p-4">
             <div>
-              <p className="text-sm font-bold text-neutral-900">{j.role}</p>
-              <p className="text-xs text-neutral-500">{j.company} · {j.location} · {j.salary}</p>
+              <p className="text-sm font-bold text-white">{j.role}</p>
+              <p className="text-xs text-neutral-400">{j.company} · {j.location} · {j.salary}</p>
             </div>
             <div className="flex gap-2">
-              <Link to={`/jobs/${j.id}`} className="rounded-md bg-neutral-900 px-3 py-1 text-xs font-semibold text-white">View</Link>
-              <button onClick={() => unsave(j.id)} className="rounded-md border border-neutral-300 px-3 py-1 text-xs text-neutral-900">Remove</button>
+              <Link to={`/jobs/${j.id}`} className="rounded-md bg-white px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">View</Link>
+              <button onClick={() => unsave(j.id)} className="rounded-md border border-white/15 px-3 py-1 text-xs text-white hover:border-accent">Remove</button>
             </div>
           </div>
         ))}
