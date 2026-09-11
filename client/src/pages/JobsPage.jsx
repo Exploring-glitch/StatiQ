@@ -165,10 +165,22 @@ export default function JobsPage() {
           placeholder="Location..."
         />
         <button
+          type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className={`shrink-0 rounded-md border px-4 py-2 text-sm ${activeCount ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white hover:border-accent'}`}
+          aria-expanded={showFilters}
+          title={showFilters ? 'Hide filter options' : 'Show filter options'}
+          className={`flex shrink-0 items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors ${showFilters || activeCount ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 bg-panel text-white hover:border-accent hover:text-accent'}`}
         >
-          Filters{activeCount ? ` (${activeCount})` : ''} {showFilters ? '▴' : '▾'}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z" />
+          </svg>
+          <span>{showFilters ? 'Hide filters' : 'Show filters'}</span>
+          {activeCount > 0 && (
+            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold leading-none text-white">
+              {activeCount}
+            </span>
+          )}
+          <span aria-hidden="true" className="text-xs">{showFilters ? '▴' : '▾'}</span>
         </button>
       </div>
 
