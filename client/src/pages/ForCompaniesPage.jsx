@@ -34,9 +34,9 @@ export default function ForCompaniesPage() {
               <p className="text-sm font-bold text-neutral-900">{t.name}</p>
               <p className="mt-1 text-2xl font-extrabold text-accent">{t.price}</p>
               <p className="mt-2 text-sm text-neutral-500">{t.desc}</p>
-              <button className="mt-4 w-full rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-900 hover:border-accent">
+              <Link to="/signup/hire" className="mt-4 block w-full rounded-md border border-neutral-300 px-4 py-2 text-center text-sm text-neutral-900 hover:border-accent">
                 {t.cta}
-              </button>
+              </Link>
             </div>
           ))}
         </div>

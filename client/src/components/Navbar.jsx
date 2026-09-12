@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 // Public landing navbar — guests only. Logged-in users never see this shell:
 // `/` and auth pages bounce them to their role home, and all other pages
-// render inside AppLayout/AppNavbar instead.
+// render inside AppLayout (role navbars when logged in).
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 

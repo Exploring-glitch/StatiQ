@@ -47,12 +47,13 @@ function App() {
         <Route path="/signup/hire" element={<GuestOnly><EmployerSignupPage /></GuestOnly>} />
       </Route>
 
-      {/* Signed-in app — no footer. Browsing pages need login; role pages need a role. */}
+      {/* Signed-in app — no footer. Browsing pages are public (guests get the
+          public shell from AppLayout); role pages need login + a role. */}
       <Route element={<AppLayout />}>
-        <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
-        <Route path="/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
-        <Route path="/for-companies" element={<ProtectedRoute><ForCompaniesPage /></ProtectedRoute>} />
-        <Route path="/for-job-seekers" element={<ProtectedRoute><ForSeekersPage /></ProtectedRoute>} />
+        <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/jobs/:id" element={<JobDetailPage />} />
+        <Route path="/for-companies" element={<ForCompaniesPage />} />
+        <Route path="/for-job-seekers" element={<ForSeekersPage />} />
         <Route path="/post-job" element={<ProtectedRoute roles={employer}><PostJobPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute roles={employer}><DashboardPage /></ProtectedRoute>} />
         <Route path="/jobs/:id/applicants" element={<ProtectedRoute roles={employer}><ApplicantsPage /></ProtectedRoute>} />
