@@ -83,6 +83,8 @@ export const api = {
   job: (id) => request(`/jobs/${id}`),
   createJob: (payload) => request('/jobs', { method: 'POST', body: payload }),
   apply: (jobId, coverNote = '') => request('/applications', { method: 'POST', body: { jobId, coverNote } }),
+  getSavedJobs: () => request('/auth/me/saved'),
+  saveJobs: (jobIds) => request('/auth/me/saved', { method: 'PUT', body: { jobIds } }),
   myApplications: () => request('/applications/mine'),
   myPostedJobs: () => request('/jobs/mine/posted'),
   jobApplicants: (jobId) => request(`/applications/job/${jobId}`),

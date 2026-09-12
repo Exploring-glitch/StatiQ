@@ -84,6 +84,9 @@ const userSchema = new mongoose.Schema(
     educationDegree: { type: String, trim: true, default: '' },
     educationInstitution: { type: String, trim: true, default: '' },
     graduationYear: { type: Number, min: 1950, max: 2100, default: null },
+
+    // Bookmarked jobs — stored as string ids so demo/mock ids work too.
+    savedJobs: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -107,6 +110,7 @@ userSchema.methods.toSafeJSON = function () {
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
     educationDegree, educationInstitution, graduationYear,
+    savedJobs,
   } = this;
   return {
     id: _id, name, email, role, title, location, skills, company, createdAt,
@@ -116,6 +120,7 @@ userSchema.methods.toSafeJSON = function () {
     desiredRoles, jobTypes, workModes, desiredLocation, languages,
     expectedSalaryMin, expectedSalaryMax, availability,
     educationDegree, educationInstitution, graduationYear,
+    savedJobs: Array.isArray(savedJobs) ? savedJobs : [],
   };
 };
 

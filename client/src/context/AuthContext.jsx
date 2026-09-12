@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api, setToken } from '../lib/api';
+import { mergeSavedOnAuth } from '../lib/saved';
 
 const AuthContext = createContext(null);
 
@@ -12,13 +13,20 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
-    api.me().then(setUser).catch(() => setToken(null)).finally(() => setLoading(false));
+    api.me()
+      .then((u) => {
+        setUser(u);
+        mergeSavedOnAuth().catch(() => {});
+      })
+      .catch(() => setToken(null))
+      .finally(() => setLoading(false));
   }, []);
 
   const login = useCallback(async (payload) => {
     const data = await api.login(payload);
     setToken(data.token);
     setUser(data.user);
+    mergeSavedOnAuth().catch(() => {});
     return data.user;
   }, []);
 
@@ -26,6 +34,7 @@ export function AuthProvider({ children }) {
     const data = await api.register(payload);
     setToken(data.token);
     setUser(data.user);
+    mergeSavedOnAuth().catch(() => {});
     return data.user;
   }, []);
 
@@ -43,6 +52,7 @@ export function AuthProvider({ children }) {
   const refresh = useCallback(async () => {
     const me = await api.me();
     setUser(me);
+    mergeSavedOnAuth().catch(() => {});
     return me;
   }, []);
 

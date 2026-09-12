@@ -49,6 +49,11 @@ export default function JobDetailPage() {
     return () => { alive = false; };
   }, [id]);
 
+  // Re-check after login/logout or cross-device sync merges new ids.
+  useEffect(() => {
+    setSaved(isSaved(id));
+  }, [user, id]);
+
   // Similar roles: same type / mode / shared tags first, current job excluded.
   useEffect(() => {
     if (!job) return;

@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ConfirmDialog from './ConfirmDialog';
 
 // Logged-in app header (Wellfound-style): no marketing nav, no footer
 export default function AppNavbar() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const nav = useNavigate();
 
-  const out = () => {
+  const requestOut = () => setConfirmOpen(true);
+
+  const confirmOut = () => {
     logout();
+    setConfirmOpen(false);
     setOpen(false);
     nav('/');
   };
@@ -45,7 +50,7 @@ export default function AppNavbar() {
             </span>
             {user?.name?.split(' ')[0]}
           </Link>
-          <button onClick={out} className="text-sm text-neutral-400 hover:text-white">Log out</button>
+          <button onClick={requestOut} className="text-sm text-neutral-400 hover:text-white">Log out</button>
         </div>
         <button
           className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white md:hidden"
@@ -71,9 +76,19 @@ export default function AppNavbar() {
             </>
           )}
           <Link to="/profile" onClick={() => setOpen(false)} className="block font-semibold text-accent">Profile →</Link>
-          <button onClick={out} className="block text-neutral-400">Log out</button>
+          <button onClick={requestOut} className="block text-neutral-400">Log out</button>
         </div>
       )}
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Log out?"
+        message="You'll be signed out of StatiQ on this device. You'll need to log back in to continue."
+        confirmLabel="Log out"
+        cancelLabel="Stay logged in"
+        destructive
+        onConfirm={confirmOut}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </header>
   );
 }

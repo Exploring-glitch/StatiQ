@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { normalizeJob } from '../lib/jobs';
-import { getSavedIds, toggleSaved } from '../lib/saved';
+import { getSavedIds, toggleSaved, mergeSavedOnAuth } from '../lib/saved';
 import { jobs as mockJobs } from '../data/mock';
 
 export default function SavedJobsPage() {
@@ -11,6 +11,8 @@ export default function SavedJobsPage() {
 
   useEffect(() => {
     const load = async () => {
+      // Pull server bookmarks first so all devices agree, then resolve.
+      await mergeSavedOnAuth().catch(() => {});
       const ids = getSavedIds();
       if (ids.length === 0) {
         setLoading(false);

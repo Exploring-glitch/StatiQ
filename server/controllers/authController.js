@@ -68,6 +68,24 @@ export const me = asyncHandler(async (req, res) => {
   res.json(req.user.toSafeJSON());
 });
 
+// GET /api/auth/me/saved (protected) — bookmarked job ids
+export const getSavedJobs = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('savedJobs');
+  res.json({ savedJobIds: Array.isArray(user?.savedJobs) ? user.savedJobs : [] });
+});
+
+// PUT /api/auth/me/saved (protected) — replace bookmark list { jobIds: [...] }
+export const putSavedJobs = asyncHandler(async (req, res) => {
+  const ids = Array.isArray(req.body?.jobIds) ? req.body.jobIds : null;
+  if (!ids) {
+    res.status(400);
+    throw new Error('jobIds must be an array');
+  }
+  const clean = [...new Set(ids.map((v) => String(v ?? '').trim()).filter(Boolean))].slice(0, 200);
+  const user = await User.findByIdAndUpdate(req.user._id, { savedJobs: clean }, { new: true }).select('savedJobs');
+  res.json({ savedJobIds: Array.isArray(user?.savedJobs) ? user.savedJobs : [] });
+});
+
 // POST /api/auth/resume (protected, multipart/form-data, field: "resume")
 // Stores the file on disk, points user.resumeUrl at /uploads/<file>.
 export const uploadResume = asyncHandler(async (req, res) => {

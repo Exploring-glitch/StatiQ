@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,10 @@ export default function JobCard({ job }) {
   const [saved, setSaved] = useState(() => isSaved(job.id));
   const { user } = useAuth();
   const isEmployer = user?.role === 'employer';
+  // Re-check after login/logout or cross-device sync merges new ids.
+  useEffect(() => {
+    setSaved(isSaved(job.id));
+  }, [user, job.id]);
   return (
     <article className="rounded-xl border border-white/10 bg-panel p-5 transition hover:border-accent/50">
       <div className="flex items-center gap-3">
