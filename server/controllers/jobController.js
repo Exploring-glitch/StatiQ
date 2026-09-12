@@ -2,6 +2,7 @@ import { body, validationResult } from 'express-validator';
 import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import { asyncHandler } from '../middleware/auth.js';
+import { escapeRegExp, isValidObjectId } from '../lib/validate.js';
 
 const check = (req, res) => {
   const errors = validationResult(req);
@@ -40,7 +41,7 @@ export const listJobs = asyncHandler(async (req, res) => {
   } = req.query;
   const and = [{ status: 'open' }];
   if (q) and.push({ $text: { $search: q } });
-  if (location) and.push({ location: new RegExp(location, 'i') });
+  if (location) and.push({ location: new RegExp(escapeRegExp(location), 'i') });
   // workMode is the modern filter; legacy `remote=true` maps to Remote.
   const mode = workMode || (remote === 'true' ? 'Remote' : '');
   if (mode === 'Remote') and.push({ $or: [{ workMode: 'Remote' }, { remote: true }] });
@@ -69,6 +70,10 @@ export const listJobs = asyncHandler(async (req, res) => {
 
 // GET /api/jobs/:id — public; only non-sensitive poster info is exposed.
 export const getJob = asyncHandler(async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(404);
+    throw new Error('Job not found');
+  }
   const job = await Job.findById(req.params.id).populate('postedBy', 'name company');
   if (!job) {
     res.status(404);
@@ -91,6 +96,10 @@ export const createJob = asyncHandler(async (req, res) => {
 // PUT /api/jobs/:id (owner or admin)
 export const updateJob = asyncHandler(async (req, res) => {
   check(req, res);
+  if (!isValidObjectId(req.params.id)) {
+    res.status(404);
+    throw new Error('Job not found');
+  }
   const job = await Job.findById(req.params.id);
   if (!job) {
     res.status(404);
@@ -108,6 +117,10 @@ export const updateJob = asyncHandler(async (req, res) => {
 
 // DELETE /api/jobs/:id (owner or admin)
 export const deleteJob = asyncHandler(async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(404);
+    throw new Error('Job not found');
+  }
   const job = await Job.findById(req.params.id);
   if (!job) {
     res.status(404);

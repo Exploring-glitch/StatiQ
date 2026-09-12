@@ -1,13 +1,14 @@
 import Application from '../models/Application.js';
 import Job from '../models/Job.js';
 import { asyncHandler } from '../middleware/auth.js';
+import { isValidObjectId } from '../lib/validate.js';
 
 // POST /api/applications { jobId, coverNote } (jobseeker)
 export const apply = asyncHandler(async (req, res) => {
   const { jobId, coverNote = '' } = req.body;
-  if (!jobId) {
-    res.status(400);
-    throw new Error('jobId is required');
+  if (!jobId || !isValidObjectId(jobId)) {
+    res.status(404);
+    throw new Error('Job not open for applications');
   }
   const job = await Job.findById(jobId);
   if (!job || job.status !== 'open') {
@@ -36,6 +37,10 @@ export const myApplications = asyncHandler(async (req, res) => {
 
 // GET /api/applications/job/:jobId (job owner or admin sees applicants)
 export const jobApplicants = asyncHandler(async (req, res) => {
+  if (!isValidObjectId(req.params.jobId)) {
+    res.status(404);
+    throw new Error('Job not found');
+  }
   const job = await Job.findById(req.params.jobId);
   if (!job) {
     res.status(404);
@@ -54,6 +59,10 @@ export const jobApplicants = asyncHandler(async (req, res) => {
 
 // PATCH /api/applications/:id { status } (job owner or admin)
 export const setStatus = asyncHandler(async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(404);
+    throw new Error('Application not found');
+  }
   const app = await Application.findById(req.params.id).populate('job');
   if (!app) {
     res.status(404);

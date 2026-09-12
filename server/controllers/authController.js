@@ -101,7 +101,13 @@ export const uploadResume = asyncHandler(async (req, res) => {
   }
   user.resumeUrl = `/uploads/${req.file.filename}`;
   user.resumeName = req.file.originalname;
-  await user.save();
+  try {
+    await user.save();
+  } catch (e) {
+    // Don't leave the newly written file orphaned on disk.
+    fs.unlink(path.join(uploadsDir, req.file.filename), () => {});
+    throw e;
+  }
   res.status(201).json(user.toSafeJSON());
 });
 
@@ -131,7 +137,13 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
     fs.unlink(old, () => {});
   }
   user.avatarUrl = `/uploads/${req.file.filename}`;
-  await user.save();
+  try {
+    await user.save();
+  } catch (e) {
+    // Don't leave the newly written file orphaned on disk.
+    fs.unlink(path.join(uploadsDir, req.file.filename), () => {});
+    throw e;
+  }
   res.status(201).json(user.toSafeJSON());
 });
 
