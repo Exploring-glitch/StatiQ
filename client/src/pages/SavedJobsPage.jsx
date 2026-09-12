@@ -11,32 +11,47 @@ export default function SavedJobsPage() {
   const [unavailable, setUnavailable] = useState(0);
 
   useEffect(() => {
+    let alive = true;
     const load = async () => {
       try {
         // Pull server bookmarks first so all devices agree, then resolve.
         await mergeSavedOnAuth().catch(() => {});
         const ids = getSavedIds();
-        if (ids.length === 0) {
+        if (!alive || ids.length === 0) {
           return;
         }
+        // Bounded parallelism: much faster than one-at-a-time without
+        // hammering the API with an unbounded fan-out.
+        const LIMIT = 6;
         const found = [];
         let missing = 0;
-        for (const id of ids) {
-          try {
-            found.push(normalizeJob(await api.job(id)));
-          } catch {
-            const m = mockJobs.find((j) => String(j.id) === String(id));
-            if (m) found.push(normalizeJob(m));
+        for (let i = 0; i < ids.length; i += LIMIT) {
+          const batch = await Promise.all(
+            ids.slice(i, i + LIMIT).map(async (id) => {
+              try {
+                return { ok: true, job: normalizeJob(await api.job(id)) };
+              } catch {
+                const m = mockJobs.find((j) => String(j.id) === String(id));
+                return m ? { ok: true, job: normalizeJob(m) } : { ok: false };
+              }
+            })
+          );
+          for (const r of batch) {
+            if (r.ok) found.push(r.job);
             else missing += 1;
           }
         }
+        if (!alive) return;
         setItems(found);
         setUnavailable(missing);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
     load();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const unsave = (id) => {

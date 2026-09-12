@@ -1,5 +1,6 @@
 import { body, validationResult } from 'express-validator';
 import Job from '../models/Job.js';
+import Application from '../models/Application.js';
 import { asyncHandler } from '../middleware/auth.js';
 
 const check = (req, res) => {
@@ -111,7 +112,17 @@ export const deleteJob = asyncHandler(async (req, res) => {
 });
 
 // GET /api/jobs/mine/posted (employer/admin)
+// Includes applicantCount per job (single aggregate) so the dashboard
+// doesn't need one request per job (N+1).
 export const myPostedJobs = asyncHandler(async (req, res) => {
-  const items = await Job.find({ postedBy: req.user._id }).sort({ createdAt: -1 });
-  res.json(items);
+  const items = await Job.find({ postedBy: req.user._id }).sort({ createdAt: -1 }).lean();
+  const ids = items.map((j) => j._id);
+  const agg = ids.length
+    ? await Application.aggregate([
+        { $match: { job: { $in: ids } } },
+        { $group: { _id: '$job', count: { $sum: 1 } } },
+      ])
+    : [];
+  const counts = new Map(agg.map((a) => [String(a._id), a.count]));
+  res.json(items.map((j) => ({ ...j, applicantCount: counts.get(String(j._id)) ?? 0 })));
 });

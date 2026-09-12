@@ -17,17 +17,29 @@ export default function DashboardPage() {
         const mine = await api.myPostedJobs();
         const list = Array.isArray(mine) ? mine : mine.items || [];
         setJobs(list);
-        const entries = await Promise.all(
-          list.map(async (j) => {
-            try {
-              const apps = await api.jobApplicants(j._id || j.id);
-              return [j._id || j.id, apps.length];
-            } catch {
-              return [j._id || j.id, 0];
-            }
-          })
+        // Counts arrive batched from the server. Only the jobs missing them
+        // (e.g. older servers) fall back to one request each.
+        const missing = list.filter((j) => typeof j.applicantCount !== 'number');
+        const base = Object.fromEntries(
+          list
+            .filter((j) => typeof j.applicantCount === 'number')
+            .map((j) => [j._id || j.id, j.applicantCount])
         );
-        setCounts(Object.fromEntries(entries));
+        if (missing.length === 0) {
+          setCounts(base);
+        } else {
+          const entries = await Promise.all(
+            missing.map(async (j) => {
+              try {
+                const apps = await api.jobApplicants(j._id || j.id);
+                return [j._id || j.id, apps.length];
+              } catch {
+                return [j._id || j.id, 0];
+              }
+            })
+          );
+          setCounts({ ...base, ...Object.fromEntries(entries) });
+        }
       } catch (err) {
         setJobs([]);
         setError(err?.message || 'Could not load your roles. Check your connection and try again.');
