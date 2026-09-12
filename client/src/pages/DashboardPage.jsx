@@ -6,9 +6,13 @@ export default function DashboardPage() {
   const [jobs, setJobs] = useState([]);
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
+      setError('');
       try {
         const mine = await api.myPostedJobs();
         const list = Array.isArray(mine) ? mine : mine.items || [];
@@ -24,14 +28,15 @@ export default function DashboardPage() {
           })
         );
         setCounts(Object.fromEntries(entries));
-      } catch {
+      } catch (err) {
         setJobs([]);
+        setError(err?.message || 'Could not load your roles. Check your connection and try again.');
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [attempt]);
 
   const totalApps = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -55,7 +60,19 @@ export default function DashboardPage() {
       </div>
       <h2 className="mt-10 text-xl font-bold text-neutral-900">Your roles</h2>
       {loading && <p className="mt-4 text-sm text-neutral-500">Loading…</p>}
-      {!loading && jobs.length === 0 && (
+      {!loading && error && (
+        <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => setAttempt((a) => a + 1)}
+            className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accentHover"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      {!loading && !error && jobs.length === 0 && (
         <p className="mt-4 rounded-xl border border-neutral-200 bg-[#F4F4F2] p-6 text-sm text-neutral-500">
           No roles yet. <Link to="/post-job" className="text-accent">Post your first job →</Link>
         </p>

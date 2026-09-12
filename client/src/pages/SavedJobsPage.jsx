@@ -8,34 +8,40 @@ import { jobs as mockJobs } from '../data/mock';
 export default function SavedJobsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unavailable, setUnavailable] = useState(0);
 
   useEffect(() => {
     const load = async () => {
-      // Pull server bookmarks first so all devices agree, then resolve.
-      await mergeSavedOnAuth().catch(() => {});
-      const ids = getSavedIds();
-      if (ids.length === 0) {
-        setLoading(false);
-        return;
-      }
-      const found = [];
-      for (const id of ids) {
-        try {
-          found.push(normalizeJob(await api.job(id)));
-        } catch {
-          const m = mockJobs.find((j) => String(j.id) === String(id));
-          if (m) found.push(normalizeJob(m));
+      try {
+        // Pull server bookmarks first so all devices agree, then resolve.
+        await mergeSavedOnAuth().catch(() => {});
+        const ids = getSavedIds();
+        if (ids.length === 0) {
+          return;
         }
+        const found = [];
+        let missing = 0;
+        for (const id of ids) {
+          try {
+            found.push(normalizeJob(await api.job(id)));
+          } catch {
+            const m = mockJobs.find((j) => String(j.id) === String(id));
+            if (m) found.push(normalizeJob(m));
+            else missing += 1;
+          }
+        }
+        setItems(found);
+        setUnavailable(missing);
+      } finally {
+        setLoading(false);
       }
-      setItems(found);
-      setLoading(false);
     };
     load();
   }, []);
 
   const unsave = (id) => {
     toggleSaved(id);
-    setItems(items.filter((j) => String(j.id) !== String(id)));
+    setItems((prev) => prev.filter((j) => String(j.id) !== String(id)));
   };
 
   return (
@@ -43,7 +49,13 @@ export default function SavedJobsPage() {
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Job seeker</p>
       <h1 className="mt-2 text-3xl font-bold text-white">Saved jobs</h1>
       {loading && <p className="mt-6 text-sm text-neutral-400">Loading…</p>}
-      {!loading && items.length === 0 && (
+      {!loading && unavailable > 0 && (
+        <p className="mt-6 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-400">
+          {unavailable} saved {unavailable === 1 ? 'job' : 'jobs'} {unavailable === 1 ? 'is' : 'are'} no longer available and{' '}
+          {unavailable === 1 ? 'was' : 'were'} skipped — {unavailable === 1 ? 'it' : 'they'} may have been removed.
+        </p>
+      )}
+      {!loading && items.length === 0 && unavailable === 0 && (
         <p className="mt-6 rounded-xl border border-white/10 bg-panel p-6 text-sm text-neutral-400">
           Nothing saved yet. <Link to="/jobs" className="text-accent">Browse jobs →</Link>
         </p>

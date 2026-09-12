@@ -25,11 +25,13 @@ export default function PostJobPage() {
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [mine, setMine] = useState([]);
+  const [mineError, setMineError] = useState('');
 
   const refreshMine = () => {
+    setMineError('');
     api.myPostedJobs()
       .then((d) => setMine(Array.isArray(d) ? d : d.items || []))
-      .catch(() => {});
+      .catch((err) => setMineError(err?.message || 'Could not load your posted jobs.'));
   };
   useEffect(() => { refreshMine(); }, []);
 
@@ -116,6 +118,14 @@ export default function PostJobPage() {
         </form>
         <div className="h-fit rounded-xl border border-white/10 bg-panel p-6">
           <h2 className="text-sm font-bold text-white">Your posted jobs</h2>
+          {mineError && (
+            <p className="mt-2 rounded-md bg-red-500/10 p-2 text-xs text-red-400">
+              {mineError}{' '}
+              <button type="button" onClick={refreshMine} className="font-semibold text-accent hover:underline">
+                Retry
+              </button>
+            </p>
+          )}
           {mine.length === 0 ? (
             <p className="mt-2 text-xs text-neutral-500">Nothing posted yet — your jobs will appear here and on the Jobs page.</p>
           ) : (
