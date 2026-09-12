@@ -11,6 +11,16 @@ const check = (req, res) => {
   }
 };
 
+// Fields a client may set on create/update. Everything else
+// (postedBy, _id, timestamps, ...) is never taken from the request body.
+const JOB_WRITE_FIELDS = [
+  'title', 'company', 'location', 'salary', 'salaryMin', 'salaryMax',
+  'type', 'remote', 'workMode', 'experienceLevel', 'tags',
+  'description', 'responsibilities', 'status',
+];
+const pickJobFields = (body = {}) =>
+  Object.fromEntries(JOB_WRITE_FIELDS.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
+
 export const jobRules = [
   body('title').trim().notEmpty().withMessage('Title is required'),
   body('company').trim().notEmpty().withMessage('Company is required'),
@@ -57,9 +67,9 @@ export const listJobs = asyncHandler(async (req, res) => {
   res.json({ items, total, page: Number(page), pages: Math.ceil(total / lim) || 1 });
 });
 
-// GET /api/jobs/:id
+// GET /api/jobs/:id — public; only non-sensitive poster info is exposed.
 export const getJob = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id).populate('postedBy', 'name company email');
+  const job = await Job.findById(req.params.id).populate('postedBy', 'name company');
   if (!job) {
     res.status(404);
     throw new Error('Job not found');
@@ -70,7 +80,7 @@ export const getJob = asyncHandler(async (req, res) => {
 // POST /api/jobs (employer/admin)
 export const createJob = asyncHandler(async (req, res) => {
   check(req, res);
-  const body = { ...req.body };
+  const body = pickJobFields(req.body);
   for (const k of ['salaryMin', 'salaryMax']) {
     if (body[k] === '' || body[k] === undefined) body[k] = null;
   }
@@ -80,6 +90,7 @@ export const createJob = asyncHandler(async (req, res) => {
 
 // PUT /api/jobs/:id (owner or admin)
 export const updateJob = asyncHandler(async (req, res) => {
+  check(req, res);
   const job = await Job.findById(req.params.id);
   if (!job) {
     res.status(404);
@@ -90,7 +101,7 @@ export const updateJob = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error('Not your job to edit');
   }
-  Object.assign(job, req.body);
+  Object.assign(job, pickJobFields(req.body));
   await job.save();
   res.json(job);
 });
