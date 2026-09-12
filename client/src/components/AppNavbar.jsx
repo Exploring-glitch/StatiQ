@@ -1,23 +1,12 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ConfirmDialog from './ConfirmDialog';
 
 // Logged-in app header (Wellfound-style): no marketing nav, no footer
+// Logout goes to the dedicated centered /logout confirmation page.
 export default function AppNavbar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const nav = useNavigate();
-
-  const requestOut = () => setConfirmOpen(true);
-
-  const confirmOut = () => {
-    logout();
-    setConfirmOpen(false);
-    setOpen(false);
-    nav('/');
-  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur">
@@ -50,7 +39,7 @@ export default function AppNavbar() {
             </span>
             {user?.name?.split(' ')[0]}
           </Link>
-          <button onClick={requestOut} className="text-sm text-neutral-400 hover:text-white">Log out</button>
+          <Link to="/logout" className="text-sm text-neutral-400 hover:text-white">Log out</Link>
         </div>
         <button
           className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white md:hidden"
@@ -76,19 +65,9 @@ export default function AppNavbar() {
             </>
           )}
           <Link to="/profile" onClick={() => setOpen(false)} className="block font-semibold text-accent">Profile →</Link>
-          <button onClick={requestOut} className="block text-neutral-400">Log out</button>
+          <Link to="/logout" onClick={() => setOpen(false)} className="block text-neutral-400">Log out</Link>
         </div>
       )}
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Log out?"
-        message="You'll be signed out of StatiQ on this device. You'll need to log back in to continue."
-        confirmLabel="Log out"
-        cancelLabel="Stay logged in"
-        destructive
-        onConfirm={confirmOut}
-        onCancel={() => setConfirmOpen(false)}
-      />
     </header>
   );
 }

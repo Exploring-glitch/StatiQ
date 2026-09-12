@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ConfirmDialog from './ConfirmDialog';
 
 const sideLink = ({ isActive }) =>
   `flex items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
@@ -14,19 +13,8 @@ const sideLink = ({ isActive }) =>
 // Deliberately different structure from the seeker top-nav so the
 // "I'm hiring" product feels like a different app.
 export default function EmployerNavbar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const nav = useNavigate();
-
-  const requestOut = () => setConfirmOpen(true);
-
-  const confirmOut = () => {
-    logout();
-    setConfirmOpen(false);
-    setOpen(false);
-    nav('/');
-  };
 
   const initials = (user?.company || user?.name || '?')
     .split(' ')
@@ -77,7 +65,7 @@ export default function EmployerNavbar() {
           </Link>
           <div className="mt-2 flex items-center justify-between px-1">
             <span className="text-xs text-neutral-500">{user?.email}</span>
-            <button onClick={requestOut} className="text-xs text-neutral-400 hover:text-white">Log out</button>
+            <Link to="/logout" className="text-xs text-neutral-400 hover:text-white">Log out</Link>
           </div>
         </div>
       </aside>
@@ -103,21 +91,10 @@ export default function EmployerNavbar() {
             <NavLink to="/post-job" onClick={() => setOpen(false)} className="block text-neutral-200">＋ Post a job</NavLink>
             <NavLink to="/jobs" onClick={() => setOpen(false)} className="block text-neutral-200">👁 Preview listings</NavLink>
             <NavLink to="/profile" onClick={() => setOpen(false)} className="block text-neutral-200">🏢 Company profile</NavLink>
-            <button onClick={requestOut} className="block text-neutral-400">Log out</button>
+            <Link to="/logout" onClick={() => setOpen(false)} className="block text-neutral-400">Log out</Link>
           </div>
         )}
       </header>
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Log out?"
-        message="You'll be signed out of StatiQ on this device. You'll need to log back in to continue."
-        confirmLabel="Log out"
-        cancelLabel="Stay logged in"
-        destructive
-        onConfirm={confirmOut}
-        onCancel={() => setConfirmOpen(false)}
-      />
     </>
   );
 }

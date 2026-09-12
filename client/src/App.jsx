@@ -18,6 +18,7 @@ import PostJobPage from './pages/PostJobPage';
 import MyApplicationsPage from './pages/MyApplicationsPage';
 import SavedJobsPage from './pages/SavedJobsPage';
 import ProfilePage from './pages/ProfilePage';
+import LogoutPage from './pages/LogoutPage';
 import DashboardPage from './pages/DashboardPage';
 import ApplicantsPage from './pages/ApplicantsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -58,6 +59,7 @@ function App() {
         <Route path="/my-applications" element={<ProtectedRoute roles={seeker}><MyApplicationsPage /></ProtectedRoute>} />
         <Route path="/saved" element={<ProtectedRoute roles={seeker}><SavedJobsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute roles={[...seeker, ...employer]}><ProfilePage /></ProtectedRoute>} />
+        <Route path="/logout" element={<ProtectedRoute roles={[...seeker, ...employer]}><LogoutPage /></ProtectedRoute>} />
       </Route>
     </Routes>
   );
