@@ -18,7 +18,7 @@ export default function Navbar() {
           <Link to="/signup" className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
             Sign up
           </Link>
-          <Link to="/signup/job" className="rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-black hover:bg-neutral-300">
+          <Link to="/signup/job" className="rounded-md bg-[#f4f4f5] px-3 py-1.5 text-sm font-semibold text-black hover:bg-neutral-300">
             I&apos;m looking for a job
           </Link>
           <Link to="/signup/hire" className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accentHover">

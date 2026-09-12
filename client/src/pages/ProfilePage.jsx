@@ -806,7 +806,7 @@ export default function ProfilePage() {
                     <label className="mt-4 flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
                       <button type="button" onClick={() => setForm({ ...form, openToWork: !form.openToWork })}
                         className={`relative h-5 w-9 rounded-full transition ${form.openToWork ? 'bg-emerald-500' : 'bg-neutral-600'}`}>
-                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${form.openToWork ? 'left-4' : 'left-0.5'}`} />
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-[#f4f4f5] transition-all ${form.openToWork ? 'left-4' : 'left-0.5'}`} />
                       </button>
                       Open to work
                     </label>

@@ -59,7 +59,7 @@ export default function EmployerNavbar() {
         <div className="border-t border-white/10 p-3">
           <Link
             to="/post-job"
-            className="block rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold text-black hover:bg-neutral-300"
+            className="block rounded-lg bg-[#f4f4f5] px-3 py-2 text-center text-sm font-semibold text-black hover:bg-neutral-300"
           >
             + New role
           </Link>

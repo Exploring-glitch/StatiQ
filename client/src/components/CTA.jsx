@@ -10,7 +10,7 @@ export default function CTA() {
           <Link to="/signup/job" className="rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accentHover">
             Sign up to find a job →
           </Link>
-          <Link to="/for-companies" className="rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-black hover:bg-neutral-300">
+          <Link to="/for-companies" className="rounded-md bg-[#f4f4f5] px-5 py-2.5 text-sm font-semibold text-black hover:bg-neutral-300">
             Start hiring
           </Link>
         </div>

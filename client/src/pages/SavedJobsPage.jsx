@@ -56,7 +56,7 @@ export default function SavedJobsPage() {
               <p className="text-xs text-neutral-400">{j.company} · {j.location} · {j.salary}</p>
             </div>
             <div className="flex gap-2">
-              <Link to={`/jobs/${j.id}`} className="rounded-md bg-white px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">View</Link>
+              <Link to={`/jobs/${j.id}`} className="rounded-md bg-[#f4f4f5] px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">View</Link>
               <button onClick={() => unsave(j.id)} className="rounded-md border border-white/15 px-3 py-1 text-xs text-white hover:border-accent">Remove</button>
             </div>
           </div>

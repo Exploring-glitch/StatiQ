@@ -169,7 +169,7 @@ export default function JobDetailPage() {
             <div className="mt-4 space-y-2">
               <Link
                 to={`/jobs/${id}/applicants`}
-                className="block w-full rounded-md bg-white px-4 py-2 text-center text-sm font-semibold text-black hover:bg-neutral-300"
+                className="block w-full rounded-md bg-[#f4f4f5] px-4 py-2 text-center text-sm font-semibold text-black hover:bg-neutral-300"
               >
                 View applicants →
               </Link>
@@ -188,7 +188,7 @@ export default function JobDetailPage() {
             <div className="mt-4 space-y-2">
               <button
                 onClick={apply} disabled={busy}
-                className="w-full rounded-md bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300 disabled:opacity-60"
+                className="w-full rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300 disabled:opacity-60"
               >
                 {busy ? 'Applying…' : user ? 'Apply now' : 'Log in to apply'}
               </button>

@@ -20,7 +20,7 @@ export default function Hero() {
           <p className="mt-2 text-sm text-neutral-400">
             Post jobs free, deploy AI sourcing agents, or hand it to an Autopilot recruiter.
           </p>
-          <Link to="/for-companies" className="mt-4 inline-block rounded-md bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300">
+          <Link to="/for-companies" className="mt-4 inline-block rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300">
             Start hiring →
           </Link>
           <div className="mt-4 rounded-lg border border-white/10 bg-panel2 p-3 text-xs text-neutral-400">

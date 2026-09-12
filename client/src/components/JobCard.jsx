@@ -42,7 +42,7 @@ export default function JobCard({ job }) {
               {saved ? 'Saved ✓' : 'Save'}
             </button>
           )}
-          <Link to={`/jobs/${job.id}`} className="rounded-md bg-white px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">
+          <Link to={`/jobs/${job.id}`} className="rounded-md bg-[#f4f4f5] px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">
             View role
           </Link>
           {isEmployer && (

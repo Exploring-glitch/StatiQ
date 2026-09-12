@@ -20,7 +20,7 @@ export default function ForCandidates() {
             className="w-full rounded-md border border-white/10 bg-panel px-3 py-2 text-sm text-white placeholder:text-neutral-500"
             placeholder="Show me Software Engineer roles hiring in San Francisco"
           />
-          <button className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300">
+          <button className="rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300">
             Search
           </button>
         </div>
