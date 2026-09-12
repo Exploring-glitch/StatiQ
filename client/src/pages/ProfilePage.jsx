@@ -83,6 +83,55 @@ const snapLinks = (u) => ({ resumeUrl: u?.resumeUrl || '', portfolioUrl: u?.port
 const snapEducation = (u) => ({ educationDegree: u?.educationDegree || '', educationInstitution: u?.educationInstitution || '', graduationYear: numOrEmpty(u?.graduationYear) });
 const SNAPS = { basics: snapBasics, identity: snapIdentity, experience: snapExperience, skills: snapSkills, prefs: snapPrefs, links: snapLinks, education: snapEducation };
 
+// Full server snapshot for form init + re-sync.
+const buildFresh = (u) => ({
+  ...snapBasics(u),
+  ...snapIdentity(u),
+  ...snapExperience(u),
+  ...snapSkills(u),
+  ...snapPrefs(u),
+  ...snapLinks(u),
+  ...snapEducation(u),
+});
+
+// Sections with data start collapsed in view mode.
+const buildEditing = (u) => {
+  const emp = u?.role === 'employer';
+  return {
+    basics: emp
+      ? !(u?.name && u?.company && u?.bio)
+      : !(u?.title && u?.bio),
+    identity: !(u?.pronouns || u?.gender || u?.ethnicity),
+    experience: !(u?.experienceYears != null || u?.experienceLevel || (u?.workExperiences || []).length),
+    skills: !((u?.skills || []).length || (u?.languages || []).length),
+    prefs: !((u?.jobTypes || []).length || (u?.workModes || []).length || u?.availability),
+    links: !(u?.resumeUrl || u?.portfolioUrl || u?.linkedinUrl || u?.githubUrl),
+    education: !(u?.educationDegree || u?.educationInstitution || u?.graduationYear != null),
+  };
+};
+
+const readDraft = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+// Restore unsaved edits surviving a refresh; server data wins for the
+// résumé since uploads save immediately.
+const applyDraft = (fresh, d) => {
+  if (!d) return fresh;
+  return {
+    ...fresh,
+    ...d,
+    resumeUrl: fresh.resumeUrl || d.resumeUrl || '',
+    workExperiences: Array.isArray(d.workExperiences) ? d.workExperiences.map(normExp) : fresh.workExperiences,
+  };
+};
+
 const optLabel = (list, v) => (list.find((o) => o.v === v)?.l || '');
 
 // Card header with per-section Edit / Cancel + Save.
@@ -146,56 +195,42 @@ export default function ProfilePage() {
   const avatarInput = useRef(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const draftKey = `statiq_profile_draft_${user?.id || 'guest'}`;
+  // Tracks which account the form was last synced from. Auth loads async,
+  // so the first render usually snapshots user=null — see sync effect below.
+  const hydratedId = useRef(user?.id || null);
 
-  const [form, setForm] = useState(() => {
-    const fresh = {
-      ...snapBasics(user),
-      ...snapIdentity(user),
-      ...snapExperience(user),
-      ...snapSkills(user),
-      ...snapPrefs(user),
-      ...snapLinks(user),
-      ...snapEducation(user),
-    };
-    // Restore unsaved edits surviving a refresh; server data wins for the
-    // résumé since uploads save immediately.
-    try {
-      const raw = localStorage.getItem(draftKey);
-      if (raw) {
-        const d = JSON.parse(raw);
-        return {
-          ...fresh,
-          ...d,
-          resumeUrl: fresh.resumeUrl || d.resumeUrl || '',
-          workExperiences: Array.isArray(d.workExperiences) ? d.workExperiences.map(normExp) : fresh.workExperiences,
-        };
-      }
-    } catch { /* corrupt draft → start fresh */ }
-    return fresh;
-  });
+  const [form, setForm] = useState(() => applyDraft(buildFresh(user), readDraft(draftKey)));
 
   // Persist every keystroke so a refresh never wipes unsaved edits.
+  // Skipped until this account's server data has hydrated, so the initial
+  // empty form can never overwrite a real draft.
   useEffect(() => {
+    if (!user?.id || hydratedId.current !== user.id) return;
     try {
       localStorage.setItem(draftKey, JSON.stringify(form));
     } catch { /* storage full/blocked → form still works in memory */ }
-  }, [form, draftKey]);
+  }, [form, draftKey, user?.id]);
+
+  // Re-sync once the real user arrives (or the account changes). Runs only
+  // on account change — never on profile saves — so in-progress edits in
+  // other sections are never clobbered.
+  useEffect(() => {
+    if (!user?.id || hydratedId.current === user.id) return;
+    hydratedId.current = user.id;
+    setForm(applyDraft(buildFresh(user), readDraft(`statiq_profile_draft_${user.id}`)));
+    setEditing(buildEditing(user));
+    setResumeName(user.resumeName || '');
+    try {
+      localStorage.removeItem('statiq_profile_draft_guest');
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
   const [resumeName, setResumeName] = useState(user?.resumeName || '');
   const [uploadBusy, setUploadBusy] = useState(false);
 
   // Per-section edit mode (sections with data start collapsed in view mode),
   // per-section save state. Each card saves only its own fields.
-  const [editing, setEditing] = useState(() => ({
-    basics: isEmployer
-      ? !(user?.name && user?.company && user?.bio)
-      : !(user?.title && user?.bio),
-    identity: !(user?.pronouns || user?.gender || user?.ethnicity),
-    experience: !(user?.experienceYears != null || user?.experienceLevel || (user?.workExperiences || []).length),
-    skills: !((user?.skills || []).length || (user?.languages || []).length),
-    prefs: !((user?.jobTypes || []).length || (user?.workModes || []).length || user?.availability),
-    links: !(user?.resumeUrl || user?.portfolioUrl || user?.linkedinUrl || user?.githubUrl),
-    education: !(user?.educationDegree || user?.educationInstitution || user?.graduationYear != null),
-  }));
+  const [editing, setEditing] = useState(() => buildEditing(user));
   const [secBusy, setSecBusy] = useState('');
   const [secMsg, setSecMsg] = useState({});
   const msgTimers = useRef({});

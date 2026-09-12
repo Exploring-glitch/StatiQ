@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,15 @@ const empty = {
 export default function PostJobPage() {
   const { user } = useAuth();
   const [form, setForm] = useState({ ...empty, company: user?.company || '' });
+  // Auth loads async: backfill the employer company once it arrives, but
+  // never overwrite what the user already typed.
+  const companySeeded = useRef(false);
+  useEffect(() => {
+    if (!companySeeded.current && user?.company) {
+      companySeeded.current = true;
+      setForm((f) => ({ ...f, company: f.company || user.company }));
+    }
+  }, [user?.company]);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [mine, setMine] = useState([]);
