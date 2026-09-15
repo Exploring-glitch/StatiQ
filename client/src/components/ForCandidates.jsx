@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { jobs } from '../data/mock';
 import JobCard from './JobCard';
 
@@ -10,20 +11,29 @@ const points = [
 ];
 
 export default function ForCandidates() {
+  const nav = useNavigate();
+  const [q, setQ] = useState('');
+  const submit = (e) => {
+    e.preventDefault();
+    nav(q.trim() ? `/jobs?q=${encodeURIComponent(q.trim())}` : '/jobs');
+  };
   return (
     <section id="candidates" className="border-y border-white/10 bg-[#0E1114]">
       <div className="mx-auto max-w-6xl px-4 py-14">
         <p className="text-xs font-semibold uppercase tracking-wide text-accent">For candidates</p>
         <h2 className="mt-2 text-3xl font-bold text-white">Find work that matters.</h2>
-        <div className="mt-4 flex max-w-xl flex-col gap-2 sm:flex-row">
+        <form onSubmit={submit} className="mt-4 flex max-w-xl flex-col gap-2 sm:flex-row">
           <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="Search startup roles"
             className="w-full rounded-md border border-white/10 bg-panel px-3 py-2 text-sm text-white placeholder:text-neutral-500"
             placeholder="Show me Software Engineer roles hiring in San Francisco"
           />
-          <button className="rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300">
+          <button type="submit" className="rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300">
             Search
           </button>
-        </div>
+        </form>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <div className="space-y-4">
