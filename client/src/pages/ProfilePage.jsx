@@ -850,7 +850,7 @@ export default function ProfilePage() {
                     <span className={label}>Job type</span>
                     <div className="flex flex-wrap gap-2">
                       {JOB_TYPES.map((t) => (
-                        <span key={t} onClick={() => toggleList('jobTypes', t)} className={form.jobTypes.includes(t) ? chipOn : chipOff}>{t}</span>
+                        <button key={t} type="button" aria-pressed={form.jobTypes.includes(t)} onClick={() => toggleList('jobTypes', t)} className={form.jobTypes.includes(t) ? chipOn : chipOff}>{t}</button>
                       ))}
                     </div>
                   </div>
@@ -858,7 +858,7 @@ export default function ProfilePage() {
                     <span className={label}>Work mode</span>
                     <div className="flex flex-wrap gap-2">
                       {WORK_MODES.map((t) => (
-                        <span key={t} onClick={() => toggleList('workModes', t)} className={form.workModes.includes(t) ? chipOn : chipOff}>{t}</span>
+                        <button key={t} type="button" aria-pressed={form.workModes.includes(t)} onClick={() => toggleList('workModes', t)} className={form.workModes.includes(t) ? chipOn : chipOff}>{t}</button>
                       ))}
                     </div>
                   </div>
