@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { normalizeJob, filterMock } from '../lib/jobs';
 import { useAuth } from '../context/AuthContext';
 import JobCard from '../components/JobCard';
+import { JobCardSkeleton } from '../components/Skeleton';
 
 const MODES = ['Remote', 'Hybrid', 'On-site'];
 const TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
@@ -281,9 +282,9 @@ export default function JobsPage() {
         <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Live from API' : '○ Demo data (API offline)'}</span>
       </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {items.map((j) => (
-          <JobCard key={j.id} job={j} />
-        ))}
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)
+          : items.map((j) => <JobCard key={j.id} job={j} />)}
       </div>
       {!loading && items.length === 0 && (
         <div className="mt-8 rounded-xl border border-white/10 bg-panel p-6 text-center">
