@@ -4,9 +4,14 @@ import { asyncHandler } from '../middleware/auth.js';
 import { isValidObjectId } from '../lib/validate.js';
 
 // POST /api/applications { jobId, coverNote } (jobseeker)
+// coverNote is the required "Why our company?" answer (50–2000 chars).
 export const apply = asyncHandler(async (req, res) => {
   const { jobId } = req.body;
   const coverNote = String(req.body?.coverNote ?? '').trim().slice(0, 2000);
+  if (coverNote.length < 50) {
+    res.status(400);
+    throw new Error('Tell the company why you want to join (50+ characters)');
+  }
   if (!jobId || !isValidObjectId(jobId)) {
     res.status(404);
     throw new Error('Job not open for applications');
