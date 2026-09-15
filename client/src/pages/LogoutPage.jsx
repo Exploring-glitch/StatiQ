@@ -35,8 +35,8 @@ export default function LogoutPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-16">
       <div
-        role="alertdialog"
-        aria-modal="false"
+        role="dialog"
+        aria-modal="true"
         aria-labelledby="logout-title"
         aria-describedby="logout-desc"
         className="w-full max-w-[400px] rounded-xl border border-white/10 bg-panel p-6 shadow-2xl"
