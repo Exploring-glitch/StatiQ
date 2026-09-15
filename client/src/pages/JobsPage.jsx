@@ -41,6 +41,8 @@ const RECOMMENDED_JOBS = [
 
 const csv = (sp, k) => (sp.get(k) || '').split(',').map((s) => s.trim()).filter(Boolean);
 
+const PAGE_SIZE = 12;
+
 export default function JobsPage() {
   const { user } = useAuth();
   const isEmployer = user?.role === 'employer';
@@ -49,6 +51,7 @@ export default function JobsPage() {
   const [location, setLocation] = useState(params.get('location') || '');
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(1);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -58,14 +61,25 @@ export default function JobsPage() {
   const minSalary = params.get('min') || '';
   const level = params.get('level') || '';
   const sort = params.get('sort') || 'newest';
+  const page = Math.max(1, Number(params.get('page')) || 1);
 
   const patch = (obj) => {
     const next = new URLSearchParams(params);
     for (const [k, v] of Object.entries(obj)) {
       if (!v || (Array.isArray(v) && !v.length)) next.delete(k);
-      else next.set(k, Array.isArray(v) ? v.join(',') : v);
+      else next.set(k, Array.isArray(v) ? v.join(',') : String(v));
     }
+    // Any filter/sort change resets to page 1; only explicit page nav keeps it.
+    if (!('page' in obj)) next.delete('page');
     setParams(next, { replace: true });
+  };
+  const goPage = (p) => {
+    const next = new URLSearchParams(params);
+    if (!p || p <= 1) next.delete('page');
+    else next.set('page', String(p));
+    setParams(next, { replace: false });
+    // Keep browsing context: jump back to results top on explicit page nav.
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
   };
   const toggle = (key, list, v) => patch({ [key]: list.includes(v) ? list.filter((x) => x !== v) : [...list, v] });
 
@@ -80,50 +94,68 @@ export default function JobsPage() {
     let alive = true;
     setLoading(true);
     const t = setTimeout(async () => {
+      const modeCsv = (params.get('mode') || '').split(',').map((s) => s.trim()).filter(Boolean).join(',');
+      const typeCsv = (params.get('type') || '').split(',').map((s) => s.trim()).filter(Boolean).join(',');
+      const currentPage = Math.max(1, Number(params.get('page')) || 1);
       const query = {
         q: params.get('q') || '',
         location: params.get('location') || '',
-        type: (params.get('type') || ''),
-        workMode: (params.get('mode') || '').split(',').filter(Boolean)[0] || '',
+        type: typeCsv,
+        workMode: modeCsv,
         experienceLevel: params.get('level') || '',
         minSalary: params.get('min') || '',
         sort: params.get('sort') || 'newest',
-        limit: 50,
-      };
-      // Send all selected modes/types; backend matches first mode + all types.
-      // Client-side demo fallback applies the full set precisely.
-      const fullQuery = {
-        ...query,
-        workModes: (params.get('mode') || '').split(',').filter(Boolean),
-        types: (params.get('type') || '').split(',').filter(Boolean),
+        page: currentPage,
+        limit: PAGE_SIZE,
       };
       try {
         const data = await api.jobs(query);
         if (!alive) return;
-        let list = (data.items || data).map(normalizeJob);
-        // Refine multi-select client-side (backend handles single mode; types csv already).
-        if (fullQuery.workModes.length > 1) list = list.filter((j) => fullQuery.workModes.includes(j.workMode));
-        if (sort === 'salary') list = [...list].sort((a, b) => (b.salaryMax ?? -1) - (a.salaryMax ?? -1));
+        // Server now handles multi-mode + sort + pagination; trust its slice.
+        const list = (data.items || data).map(normalizeJob);
+        const totalCount = data.total ?? list.length;
+        const totalPages = data.pages ?? 1;
+        // Clamp stale page (e.g. filters shrank results while page=5 in URL).
+        if (totalPages > 0 && currentPage > totalPages && totalCount > 0) {
+          const next = new URLSearchParams(params);
+          next.set('page', String(totalPages));
+          setParams(next, { replace: true });
+          return;
+        }
         setItems(list);
-        setTotal(data.total ?? list.length);
+        setTotal(totalCount);
+        setPages(totalPages);
         setLive(true);
       } catch {
         if (!alive) return;
-        const list = filterMock({
-          q: fullQuery.q, location: fullQuery.location,
-          workModes: fullQuery.workModes, types: fullQuery.types,
-          minSalary: fullQuery.minSalary, experienceLevel: fullQuery.experienceLevel,
-          sort: fullQuery.sort,
+        const full = filterMock({
+          q: query.q, location: query.location,
+          workModes: modeCsv ? modeCsv.split(',') : [], types: typeCsv ? typeCsv.split(',') : [],
+          minSalary: query.minSalary, experienceLevel: query.experienceLevel,
+          sort: query.sort,
         });
-        setItems(list);
-        setTotal(list.length);
+        const totalCount = full.length;
+        const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+        const safePage = Math.min(currentPage, totalPages);
+        const start = (safePage - 1) * PAGE_SIZE;
+        setItems(full.slice(start, start + PAGE_SIZE));
+        setTotal(totalCount);
+        setPages(totalPages);
+        if (safePage !== currentPage) {
+          const next = new URLSearchParams(params);
+          if (safePage <= 1) next.delete('page');
+          else next.set('page', String(safePage));
+          setParams(next, { replace: true });
+          return;
+        }
         setLive(false);
       } finally {
         if (alive) setLoading(false);
       }
     }, 300); // debounce search
     return () => { alive = false; clearTimeout(t); };
-  }, [params, sort]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
 
   // Sync debounced text inputs → URL
   useEffect(() => {
@@ -146,6 +178,10 @@ export default function JobsPage() {
   const chipOn = 'rounded-full border border-accent bg-accent/15 px-3 py-1 text-xs font-medium text-accent cursor-pointer focus-visible:outline-2 focus-visible:outline-accent';
   const chipOff = 'rounded-full border border-white/15 px-3 py-1 text-xs text-neutral-300 hover:border-accent cursor-pointer focus-visible:outline-2 focus-visible:outline-accent';
   const select = 'rounded-md border border-white/10 bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent/60';
+
+  // External picks only clutter filtered/paginated browsing — show on clean page 1.
+  const hasSearch = Boolean((params.get('q') || '').trim() || (params.get('location') || '').trim());
+  const showRecommended = page === 1 && !hasSearch && activeCount === 0;
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
@@ -240,6 +276,7 @@ export default function JobsPage() {
         </div>
       )}
 
+      {showRecommended && (
       <div className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-white">Recommended jobs</h2>
@@ -276,9 +313,10 @@ export default function JobsPage() {
           ))}
         </div>
       </div>
+      )}
 
       <p className="mt-8 text-xs text-neutral-500">
-        {loading ? 'Loading…' : `${total} role${total === 1 ? '' : 's'} found`} ·{' '}
+        {loading ? 'Loading…' : `${total} role${total === 1 ? '' : 's'} found${pages > 1 ? ` · Page ${page} of ${pages}` : ''}`} ·{' '}
         <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Live from API' : '○ Demo data (API offline)'}</span>
       </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -291,6 +329,29 @@ export default function JobsPage() {
           <p className="text-sm text-neutral-400">No roles match these filters.</p>
           <button onClick={clearAll} className="mt-2 text-sm text-accent hover:underline">Clear search & filters →</button>
         </div>
+      )}
+      {!loading && pages > 1 && (
+        <nav aria-label="Jobs pages" className="mt-8 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => goPage(page - 1)}
+            className="rounded-md border border-white/15 px-4 py-2 text-sm text-white transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:text-white"
+          >
+            ← Prev
+          </button>
+          <span className="text-xs text-neutral-400" aria-live="polite">
+            Page {page} of {pages} · {total} role{total === 1 ? '' : 's'}
+          </span>
+          <button
+            type="button"
+            disabled={page >= pages}
+            onClick={() => goPage(page + 1)}
+            className="rounded-md border border-white/15 px-4 py-2 text-sm text-white transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:text-white"
+          >
+            Next →
+          </button>
+        </nav>
       )}
     </section>
   );

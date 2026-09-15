@@ -54,10 +54,19 @@ export const listJobs = asyncHandler(async (req, res) => {
   const and = [{ status: 'open' }];
   if (q) and.push({ $text: { $search: q } });
   if (location) and.push({ location: new RegExp(escapeRegExp(location), 'i') });
-  // workMode is the modern filter; legacy `remote=true` maps to Remote.
-  const mode = workMode || (remote === 'true' ? 'Remote' : '');
-  if (mode === 'Remote') and.push({ $or: [{ workMode: 'Remote' }, { remote: true }] });
-  else if (mode) and.push({ workMode: mode });
+  // workMode accepts CSV (e.g. Remote,Hybrid); legacy `remote=true` maps to Remote.
+  const modes = String(workMode || '')
+    .split(',')
+    .map((m) => m.trim())
+    .filter(Boolean);
+  if (remote === 'true' && !modes.includes('Remote')) modes.push('Remote');
+  if (modes.length) {
+    if (modes.includes('Remote')) {
+      and.push({ $or: [{ workMode: { $in: modes } }, { remote: true }] });
+    } else {
+      and.push({ workMode: { $in: modes } });
+    }
+  }
   if (type) {
     const types = String(type).split(',').map((t) => t.trim()).filter(Boolean);
     if (types.length) and.push({ type: { $in: types } });
