@@ -76,6 +76,22 @@ export const api = {
     if (!res.ok) throw new Error(data.message || `Delete failed (${res.status})`);
     return data;
   },
+  // Private résumé download — fetches via the authed endpoint and returns
+  // an object URL. External https:// links resolve directly (no auth needed).
+  downloadResume: async (resumeUrl) => {
+    if (!resumeUrl) throw new Error('No résumé to open');
+    if (/^https?:\/\//i.test(resumeUrl)) return { direct: resumeUrl };
+    const name = String(resumeUrl.split('/').pop() || '');
+    const res = await fetch(`${BASE}/auth/files/resumes/${encodeURIComponent(name)}`, {
+      headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || `Download failed (${res.status})`);
+    }
+    const blob = await res.blob();
+    return { blobUrl: URL.createObjectURL(blob), filename: name };
+  },
   jobs: (params = {}) => {
     const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
     return request(`/jobs${qs ? `?${qs}` : ''}`);
