@@ -29,14 +29,17 @@ export default function MyApplicationsPage() {
       )}
       <div className="mt-6 space-y-3">
         {items.map((a) => (
-          <div key={a._id} className="flex items-center justify-between rounded-xl border border-white/10 bg-panel p-4">
-            <div>
-              <p className="text-sm font-bold text-white">{a.job?.title}</p>
-              <p className="text-xs text-neutral-400">{a.job?.company} · {a.job?.location}</p>
+          <div key={a._id} className="rounded-xl border border-white/10 bg-panel p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-white">{a.job?.title}</p>
+                <p className="text-xs text-neutral-400">{a.job?.company} · {a.job?.location}</p>
+              </div>
+              <span className={`rounded-full border border-white/10 px-3 py-1 text-xs font-semibold ${STAGE[a.status] || ''}`}>
+                {a.status}
+              </span>
             </div>
-            <span className={`rounded-full border border-white/10 px-3 py-1 text-xs font-semibold ${STAGE[a.status] || ''}`}>
-              {a.status}
-            </span>
+            {a.coverNote && <p className="mt-2 rounded-md bg-panel2 p-2 text-xs italic text-neutral-400">“{a.coverNote}”</p>}
           </div>
         ))}
       </div>
