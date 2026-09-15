@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api, fileUrl } from '../lib/api';
+import { api } from '../lib/api';
+import ResumeLink from '../components/ResumeLink';
 
 const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
 
@@ -106,7 +107,7 @@ export default function ApplicantsPage() {
                     </p>
                   )}
                   <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
-                    {c.resumeUrl && <a href={fileUrl(c.resumeUrl)} target="_blank" rel="noreferrer" className="text-accent hover:underline">Résumé ↗</a>}
+                    {c.resumeUrl && <ResumeLink url={c.resumeUrl} name={c.resumeName} className="text-accent hover:underline">Résumé ↗</ResumeLink>}
                     {c.portfolioUrl && <a href={c.portfolioUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">Portfolio ↗</a>}
                     {c.linkedinUrl && <a href={c.linkedinUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">LinkedIn ↗</a>}
                     {c.githubUrl && <a href={c.githubUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">GitHub ↗</a>}
