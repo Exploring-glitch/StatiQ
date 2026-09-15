@@ -6,6 +6,7 @@ import { jobs as mockJobs } from '../data/mock';
 import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import ApplyModal from '../components/ApplyModal';
 import JobCard from '../components/JobCard';
 
 const timeAgo = (iso) => {
@@ -30,6 +31,8 @@ export default function JobDetailPage() {
   const [job, setJob] = useState(null);
   const [missing, setMissing] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [answer, setAnswer] = useState('');
+  const [showApply, setShowApply] = useState(false);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(() => isSaved(id));
@@ -98,16 +101,23 @@ export default function JobDetailPage() {
     setTimeout(() => setCopied(false), 1800);
   };
 
-  const apply = async () => {
+  const apply = () => {
     if (!user) {
       nav(`/login/job?next=${encodeURIComponent(`/jobs/${id}`)}`);
       return;
     }
     setMsg('');
+    setShowApply(true);
+  };
+
+  const submitApplication = async (note) => {
+    setMsg('');
     setBusy(true);
     try {
-      await api.apply(id);
+      await api.apply(id, note);
+      setAnswer(note);
       setApplied(true);
+      setShowApply(false);
       toast?.notify('Application sent', 'success');
     } catch (err) {
       setMsg(err.message);
@@ -185,9 +195,12 @@ export default function JobDetailPage() {
               </Link>
             </div>
           ) : applied ? (
-            <p className="mt-4 rounded-md bg-accent/15 p-3 text-sm text-accent">
-              Application sent. The hiring team will reach out soon.
-            </p>
+            <div className="mt-4 rounded-md bg-accent/15 p-3">
+              <p className="text-sm text-accent">
+                Application sent. The hiring team will reach out soon.
+              </p>
+              {answer && <p className="mt-2 text-xs italic text-neutral-400">“{answer}”</p>}
+            </div>
           ) : (
             <div className="mt-4 space-y-2">
               <button
@@ -225,6 +238,16 @@ export default function JobDetailPage() {
             ))}
           </div>
         </div>
+      )}
+      {showApply && !applied && (
+        <ApplyModal
+          company={job.company}
+          role={job.role}
+          busy={busy}
+          error={msg}
+          onClose={() => setShowApply(false)}
+          onSubmit={submitApplication}
+        />
       )}
     </section>
   );
