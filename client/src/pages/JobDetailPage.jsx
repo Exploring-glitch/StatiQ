@@ -5,6 +5,7 @@ import { normalizeJob } from '../lib/jobs';
 import { jobs as mockJobs } from '../data/mock';
 import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
 import JobCard from '../components/JobCard';
 
 const timeAgo = (iso) => {
@@ -23,6 +24,7 @@ const timeAgo = (iso) => {
 export default function JobDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const toast = useToast();
   const isEmployer = user?.role === 'employer';
   const nav = useNavigate();
   const [job, setJob] = useState(null);
@@ -106,8 +108,10 @@ export default function JobDetailPage() {
     try {
       await api.apply(id);
       setApplied(true);
+      toast?.notify('Application sent', 'success');
     } catch (err) {
       setMsg(err.message);
+      toast?.notify(err.message, 'error');
     } finally {
       setBusy(false);
     }
