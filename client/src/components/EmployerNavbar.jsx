@@ -64,7 +64,8 @@ export default function EmployerNavbar() {
             + New role
           </Link>
           <div className="mt-2 flex items-center justify-between px-1">
-            <span className="text-xs text-neutral-500">{user?.email}</span>
+            <span className="max-w-28 truncate text-xs text-neutral-500">{user?.email}</span>
+            <Link to="/profile" className="text-xs text-neutral-400 hover:text-white">Profile</Link>
             <Link to="/logout" className="text-xs text-neutral-400 hover:text-white">Log out</Link>
           </div>
         </div>
