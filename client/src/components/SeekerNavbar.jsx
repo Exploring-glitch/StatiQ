@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fileUrl } from '../lib/api';
@@ -13,6 +13,20 @@ const link = ({ isActive }) =>
 export default function SeekerNavbar() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMenu(false); };
+    const onClick = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenu(false); };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClick);
+    };
+  }, [menu]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur">
@@ -32,9 +46,12 @@ export default function SeekerNavbar() {
           <NavLink to="/saved" className={link}>Saved</NavLink>
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <Link
-            to="/profile"
+        <div className="relative hidden items-center gap-3 md:flex" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenu(!menu)}
+            aria-haspopup="menu"
+            aria-expanded={menu}
             className="flex items-center gap-2 rounded-full border border-white/15 py-1 pl-1 pr-3 text-sm text-white hover:border-accent"
           >
             <span className="relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-accent/20 text-xs font-bold text-accent">
@@ -48,8 +65,14 @@ export default function SeekerNavbar() {
               )}
             </span>
             {user?.name?.split(' ')[0] || 'Profile'}
-          </Link>
-          <Link to="/logout" className="text-sm text-neutral-400 hover:text-white">Log out</Link>
+            <span aria-hidden="true" className="text-xs text-neutral-500">▾</span>
+          </button>
+          {menu && (
+            <div role="menu" className="absolute right-0 top-10 w-44 rounded-lg border border-white/10 bg-panel2 p-1 shadow-2xl">
+              <Link role="menuitem" to="/profile" onClick={() => setMenu(false)} className="block rounded-md px-3 py-2 text-sm text-neutral-200 hover:bg-white/5 hover:text-white">Profile</Link>
+              <Link role="menuitem" to="/logout" onClick={() => setMenu(false)} className="block rounded-md px-3 py-2 text-sm text-neutral-400 hover:bg-white/5 hover:text-white">Log out</Link>
+            </div>
+          )}
         </div>
 
         <button
