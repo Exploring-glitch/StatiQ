@@ -5,7 +5,8 @@ import { isValidObjectId } from '../lib/validate.js';
 
 // POST /api/applications { jobId, coverNote } (jobseeker)
 export const apply = asyncHandler(async (req, res) => {
-  const { jobId, coverNote = '' } = req.body;
+  const { jobId } = req.body;
+  const coverNote = String(req.body?.coverNote ?? '').trim().slice(0, 2000);
   if (!jobId || !isValidObjectId(jobId)) {
     res.status(404);
     throw new Error('Job not open for applications');

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,15 +11,62 @@ import jobRoutes from './routes/jobs.js';
 import applicationRoutes from './routes/applications.js';
 import Job from './models/Job.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
+import { publicLimiter } from './middleware/rateLimit.js';
+import { avatarsDir } from './middleware/upload.js';
 
 const app = express();
-app.use(cors({ origin: (process.env.CLIENT_URL || 'http://localhost:5173').split(',') }));
+app.disable('x-powered-by');
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+}));
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map((s) => s.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('CORS blocked'), false);
+  },
+}));
 app.use(express.json({ limit: '1mb' }));
 
-// Uploaded résumés live on disk under /uploads and are served publicly
-// (filenames are unguessable: resume-<userId>-<timestamp>.<ext>).
+// Strip NoSQL-injection keys ($..., ....) from body/query/params.
+// Lightweight alternative to express-mongo-sanitize (Express 5 frozen-query
+// safe: builds cleaned copies instead of mutating req.query).
+const sanitizeObject = (obj) => {
+  if (Array.isArray(obj)) return obj.map(sanitizeObject);
+  if (obj && typeof obj === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (k.startsWith('$') || k.includes('.')) continue;
+      out[k] = sanitizeObject(v);
+    }
+    return out;
+  }
+  return obj;
+};
+app.use((req, _res, next) => {
+  if (req.body && typeof req.body === 'object') req.body = sanitizeObject(req.body);
+  if (req.params && typeof req.params === 'object') {
+    for (const [k, v] of Object.entries(sanitizeObject(req.params))) req.params[k] = v;
+  }
+  next();
+});
+
+// Uploads: avatars are public; résumés are PRIVATE (served only via the
+// authenticated GET /api/auth/files/resumes/:name endpoint).
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads/avatars', express.static(avatarsDir, { maxAge: '7d' }));
+app.use('/uploads/resumes', (_req, res) =>
+  res.status(403).json({ message: 'Forbidden — résumés require authentication. Use GET /api/auth/files/resumes/:name.' })
+);
+// Legacy flat /uploads/<file>: serve avatars, block anything resume-like.
+app.use('/uploads', (req, res, next) => {
+  const base = path.basename(req.path || '');
+  if (/^resume-/i.test(base)) {
+    return res.status(403).json({ message: 'Forbidden — résumés require authentication. Use GET /api/auth/files/resumes/:name.' });
+  }
+  next();
+}, express.static(path.join(__dirname, 'uploads'), { maxAge: '7d' }));
 
 // Never let a DB outage kill the API: stay up in degraded mode so the
 // site loads and API errors are readable JSON (not "Failed to fetch").
@@ -51,7 +99,7 @@ const demoJobs = [
 app.get('/api/demo-jobs', (req, res) => res.json(demoJobs));
 
 app.use('/api/auth', dbGate, authRoutes);
-app.use('/api/jobs', async (req, res, next) => {
+app.use('/api/jobs', publicLimiter, async (req, res, next) => {
   // Graceful fallback: no DB yet → serve demo data for public GETs
   if (req.method === 'GET' && !Job.db?.readyState) {
     if (req.path === '/' || req.path === '') return res.json({ items: demoJobs, total: demoJobs.length, page: 1, pages: 1 });

@@ -32,6 +32,18 @@ export const jobRules = [
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
 ];
 
+// Partial-update rules: every field optional so PATCH-style PUTs
+// (e.g. { status: 'closed' }) don't fail on missing title/company/location.
+export const jobUpdateRules = [
+  body('title').optional().trim().notEmpty().withMessage('Title cannot be empty'),
+  body('company').optional().trim().notEmpty().withMessage('Company cannot be empty'),
+  body('location').optional().trim().notEmpty().withMessage('Location cannot be empty'),
+  body('salaryMin').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Min salary must be positive'),
+  body('salaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive'),
+  body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
+  body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
+];
+
 // GET /api/jobs?q=&location=&remote=&type=&workMode=&experienceLevel=&minSalary=&sort=&page=&limit=
 export const listJobs = asyncHandler(async (req, res) => {
   const {

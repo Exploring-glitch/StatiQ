@@ -6,10 +6,13 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const uploadsDir = path.join(__dirname, '..', 'uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
+export const avatarsDir = path.join(uploadsDir, 'avatars');
+export const resumesDir = path.join(uploadsDir, 'resumes');
+for (const d of [uploadsDir, avatarsDir, resumesDir]) fs.mkdirSync(d, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  destination: (_req, file, cb) =>
+    cb(null, file.fieldname === 'avatar' ? avatarsDir : resumesDir),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const prefix = file.fieldname === 'avatar' ? 'avatar' : 'resume';
@@ -55,3 +58,43 @@ export const avatarUpload = multer({
   limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
   fileFilter: checkFile(AVATAR_ALLOWED, 'Only JPG, PNG or WebP images are allowed'),
 });
+
+// Magic-byte check — mimetype/extension are client-supplied and trivially
+// spoofed, so verify the file header matches its claimed type. Returns
+// null when OK, otherwise an error message. Caller deletes the file on fail.
+export const verifyUploadMagic = (filePath, ext) => {
+  let fd;
+  try {
+    fd = fs.openSync(filePath, 'r');
+    const buf = Buffer.alloc(12);
+    const n = fs.readSync(fd, buf, 0, 12, 0);
+    if (ext === '.pdf') {
+      if (n < 4 || buf.subarray(0, 4).toString() !== '%PDF') return 'File content does not look like a PDF';
+    } else if (ext === '.doc') {
+      // OLE compound document: D0 CF 11 E0 (old .doc); new .doc saved as
+      // OOXML is a ZIP — accept PK too.
+      const ole = n >= 4 && buf[0] === 0xd0 && buf[1] === 0xcf && buf[2] === 0x11 && buf[3] === 0xe0;
+      const zip = n >= 2 && buf[0] === 0x50 && buf[1] === 0x4b;
+      if (!ole && !zip) return 'File content does not look like a Word document';
+    } else if (ext === '.docx') {
+      if (n < 2 || buf[0] !== 0x50 || buf[1] !== 0x4b) return 'File content does not look like a Word document';
+    } else if (ext === '.jpg' || ext === '.jpeg') {
+      if (n < 2 || buf[0] !== 0xff || buf[1] !== 0xd8) return 'File content does not look like a JPEG image';
+    } else if (ext === '.png') {
+      const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+      if (n < 8 || !sig.every((b, i) => buf[i] === b)) return 'File content does not look like a PNG image';
+    } else if (ext === '.webp') {
+      // RIFF....WEBP
+      if (n < 12 || buf.subarray(0, 4).toString() !== 'RIFF' || buf.subarray(8, 12).toString() !== 'WEBP') {
+        return 'File content does not look like a WebP image';
+      }
+    }
+    return null;
+  } catch {
+    return 'Could not verify uploaded file';
+  } finally {
+    if (fd !== undefined) {
+      try { fs.closeSync(fd); } catch { /* ignore */ }
+    }
+  }
+};

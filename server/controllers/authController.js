@@ -2,8 +2,29 @@ import { body, validationResult } from 'express-validator';
 import fs from 'fs';
 import path from 'path';
 import User from '../models/User.js';
+import Application from '../models/Application.js';
 import { asyncHandler, signToken } from '../middleware/auth.js';
-import { uploadsDir } from '../middleware/upload.js';
+import { uploadsDir, avatarsDir, resumesDir, verifyUploadMagic } from '../middleware/upload.js';
+import { recordLoginFailure, clearLoginFailures } from '../middleware/rateLimit.js';
+import { isValidObjectId } from '../lib/validate.js';
+
+// Resolve an /uploads/... URL to an on-disk path. Supports the new
+// /uploads/avatars|resumes/<file> layout and legacy flat /uploads/<file>.
+const resolveUploadPath = (url) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('/uploads/')) return null;
+  const rel = url.slice('/uploads/'.length);
+  if (rel.includes('..') || rel.includes('/') || rel.includes('\\')) {
+    const parts = rel.split('/');
+    if (parts.length === 2 && (parts[0] === 'avatars' || parts[0] === 'resumes')) {
+      return path.join(uploadsDir, parts[0], path.basename(parts[1]));
+    }
+    return null;
+  }
+  const base = path.basename(rel);
+  if (rel.startsWith('avatars/') || base.startsWith('avatar-')) return path.join(avatarsDir, base);
+  if (rel.startsWith('resumes/') || base.startsWith('resume-')) return path.join(resumesDir, base);
+  return path.join(uploadsDir, base);
+};
 
 const check = (req, res) => {
   const errors = validationResult(req);
@@ -35,10 +56,12 @@ export const register = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Email already registered');
   }
-  // Accept optional rich-profile fields at signup too (all optional, validated by schema)
+  // Accept optional rich-profile fields at signup too (all optional, validated by schema).
+  // NOTE: resumeUrl/resumeName/avatarUrl are NOT accepted here — they can
+  // only be set via the authenticated upload endpoints below.
   const extra = {};
   for (const k of [
-    'bio', 'phone', 'resumeUrl', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
+    'bio', 'phone', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
     'experienceYears', 'experienceLevel', 'workExperiences', 'openToWork',
     'pronouns', 'gender', 'ethnicity',
     'desiredRoles', 'jobTypes', 'workModes', 'desiredLocation', 'languages',
@@ -57,9 +80,11 @@ export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).select('+password');
   if (!user || !(await user.comparePassword(password))) {
+    recordLoginFailure(email);
     res.status(401);
     throw new Error('Invalid email or password');
   }
+  clearLoginFailures(email);
   res.json(tokenResponse(user));
 });
 
@@ -81,31 +106,42 @@ export const putSavedJobs = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('jobIds must be an array');
   }
-  const clean = [...new Set(ids.map((v) => String(v ?? '').trim()).filter(Boolean))].slice(0, 200);
+  // Saved ids are strings so demo/mock ids (e.g. "1") keep working, but
+  // cap length/charset so they can't be used to smuggle payloads.
+  const clean = [...new Set(ids.map((v) => String(v ?? '').trim()).filter(Boolean))]
+    .filter((v) => v.length <= 100 && /^[A-Za-z0-9_-]+$/.test(v))
+    .slice(0, 200);
   const user = await User.findByIdAndUpdate(req.user._id, { savedJobs: clean }, { new: true }).select('savedJobs');
   res.json({ savedJobIds: Array.isArray(user?.savedJobs) ? user.savedJobs : [] });
 });
 
 // POST /api/auth/resume (protected, multipart/form-data, field: "resume")
-// Stores the file on disk, points user.resumeUrl at /uploads/<file>.
+// Stores the file under /uploads/resumes, points user.resumeUrl there.
 export const uploadResume = asyncHandler(async (req, res) => {
   if (!req.file) {
     res.status(400);
     throw new Error('No file received — attach it as the "resume" field');
   }
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  const bad = verifyUploadMagic(req.file.path, ext);
+  if (bad) {
+    fs.unlink(req.file.path, () => {});
+    res.status(400);
+    throw new Error(bad);
+  }
   const user = await User.findById(req.user._id);
   // Remove the previous upload so disk doesn't fill with orphaned résumés.
   if (user.resumeUrl && user.resumeUrl.startsWith('/uploads/')) {
-    const old = path.join(uploadsDir, path.basename(user.resumeUrl));
-    fs.unlink(old, () => {});
+    const old = resolveUploadPath(user.resumeUrl);
+    if (old) fs.unlink(old, () => {});
   }
-  user.resumeUrl = `/uploads/${req.file.filename}`;
+  user.resumeUrl = `/uploads/resumes/${req.file.filename}`;
   user.resumeName = req.file.originalname;
   try {
     await user.save();
   } catch (e) {
     // Don't leave the newly written file orphaned on disk.
-    fs.unlink(path.join(uploadsDir, req.file.filename), () => {});
+    fs.unlink(req.file.path, () => {});
     throw e;
   }
   res.status(201).json(user.toSafeJSON());
@@ -115,8 +151,8 @@ export const uploadResume = asyncHandler(async (req, res) => {
 export const deleteResume = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (user.resumeUrl && user.resumeUrl.startsWith('/uploads/')) {
-    const old = path.join(uploadsDir, path.basename(user.resumeUrl));
-    fs.unlink(old, () => {});
+    const old = resolveUploadPath(user.resumeUrl);
+    if (old) fs.unlink(old, () => {});
   }
   user.resumeUrl = '';
   user.resumeName = '';
@@ -125,23 +161,30 @@ export const deleteResume = asyncHandler(async (req, res) => {
 });
 
 // POST /api/auth/avatar (protected, multipart/form-data, field: "avatar")
-// Stores the image on disk, points user.avatarUrl at /uploads/<file>.
+// Stores the image under /uploads/avatars, points user.avatarUrl there.
 export const uploadAvatar = asyncHandler(async (req, res) => {
   if (!req.file) {
     res.status(400);
     throw new Error('No file received — attach it as the "avatar" field');
   }
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  const bad = verifyUploadMagic(req.file.path, ext);
+  if (bad) {
+    fs.unlink(req.file.path, () => {});
+    res.status(400);
+    throw new Error(bad);
+  }
   const user = await User.findById(req.user._id);
   if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/')) {
-    const old = path.join(uploadsDir, path.basename(user.avatarUrl));
-    fs.unlink(old, () => {});
+    const old = resolveUploadPath(user.avatarUrl);
+    if (old) fs.unlink(old, () => {});
   }
-  user.avatarUrl = `/uploads/${req.file.filename}`;
+  user.avatarUrl = `/uploads/avatars/${req.file.filename}`;
   try {
     await user.save();
   } catch (e) {
     // Don't leave the newly written file orphaned on disk.
-    fs.unlink(path.join(uploadsDir, req.file.filename), () => {});
+    fs.unlink(req.file.path, () => {});
     throw e;
   }
   res.status(201).json(user.toSafeJSON());
@@ -151,8 +194,8 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
 export const deleteAvatar = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (user.avatarUrl && user.avatarUrl.startsWith('/uploads/')) {
-    const old = path.join(uploadsDir, path.basename(user.avatarUrl));
-    fs.unlink(old, () => {});
+    const old = resolveUploadPath(user.avatarUrl);
+    if (old) fs.unlink(old, () => {});
   }
   user.avatarUrl = '';
   await user.save();
@@ -167,7 +210,6 @@ export const updateMeRules = [
   body('skills').optional().isArray().withMessage('Skills must be an array'),
   body('bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio must be under 1000 characters'),
   body('phone').optional().trim(),
-  body('resumeUrl').optional().trim(),
   body('portfolioUrl').optional().trim(),
   body('linkedinUrl').optional().trim(),
   body('githubUrl').optional().trim(),
@@ -196,7 +238,7 @@ export const updateMe = asyncHandler(async (req, res) => {
   check(req, res);
   const allowed = [
     'name', 'title', 'location', 'company', 'skills',
-    'bio', 'phone', 'resumeUrl', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
+    'bio', 'phone', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
     'experienceYears', 'experienceLevel', 'workExperiences', 'openToWork',
     'pronouns', 'gender', 'ethnicity',
     'desiredRoles', 'jobTypes', 'workModes', 'desiredLocation', 'languages',
@@ -234,4 +276,67 @@ export const updateMe = asyncHandler(async (req, res) => {
   }
   const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
   res.json(user.toSafeJSON());
+});
+
+export const changePasswordRules = [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 8 }).withMessage('New password needs 8+ characters'),
+];
+
+// PUT /api/auth/me/password (protected) — rotate own password
+export const changePassword = asyncHandler(async (req, res) => {
+  check(req, res);
+  const { currentPassword, newPassword } = req.body;
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user || !(await user.comparePassword(currentPassword))) {
+    res.status(401);
+    throw new Error('Current password is incorrect');
+  }
+  user.password = newPassword;
+  await user.save();
+  res.json({ message: 'Password updated' });
+});
+
+// GET /api/auth/files/resumes/:name (protected) — private résumé download.
+// Allowed: the owner, an admin, or an employer holding an application
+// from that candidate (hiring teams can review, the public cannot).
+export const downloadResumeFile = asyncHandler(async (req, res) => {
+  const name = path.basename(String(req.params.name || ''));
+  if (!name) {
+    res.status(404);
+    throw new Error('File not found');
+  }
+  const owner = await User.findOne({
+    $or: [{ resumeUrl: `/uploads/resumes/${name}` }, { resumeUrl: `/uploads/${name}` }],
+  }).select('_id');
+  if (!owner) {
+    res.status(404);
+    throw new Error('File not found');
+  }
+  const me = req.user;
+  const isOwner = owner._id.toString() === me._id.toString();
+  let allowed = isOwner || me.role === 'admin';
+  if (!allowed && me.role === 'employer') {
+    const apps = await Application.find({ applicant: owner._id }).select('job').lean();
+    const jobIds = apps.map((a) => a.job);
+    if (jobIds.length) {
+      const { default: Job } = await import('../models/Job.js');
+      const mine = await Job.exists({ _id: { $in: jobIds }, postedBy: me._id });
+      allowed = !!mine;
+    }
+  }
+  if (!allowed) {
+    res.status(403);
+    throw new Error('Forbidden — not your file');
+  }
+  const candidates = [path.join(resumesDir, name), path.join(uploadsDir, name)];
+  const filePath = candidates.find((p) => fs.existsSync(p));
+  if (!filePath) {
+    res.status(404);
+    throw new Error('File not found');
+  }
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Security-Policy', 'sandbox allow-downloads');
+  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  res.sendFile(filePath);
 });
