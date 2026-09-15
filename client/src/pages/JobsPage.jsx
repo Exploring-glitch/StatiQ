@@ -143,8 +143,8 @@ export default function JobsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
-  const chipOn = 'rounded-full border border-accent bg-accent/15 px-3 py-1 text-xs font-medium text-accent cursor-pointer';
-  const chipOff = 'rounded-full border border-white/15 px-3 py-1 text-xs text-neutral-300 hover:border-accent cursor-pointer';
+  const chipOn = 'rounded-full border border-accent bg-accent/15 px-3 py-1 text-xs font-medium text-accent cursor-pointer focus-visible:outline-2 focus-visible:outline-accent';
+  const chipOff = 'rounded-full border border-white/15 px-3 py-1 text-xs text-neutral-300 hover:border-accent cursor-pointer focus-visible:outline-2 focus-visible:outline-accent';
   const select = 'rounded-md border border-white/10 bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent/60';
 
   return (
@@ -197,26 +197,26 @@ export default function JobsPage() {
 
       {showFilters && (
         <div className="mt-3 space-y-4 rounded-xl border border-white/10 bg-panel p-4">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Work mode</p>
+          <fieldset>
+            <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Work mode</legend>
             <div className="flex flex-wrap gap-2">
               {MODES.map((m) => (
-                <span key={m} onClick={() => toggle('mode', workModes, m)} className={workModes.includes(m) ? chipOn : chipOff}>
+                <button key={m} type="button" aria-pressed={workModes.includes(m)} onClick={() => toggle('mode', workModes, m)} className={workModes.includes(m) ? chipOn : chipOff}>
                   {workModes.includes(m) ? `${m} ✓` : m}
-                </span>
+                </button>
               ))}
             </div>
-          </div>
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Job type</p>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Job type</legend>
             <div className="flex flex-wrap gap-2">
               {TYPES.map((t) => (
-                <span key={t} onClick={() => toggle('type', types, t)} className={types.includes(t) ? chipOn : chipOff}>
+                <button key={t} type="button" aria-pressed={types.includes(t)} onClick={() => toggle('type', types, t)} className={types.includes(t) ? chipOn : chipOff}>
                   {types.includes(t) ? `${t} ✓` : t}
-                </span>
+                </button>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="text-xs text-neutral-400">Min salary
               <select value={minSalary} onChange={(e) => patch({ min: e.target.value })} className={`${select} mt-1 w-full`}>
