@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { Skeleton } from '../components/Skeleton';
 
 export default function DashboardPage() {
   const [jobs, setJobs] = useState([]);
@@ -71,7 +72,13 @@ export default function DashboardPage() {
         </div>
       </div>
       <h2 className="mt-10 text-xl font-bold text-neutral-900">Your roles</h2>
-      {loading && <p className="mt-4 text-sm text-neutral-500">Loading…</p>}
+      {loading && (
+        <div className="mt-4 space-y-3" aria-label="Loading your roles">
+          <Skeleton className="h-16 w-full !rounded-xl" />
+          <Skeleton className="h-16 w-full !rounded-xl" />
+          <Skeleton className="h-16 w-full !rounded-xl" />
+        </div>
+      )}
       {!loading && error && (
         <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
           <p>{error}</p>
