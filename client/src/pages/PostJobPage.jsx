@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
 
 const empty = {
   title: '', company: '', location: '', salary: '',
@@ -12,6 +13,7 @@ const empty = {
 
 export default function PostJobPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const [form, setForm] = useState({ ...empty, company: user?.company || '' });
   // Auth loads async: backfill the employer company once it arrives, but
   // never overwrite what the user already typed.
@@ -52,10 +54,12 @@ export default function PostJobPage() {
       };
       const created = await api.createJob(payload);
       setMsg(`Posted “${created.title}” successfully.`);
+      toast?.notify(`Posted “${created.title}”`, 'success');
       setForm({ ...empty, company: user?.company || '' });
       refreshMine();
     } catch (err) {
       setMsg(err.message);
+      toast?.notify(err.message, 'error');
     } finally {
       setBusy(false);
     }
