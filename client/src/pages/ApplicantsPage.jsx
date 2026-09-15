@@ -113,7 +113,12 @@ export default function ApplicantsPage() {
                     {c.githubUrl && <a href={c.githubUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">GitHub ↗</a>}
                     {c.phone && <span className="text-neutral-500">{c.phone}</span>}
                   </div>
-                  {a.coverNote && <p className="mt-2 rounded-md bg-panel2 p-2 text-xs italic text-neutral-400">“{a.coverNote}”</p>}
+                  {a.coverNote && (
+                    <div className="mt-2 rounded-md bg-panel2 p-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Why {title || 'us'}</p>
+                      <p className="mt-0.5 text-xs italic text-neutral-300">“{a.coverNote}”</p>
+                    </div>
+                  )}
                 </div>
                 <select
                   value={a.status}
