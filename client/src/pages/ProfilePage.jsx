@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api, fileUrl } from '../lib/api';
+import ResumeLink from '../components/ResumeLink';
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
 const WORK_MODES = ['Remote', 'Hybrid', 'On-site'];
@@ -910,14 +911,20 @@ export default function ProfilePage() {
                           <p className="truncate text-sm font-medium text-white">
                             {isUploadedResume ? (resumeName || 'resume') : form.resumeUrl}
                           </p>
-                          <a
-                            href={fileUrl(form.resumeUrl)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs text-accent hover:underline"
-                          >
-                            View ↗
-                          </a>
+                          {isUploadedResume ? (
+                            <ResumeLink url={form.resumeUrl} name={resumeName} className="text-xs text-accent hover:underline">
+                              View ↗
+                            </ResumeLink>
+                          ) : (
+                            <a
+                              href={fileUrl(form.resumeUrl)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-accent hover:underline"
+                            >
+                              View ↗
+                            </a>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -969,11 +976,20 @@ export default function ProfilePage() {
                 </div>
                 ) : (
                   <div className="mt-3">
-                    <Row
-                      k="Résumé"
-                      v={isUploadedResume ? (resumeName || 'Uploaded file') : form.resumeUrl}
-                      link={form.resumeUrl ? fileUrl(form.resumeUrl) : ''}
-                    />
+                    {isUploadedResume ? (
+                      <div className="flex gap-2 border-b border-white/5 py-1.5 text-sm last:border-0">
+                        <span className="w-28 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Résumé</span>
+                        <span className="min-w-0 flex-1 break-words text-neutral-200">
+                          <ResumeLink url={form.resumeUrl} name={resumeName || 'Uploaded file'} className="break-all text-accent hover:underline" />
+                        </span>
+                      </div>
+                    ) : (
+                      <Row
+                        k="Résumé"
+                        v={form.resumeUrl}
+                        link={form.resumeUrl}
+                      />
+                    )}
                     <Row k="Portfolio" v={form.portfolioUrl} link={form.portfolioUrl} />
                     <Row k="LinkedIn" v={form.linkedinUrl} link={form.linkedinUrl} />
                     <Row k="GitHub" v={form.githubUrl} link={form.githubUrl} />
@@ -1052,7 +1068,11 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-              {form.resumeUrl && <a href={fileUrl(form.resumeUrl)} target="_blank" rel="noreferrer" className="text-accent hover:underline">Résumé ↗</a>}
+              {form.resumeUrl && (
+                isUploadedResume
+                  ? <ResumeLink url={form.resumeUrl} name={resumeName} className="text-accent hover:underline">Résumé ↗</ResumeLink>
+                  : <a href={form.resumeUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">Résumé ↗</a>
+              )}
               {form.portfolioUrl && <a href={form.portfolioUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">Portfolio ↗</a>}
               {form.linkedinUrl && <a href={form.linkedinUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">LinkedIn ↗</a>}
               {form.githubUrl && <a href={form.githubUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">GitHub ↗</a>}
