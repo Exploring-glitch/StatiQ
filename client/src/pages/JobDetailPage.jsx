@@ -87,17 +87,33 @@ export default function JobDetailPage() {
   }, [job]);
 
   const share = async () => {
+    const href = window.location.href;
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+        return;
+      } catch {
+        // Clipboard API denied — fall through to legacy copy.
+      }
+    }
     try {
-      await navigator.clipboard.writeText(window.location.href);
-    } catch {
       const ta = document.createElement('textarea');
-      ta.value = window.location.href;
+      ta.value = href;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
       document.body.appendChild(ta);
       ta.select();
+      // Deprecated but still the widest-supported fallback for non-secure contexts.
       document.execCommand('copy');
       document.body.removeChild(ta);
+      setCopied(true);
+    } catch {
+      toast?.notify('Copy this link manually', 'error');
+      return;
     }
-    setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
 
