@@ -202,6 +202,13 @@ export default function ApplicantsPage() {
                     ))}
                   </select>
                   <span className="text-[11px] font-semibold text-accent">View profile →</span>
+                  <Link
+                    to={`/jobs/${id}/applicants/${a._id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[11px] text-neutral-400 hover:text-white hover:underline"
+                  >
+                    Open full page ↗
+                  </Link>
                 </div>
               </div>
             </article>
@@ -213,6 +220,7 @@ export default function ApplicantsPage() {
           app={selected}
           jobTitle={title}
           now={now}
+          profileUrl={`/jobs/${id}/applicants/${selected._id}`}
           onClose={() => setSelectedId(null)}
           onStatusChange={setStatus}
         />
