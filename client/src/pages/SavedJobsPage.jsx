@@ -9,10 +9,14 @@ export default function SavedJobsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(0);
+  const [error, setError] = useState('');
+  const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
+      setError('');
+      setLoading(true);
       try {
         // Pull server bookmarks first so all devices agree, then resolve.
         await mergeSavedOnAuth().catch(() => {});
@@ -44,6 +48,8 @@ export default function SavedJobsPage() {
         if (!alive) return;
         setItems(found);
         setUnavailable(missing);
+      } catch (e) {
+        if (alive) setError(e.message || 'Could not load saved jobs');
       } finally {
         if (alive) setLoading(false);
       }
@@ -52,7 +58,7 @@ export default function SavedJobsPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [nonce]);
 
   const unsave = (id) => {
     toggleSaved(id);
@@ -64,6 +70,12 @@ export default function SavedJobsPage() {
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Job seeker</p>
       <h1 className="mt-2 text-3xl font-bold text-white">Saved jobs</h1>
       {loading && <p className="mt-6 text-sm text-neutral-400">Loading…</p>}
+      {!loading && error && (
+        <div className="mt-6 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+          <p className="min-w-0 flex-1">{error}</p>
+          <button type="button" onClick={() => setNonce((n) => n + 1)} className="rounded border border-red-400/40 px-2 py-0.5 text-xs hover:bg-red-500/20">Retry</button>
+        </div>
+      )}
       {!loading && unavailable > 0 && (
         <p className="mt-6 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-400">
           {unavailable} saved {unavailable === 1 ? 'job' : 'jobs'} {unavailable === 1 ? 'is' : 'are'} no longer available and{' '}
