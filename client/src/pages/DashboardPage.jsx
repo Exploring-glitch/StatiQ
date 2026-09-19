@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
-import { timeAgo } from '../lib/time';
+import { timeAgo, useNow } from '../lib/time';
 import { Skeleton } from '../components/Skeleton';
 
 export default function DashboardPage() {
+  const now = useNow();
   const [jobs, setJobs] = useState([]);
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -106,7 +107,7 @@ export default function DashboardPage() {
                 <p className="text-sm font-bold text-white">{j.title}</p>
                 <p className="text-xs text-neutral-500">
                   {j.location} · {counts[id] ?? '…'} applicants
-                  {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted').toLowerCase()}` : ''}
+                  {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted', now).toLowerCase()}` : ''}
                 </p>
               </div>
               <div className="flex gap-2">
