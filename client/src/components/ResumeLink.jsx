@@ -20,7 +20,13 @@ export default function ResumeLink({ url, name, className = 'text-accent hover:u
     setBusy(true);
     try {
       const { direct, blobUrl } = await api.downloadResume(url);
-      window.open(direct || blobUrl, '_blank', 'noreferrer');
+      if (direct) {
+        window.open(direct, '_blank', 'noreferrer');
+        return;
+      }
+      window.open(blobUrl, '_blank', 'noreferrer');
+      // Avoid leaking blob URLs on repeated opens; the new tab holds its own reference.
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     } catch (err) {
       toast?.notify(err.message, 'error');
     } finally {
