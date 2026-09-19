@@ -107,18 +107,20 @@ export default function ApplicantsPage() {
           const c = a.applicant || {};
           const jobs = Array.isArray(c.workExperiences) ? c.workExperiences : [];
           return (
-            <div key={a._id} className="rounded-xl border border-white/10 bg-panel p-4 transition hover:border-accent/40">
+            <article
+              key={a._id}
+              onClick={() => setSelectedId(a._id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.target === e.currentTarget) setSelectedId(a._id);
+              }}
+              tabIndex={0}
+              title={`Open ${c.name || 'candidate'} profile`}
+              className="cursor-pointer rounded-xl border border-white/10 bg-panel p-4 transition hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent"
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedId(a._id)}
-                      title={`Open ${c.name || 'candidate'} profile`}
-                      className="text-sm font-bold text-white hover:text-accent hover:underline"
-                    >
-                      {c.name}
-                    </button>
+                    <p className="text-sm font-bold text-white">{c.name}</p>
                     {a.createdAt && (
                       <span
                         className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400"
@@ -173,11 +175,11 @@ export default function ApplicantsPage() {
                       {c.desiredLocation ? ` · ${c.desiredLocation}` : ''}
                     </p>
                   )}
-                  <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
+                  <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]" onClick={(e) => e.stopPropagation()}>
                     {c.resumeUrl && <ResumeLink url={c.resumeUrl} name={c.resumeName} className="text-accent hover:underline">Résumé ↗</ResumeLink>}
-                    {c.portfolioUrl && <a href={c.portfolioUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">Portfolio ↗</a>}
-                    {c.linkedinUrl && <a href={c.linkedinUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">LinkedIn ↗</a>}
-                    {c.githubUrl && <a href={c.githubUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">GitHub ↗</a>}
+                    {c.portfolioUrl && <a href={c.portfolioUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-accent hover:underline">Portfolio ↗</a>}
+                    {c.linkedinUrl && <a href={c.linkedinUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-accent hover:underline">LinkedIn ↗</a>}
+                    {c.githubUrl && <a href={c.githubUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-accent hover:underline">GitHub ↗</a>}
                     {c.phone && <span className="text-neutral-500">{c.phone}</span>}
                   </div>
                   {a.coverNote && (
@@ -187,29 +189,22 @@ export default function ApplicantsPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
                   <label className="sr-only" htmlFor={`status-${a._id}`}>Application status</label>
                   <select
                     id={`status-${a._id}`}
                     value={a.status}
                     onChange={(e) => setStatus(a._id, e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
                     className="rounded-md border border-white/10 bg-panel2 px-2 py-1 text-xs text-white"
                   >
                     {STAGES.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedId(a._id)}
-                    className="text-[11px] font-semibold text-accent hover:underline"
-                  >
-                    View profile →
-                  </button>
+                  <span className="text-[11px] font-semibold text-accent">View profile →</span>
                 </div>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
