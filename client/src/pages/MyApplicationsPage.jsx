@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { timeAgo, useNow } from '../lib/time';
 
 const STAGE = { applied: 'text-neutral-400', reviewing: 'text-yellow-400', interview: 'text-accent', offer: 'text-emerald-400', rejected: 'text-red-400' };
 
 export default function MyApplicationsPage() {
+  const now = useNow();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,7 +44,10 @@ export default function MyApplicationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-white">{a.job?.title}</p>
-                <p className="text-xs text-neutral-400">{a.job?.company} · {a.job?.location}</p>
+                <p className="text-xs text-neutral-400">
+                  {a.job?.company} · {a.job?.location}
+                  {a.createdAt ? ` · ${timeAgo(a.createdAt, 'Applied', now).toLowerCase()}` : ''}
+                </p>
               </div>
               <span className={`rounded-full border border-white/10 px-3 py-1 text-xs font-semibold ${STAGE[a.status] || ''}`}>
                 {a.status}
