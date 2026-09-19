@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { timeAgo } from '../lib/time';
+import { MARKS, markBadge, markLabel } from '../lib/marks';
 import ResumeLink from './ResumeLink';
 
 const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
 
 // Full applicant profile in a modal. Data comes from the already-fetched
 // GET /api/applications/job/:jobId list — no extra request needed.
-export default function ApplicantDetail({ app, jobTitle, now, profileUrl, onClose, onStatusChange }) {
+export default function ApplicantDetail({ app, jobTitle, now, profileUrl, onClose, onStatusChange, onMarkChange }) {
   const c = app?.applicant || {};
   const jobs = Array.isArray(c.workExperiences) ? c.workExperiences : [];
 
@@ -44,6 +45,11 @@ export default function ApplicantDetail({ app, jobTitle, now, profileUrl, onClos
               <h2 className="text-lg font-bold text-white">{c.name || 'Candidate'}</h2>
               {c.openToWork && (
                 <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">● Open to work</span>
+              )}
+              {app.mark && (
+                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${markBadge(app.mark)}`}>
+                  {markLabel(app.mark)}
+                </span>
               )}
             </div>
             <p className="mt-1 text-xs text-neutral-400">
@@ -157,6 +163,18 @@ export default function ApplicantDetail({ app, jobTitle, now, profileUrl, onClos
           >
             {STAGES.map((s) => (
               <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <label htmlFor="applicant-detail-mark" className="ml-2 text-xs text-neutral-400">Mark:</label>
+          <select
+            id="applicant-detail-mark"
+            value={app.mark || ''}
+            onChange={(e) => onMarkChange?.(app._id, e.target.value)}
+            title="Mark this candidate (only you see this)"
+            className="rounded-md border border-white/10 bg-panel2 px-2 py-1 text-xs text-white"
+          >
+            {MARKS.map((m) => (
+              <option key={m.v} value={m.v}>{m.l}</option>
             ))}
           </select>
           {app.updatedAt && (
