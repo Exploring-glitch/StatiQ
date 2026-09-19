@@ -12,6 +12,6 @@ r.get('/mine/posted', protect, authorize('employer', 'admin'), myPostedJobs);
 r.get('/:id', getJob);
 r.post('/', protect, authorize('employer', 'admin'), writeLimiter, jobRules, createJob);
 r.put('/:id', protect, authorize('employer', 'admin'), writeLimiter, jobUpdateRules, updateJob);
-r.delete('/:id', protect, authorize('employer', 'admin'), deleteJob);
+r.delete('/:id', protect, authorize('employer', 'admin'), writeLimiter, deleteJob);
 
 export default r;
