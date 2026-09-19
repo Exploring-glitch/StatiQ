@@ -260,7 +260,13 @@ export default function ApplicantsPage() {
                       <option key={m.v} value={m.v}>{m.l}</option>
                     ))}
                   </select>
-                  <span className="text-[11px] font-semibold text-accent">View profile →</span>
+                  <Link
+                    to={`/jobs/${id}/applicants/${a._id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[11px] font-semibold text-accent hover:underline"
+                  >
+                    View profile →
+                  </Link>
                   <Link
                     to={`/jobs/${id}/applicants/${a._id}`}
                     onClick={(e) => e.stopPropagation()}
