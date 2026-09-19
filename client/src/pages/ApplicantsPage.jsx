@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { timeAgo, useNow } from '../lib/time';
 import { useToast } from '../components/Toast';
@@ -12,11 +12,20 @@ export default function ApplicantsPage() {
   const { id } = useParams();
   const toast = useToast();
   const now = useNow();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [apps, setApps] = useState([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedId, setSelectedId] = useState(null);
+  // Deep-linkable selection: /jobs/:id/applicants?applicant=<appId>
+  // survives refresh and works with back/forward navigation.
+  const selectedId = searchParams.get('applicant');
+  const setSelectedId = (appId) => {
+    const next = new URLSearchParams(searchParams);
+    if (appId) next.set('applicant', appId);
+    else next.delete('applicant');
+    setSearchParams(next, { replace: true });
+  };
   const selected = apps.find((x) => x._id === selectedId) || null;
 
   useEffect(() => {
