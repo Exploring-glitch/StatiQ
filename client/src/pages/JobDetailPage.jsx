@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { normalizeJob } from '../lib/jobs';
+import { timeAgo, useNow } from '../lib/time';
 import { jobs as mockJobs } from '../data/mock';
 import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
@@ -9,21 +10,9 @@ import { useToast } from '../components/Toast';
 import ApplyModal from '../components/ApplyModal';
 import JobCard from '../components/JobCard';
 
-const timeAgo = (iso) => {
-  if (!iso) return '';
-  const ms = Date.now() - new Date(iso).getTime();
-  if (Number.isNaN(ms) || ms < 0) return '';
-  const mins = Math.floor(ms / 60000);
-  if (mins < 60) return mins <= 1 ? 'Posted just now' : `Posted ${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `Posted ${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return days === 1 ? 'Posted yesterday' : `Posted ${days}d ago`;
-  return `Posted on ${new Date(iso).toLocaleDateString()}`;
-};
-
 export default function JobDetailPage() {
   const { id } = useParams();
+  const now = useNow();
   const { user } = useAuth();
   const toast = useToast();
   const isEmployer = user?.role === 'employer';
@@ -169,7 +158,11 @@ export default function JobDetailPage() {
         <div className="rounded-xl border border-white/10 bg-panel p-6 lg:col-span-2">
           <p className="text-sm font-bold text-white">{job.role}</p>
           <p className="mt-1 text-xs text-neutral-400">{job.company} · {job.location} · {job.salary} · {job.type}</p>
-          {timeAgo(job.createdAt) && <p className="mt-1 text-xs text-neutral-500">{timeAgo(job.createdAt)}</p>}
+          {timeAgo(job.createdAt, 'Posted', now) && (
+            <p className="mt-1 text-xs text-neutral-500" title={job.createdAt ? new Date(job.createdAt).toLocaleString() : ''}>
+              {timeAgo(job.createdAt, 'Posted', now)}
+            </p>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             {job.tags.map((t) => (
               <span key={t} className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-xs text-neutral-300">{t}</span>
