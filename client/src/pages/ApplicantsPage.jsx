@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useToast } from '../components/Toast';
 import ResumeLink from '../components/ResumeLink';
 
 const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
 
 export default function ApplicantsPage() {
   const { id } = useParams();
+  const toast = useToast();
   const [apps, setApps] = useState([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
@@ -31,12 +33,31 @@ export default function ApplicantsPage() {
   }, [id]);
 
   const setStatus = async (appId, status) => {
+    const prev = apps.find((a) => a._id === appId)?.status;
+    setApps((list) => list.map((a) => (a._id === appId ? { ...a, status } : a)));
+    setError('');
     try {
       const updated = await api.setApplicantStatus(appId, status);
-      setApps(apps.map((a) => (a._id === appId ? updated : a)));
+      setApps((list) => list.map((a) => (a._id === appId ? updated : a)));
+      toast?.notify(`Moved to ${status}`, 'success');
     } catch (e) {
+      // Revert optimistic update so the select reflects the server state.
+      setApps((list) => list.map((a) => (a._id === appId ? { ...a, status: prev ?? a.status } : a)));
       setError(e.message);
+      toast?.notify(e.message, 'error');
     }
+  };
+
+  const reload = () => {
+    setError('');
+    setLoading(true);
+    Promise.all([api.jobApplicants(id), api.job(id).catch(() => null)])
+      .then(([list, job]) => {
+        setApps(list);
+        if (job) setTitle(job.title || job.role);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -44,7 +65,12 @@ export default function ApplicantsPage() {
       <Link to="/dashboard" className="text-sm text-neutral-400 hover:text-white">← Dashboard</Link>
       <h1 className="mt-2 text-2xl font-bold text-white">Applicants{title ? ` — ${title}` : ''}</h1>
       {loading && <p className="mt-6 text-sm text-neutral-400">Loading…</p>}
-      {error && <p className="mt-4 rounded-md bg-red-500/10 p-2 text-xs text-red-400">{error}</p>}
+      {error && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-md bg-red-500/10 p-2 text-xs text-red-400">
+          <p className="min-w-0 flex-1">{error}</p>
+          <button type="button" onClick={reload} className="rounded border border-red-400/40 px-2 py-0.5 hover:bg-red-500/20">Retry</button>
+        </div>
+      )}
       {!loading && !error && apps.length === 0 && (
         <p className="mt-6 rounded-xl border border-white/10 bg-panel p-6 text-sm text-neutral-400">
           No applicants yet. Share your role to get discovered.
@@ -120,7 +146,9 @@ export default function ApplicantsPage() {
                     </div>
                   )}
                 </div>
+                <label className="sr-only" htmlFor={`status-${a._id}`}>Application status</label>
                 <select
+                  id={`status-${a._id}`}
                   value={a.status}
                   onChange={(e) => setStatus(a._id, e.target.value)}
                   className="rounded-md border border-white/10 bg-panel2 px-2 py-1 text-xs text-white"
