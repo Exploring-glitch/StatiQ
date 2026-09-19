@@ -105,4 +105,5 @@ export const api = {
   myPostedJobs: () => request('/jobs/mine/posted'),
   jobApplicants: (jobId) => request(`/applications/job/${jobId}`),
   setApplicantStatus: (appId, status) => request(`/applications/${appId}`, { method: 'PATCH', body: { status } }),
+  setApplicantMark: (appId, mark) => request(`/applications/${appId}`, { method: 'PATCH', body: { mark } }),
 };
