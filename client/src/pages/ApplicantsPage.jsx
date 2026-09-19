@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
-import { timeAgo } from '../lib/time';
+import { timeAgo, useNow } from '../lib/time';
 import { useToast } from '../components/Toast';
 import ResumeLink from '../components/ResumeLink';
 
@@ -10,6 +10,7 @@ const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
 export default function ApplicantsPage() {
   const { id } = useParams();
   const toast = useToast();
+  const now = useNow();
   const [apps, setApps] = useState([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
@@ -92,7 +93,7 @@ export default function ApplicantsPage() {
                         className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400"
                         title={new Date(a.createdAt).toLocaleString()}
                       >
-                        🕒 {timeAgo(a.createdAt, 'Applied')}
+                        🕒 {timeAgo(a.createdAt, 'Applied', now)}
                       </span>
                     )}
                     {c.openToWork && (
