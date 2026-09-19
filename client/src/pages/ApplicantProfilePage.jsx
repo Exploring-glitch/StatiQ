@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { timeAgo, useNow } from '../lib/time';
+import { MARKS, markBadge, markLabel } from '../lib/marks';
 import { useToast } from '../components/Toast';
 import ResumeLink from '../components/ResumeLink';
 
@@ -53,6 +54,20 @@ export default function ApplicantProfilePage() {
     }
   };
 
+  const setMark = async (mark) => {
+    const prev = app?.mark;
+    setApp((a) => (a ? { ...a, mark } : a));
+    try {
+      const updated = await api.setApplicantMark(appId, mark);
+      setApp(updated);
+      toast?.notify(mark ? `Marked as ${markLabel(mark)}` : 'Mark removed', 'success');
+    } catch (e) {
+      setApp((a) => (a ? { ...a, mark: prev } : a));
+      setError(e.message);
+      toast?.notify(e.message, 'error');
+    }
+  };
+
   const c = app?.applicant || {};
   const jobs = Array.isArray(c.workExperiences) ? c.workExperiences : [];
 
@@ -73,6 +88,11 @@ export default function ApplicantProfilePage() {
             <h1 className="text-xl font-bold text-white">{c.name || 'Candidate'}</h1>
             {c.openToWork && (
               <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">● Open to work</span>
+            )}
+            {app.mark && (
+              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${markBadge(app.mark)}`}>
+                {markLabel(app.mark)}
+              </span>
             )}
             {app.createdAt && (
               <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400" title={new Date(app.createdAt).toLocaleString()}>
@@ -152,6 +172,18 @@ export default function ApplicantProfilePage() {
             >
               {STAGES.map((s) => (
                 <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <label htmlFor="applicant-page-mark" className="ml-2 text-xs text-neutral-400">Mark:</label>
+            <select
+              id="applicant-page-mark"
+              value={app.mark || ''}
+              onChange={(e) => setMark(e.target.value)}
+              title="Mark this candidate (only you see this)"
+              className="rounded-md border border-white/10 bg-panel2 px-2 py-1 text-xs text-white"
+            >
+              {MARKS.map((m) => (
+                <option key={m.v} value={m.v}>{m.l}</option>
               ))}
             </select>
             {app.updatedAt && (
