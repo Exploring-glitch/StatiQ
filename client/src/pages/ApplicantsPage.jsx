@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { timeAgo, useNow } from '../lib/time';
 import { MARKS, markBadge, markLabel } from '../lib/marks';
 import { useToast } from '../components/Toast';
-import ApplicantDetail from '../components/ApplicantDetail';
 import ResumeLink from '../components/ResumeLink';
 
 const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
@@ -14,21 +13,10 @@ export default function ApplicantsPage() {
   const nav = useNavigate();
   const toast = useToast();
   const now = useNow();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [apps, setApps] = useState([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  // Deep-linkable selection: /jobs/:id/applicants?applicant=<appId>
-  // survives refresh and works with back/forward navigation.
-  const selectedId = searchParams.get('applicant');
-  const setSelectedId = (appId) => {
-    const next = new URLSearchParams(searchParams);
-    if (appId) next.set('applicant', appId);
-    else next.delete('applicant');
-    setSearchParams(next, { replace: true });
-  };
-  const selected = apps.find((x) => x._id === selectedId) || null;
   const [markFilter, setMarkFilter] = useState('all');
   const visible = apps.filter((a) => {
     if (markFilter === 'all') return true;
@@ -267,17 +255,6 @@ export default function ApplicantsPage() {
           );
         })}
       </div>
-      {selected && (
-        <ApplicantDetail
-          app={selected}
-          jobTitle={title}
-          now={now}
-          profileUrl={`/jobs/${id}/applicants/${selected._id}`}
-          onClose={() => setSelectedId(null)}
-          onStatusChange={setStatus}
-          onMarkChange={setMark}
-        />
-      )}
     </section>
   );
 }
