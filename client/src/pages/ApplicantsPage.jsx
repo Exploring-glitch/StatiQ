@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { timeAgo, useNow } from '../lib/time';
 import { MARKS, markBadge, markLabel } from '../lib/marks';
@@ -11,6 +11,7 @@ const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
 
 export default function ApplicantsPage() {
   const { id } = useParams();
+  const nav = useNavigate();
   const toast = useToast();
   const now = useNow();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -151,9 +152,9 @@ export default function ApplicantsPage() {
           return (
             <article
               key={a._id}
-              onClick={() => setSelectedId(a._id)}
+              onClick={() => nav(`/jobs/${id}/applicants/${a._id}`)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.target === e.currentTarget) setSelectedId(a._id);
+                if (e.key === 'Enter' && e.target === e.currentTarget) nav(`/jobs/${id}/applicants/${a._id}`);
               }}
               tabIndex={0}
               title={`Open ${c.name || 'candidate'} profile`}
@@ -260,20 +261,6 @@ export default function ApplicantsPage() {
                       <option key={m.v} value={m.v}>{m.l}</option>
                     ))}
                   </select>
-                  <Link
-                    to={`/jobs/${id}/applicants/${a._id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[11px] font-semibold text-accent hover:underline"
-                  >
-                    View profile →
-                  </Link>
-                  <Link
-                    to={`/jobs/${id}/applicants/${a._id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[11px] text-neutral-400 hover:text-white hover:underline"
-                  >
-                    Open full page ↗
-                  </Link>
                 </div>
               </div>
             </article>
