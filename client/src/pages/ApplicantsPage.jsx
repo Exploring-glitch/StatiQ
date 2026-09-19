@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
+import { timeAgo } from '../lib/time';
 import { useToast } from '../components/Toast';
 import ResumeLink from '../components/ResumeLink';
 
@@ -86,6 +87,14 @@ export default function ApplicantsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-bold text-white">{c.name}</p>
+                    {a.createdAt && (
+                      <span
+                        className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400"
+                        title={new Date(a.createdAt).toLocaleString()}
+                      >
+                        🕒 {timeAgo(a.createdAt, 'Applied')}
+                      </span>
+                    )}
                     {c.openToWork && (
                       <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">● Open to work</span>
                     )}
