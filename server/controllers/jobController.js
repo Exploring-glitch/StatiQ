@@ -45,6 +45,10 @@ export const jobUpdateRules = [
 ];
 
 // GET /api/jobs?q=&location=&remote=&type=&workMode=&experienceLevel=&minSalary=&sort=&page=&limit=
+// Query enums are allowlisted so sanitized-but-unexpected values never reach Mongo operators.
+const ALLOWED_JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
+const ALLOWED_WORK_MODES = ['Remote', 'Hybrid', 'On-site'];
+const ALLOWED_LEVELS = ['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive'];
 export const listJobs = asyncHandler(async (req, res) => {
   const {
     q = '', location = '', remote, type = '', workMode = '',
@@ -58,7 +62,7 @@ export const listJobs = asyncHandler(async (req, res) => {
   const modes = String(workMode || '')
     .split(',')
     .map((m) => m.trim())
-    .filter(Boolean);
+    .filter((m) => ALLOWED_WORK_MODES.includes(m));
   if (remote === 'true' && !modes.includes('Remote')) modes.push('Remote');
   if (modes.length) {
     if (modes.includes('Remote')) {
@@ -68,10 +72,10 @@ export const listJobs = asyncHandler(async (req, res) => {
     }
   }
   if (type) {
-    const types = String(type).split(',').map((t) => t.trim()).filter(Boolean);
+    const types = String(type).split(',').map((t) => t.trim()).filter((t) => ALLOWED_JOB_TYPES.includes(t));
     if (types.length) and.push({ type: { $in: types } });
   }
-  if (experienceLevel) and.push({ experienceLevel });
+  if (experienceLevel && ALLOWED_LEVELS.includes(experienceLevel)) and.push({ experienceLevel });
   const min = Number(minSalary);
   if (minSalary !== '' && !Number.isNaN(min)) {
     // Jobs without salary data still show (don't punish missing data).
