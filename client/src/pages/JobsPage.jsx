@@ -54,6 +54,8 @@ export default function JobsPage() {
   const [pages, setPages] = useState(1);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [offline, setOffline] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
   const workModes = useMemo(() => csv(params, 'mode'), [params]);
@@ -126,6 +128,7 @@ export default function JobsPage() {
         setTotal(totalCount);
         setPages(totalPages);
         setLive(true);
+        setOffline(false);
       } catch {
         if (!alive) return;
         const full = filterMock({
@@ -149,13 +152,14 @@ export default function JobsPage() {
           return;
         }
         setLive(false);
+        setOffline(true);
       } finally {
         if (alive) setLoading(false);
       }
     }, 300); // debounce search
     return () => { alive = false; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params]);
+  }, [params, retryKey]);
 
   // Sync debounced text inputs → URL
   useEffect(() => {
@@ -318,6 +322,11 @@ export default function JobsPage() {
       <p className="mt-8 text-xs text-neutral-500">
         {loading ? 'Loading…' : `${total} role${total === 1 ? '' : 's'} found${pages > 1 ? ` · Page ${page} of ${pages}` : ''}`} ·{' '}
         <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Live from API' : '○ Demo data (API offline)'}</span>
+        {!loading && offline && (
+          <button type="button" onClick={() => setRetryKey((k) => k + 1)} className="ml-2 rounded border border-white/15 px-2 py-0.5 text-[11px] text-white hover:border-accent hover:text-accent">
+            Retry live API
+          </button>
+        )}
       </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {loading
