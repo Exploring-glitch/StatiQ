@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { timeAgo } from '../lib/time';
 import ResumeLink from './ResumeLink';
 
@@ -6,7 +7,7 @@ const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
 
 // Full applicant profile in a modal. Data comes from the already-fetched
 // GET /api/applications/job/:jobId list — no extra request needed.
-export default function ApplicantDetail({ app, jobTitle, now, onClose, onStatusChange }) {
+export default function ApplicantDetail({ app, jobTitle, now, profileUrl, onClose, onStatusChange }) {
   const c = app?.applicant || {};
   const jobs = Array.isArray(c.workExperiences) ? c.workExperiences : [];
 
@@ -60,6 +61,11 @@ export default function ApplicantDetail({ app, jobTitle, now, onClose, onStatusC
             ✕
           </button>
         </div>
+        {profileUrl && (
+          <Link to={profileUrl} className="mt-2 inline-block text-xs font-semibold text-accent hover:underline">
+            Open full profile page ↗
+          </Link>
+        )}
 
         {(c.experienceYears != null || c.experienceLevel || c.availability) && (
           <div className="mt-3 flex flex-wrap gap-1">
