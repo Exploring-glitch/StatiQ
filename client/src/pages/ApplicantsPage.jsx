@@ -66,6 +66,18 @@ export default function ApplicantsPage() {
     <section className="mx-auto max-w-5xl px-4 py-10">
       <Link to="/dashboard" className="text-sm text-neutral-400 hover:text-white">← Dashboard</Link>
       <h1 className="mt-2 text-2xl font-bold text-white">Applicants{title ? ` — ${title}` : ''}</h1>
+      {!loading && !error && apps.length > 0 && (
+        <p className="mt-1 text-xs text-neutral-500" aria-live="polite">
+          {apps.length} applicant{apps.length === 1 ? '' : 's'}
+          {(() => {
+            const latest = [...apps]
+              .map((x) => new Date(x.createdAt).getTime())
+              .filter((t) => !Number.isNaN(t))
+              .sort((a, b) => b - a)[0];
+            return latest ? ` · latest ${timeAgo(new Date(latest).toISOString(), 'applied', now).toLowerCase()}` : '';
+          })()}
+        </p>
+      )}
       {loading && <p className="mt-6 text-sm text-neutral-400">Loading…</p>}
       {error && (
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-md bg-red-500/10 p-2 text-xs text-red-400">
