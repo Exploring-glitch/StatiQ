@@ -41,8 +41,10 @@ export const apply = asyncHandler(async (req, res) => {
 });
 
 // GET /api/applications/mine (jobseeker)
+// The employer-internal mark is stripped — seekers never see their rating.
 export const myApplications = asyncHandler(async (req, res) => {
   const items = await Application.find({ applicant: req.user._id })
+    .select('-mark')
     .populate('job', 'title company location salary status')
     .sort({ createdAt: -1 });
   res.json(items);
@@ -70,7 +72,9 @@ export const jobApplicants = asyncHandler(async (req, res) => {
   res.json(items);
 });
 
-// PATCH /api/applications/:id { status } (job owner or admin)
+// PATCH /api/applications/:id { status?, mark? } (job owner or admin)
+// At least one of status/mark is required. mark is the employer-internal
+// rating and is never exposed to seekers (myApplications strips it below).
 export const setStatus = asyncHandler(async (req, res) => {
   if (!isValidObjectId(req.params.id)) {
     res.status(404);
@@ -86,12 +90,24 @@ export const setStatus = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error('Not your job');
   }
+  const hasStatus = req.body.status !== undefined;
+  const hasMark = req.body.mark !== undefined;
+  if (!hasStatus && !hasMark) {
+    res.status(400);
+    throw new Error('Nothing to update — send status and/or mark');
+  }
   const allowed = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
-  if (!allowed.includes(req.body.status)) {
+  if (hasStatus && !allowed.includes(req.body.status)) {
     res.status(400);
     throw new Error('Invalid status');
   }
-  app.status = req.body.status;
+  const allowedMarks = ['', 'best', 'good', 'maybe', 'not-good'];
+  if (hasMark && !allowedMarks.includes(req.body.mark)) {
+    res.status(400);
+    throw new Error('Invalid mark');
+  }
+  if (hasStatus) app.status = req.body.status;
+  if (hasMark) app.mark = req.body.mark;
   await app.save();
   res.json(app);
 });
