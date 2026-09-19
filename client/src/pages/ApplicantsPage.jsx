@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { timeAgo, useNow } from '../lib/time';
 import { useToast } from '../components/Toast';
+import ApplicantDetail from '../components/ApplicantDetail';
 import ResumeLink from '../components/ResumeLink';
 
 const STAGES = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
@@ -15,6 +16,8 @@ export default function ApplicantsPage() {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedId, setSelectedId] = useState(null);
+  const selected = apps.find((x) => x._id === selectedId) || null;
 
   useEffect(() => {
     const load = async () => {
@@ -95,11 +98,18 @@ export default function ApplicantsPage() {
           const c = a.applicant || {};
           const jobs = Array.isArray(c.workExperiences) ? c.workExperiences : [];
           return (
-            <div key={a._id} className="rounded-xl border border-white/10 bg-panel p-4">
+            <div key={a._id} className="rounded-xl border border-white/10 bg-panel p-4 transition hover:border-accent/40">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-bold text-white">{c.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(a._id)}
+                      title={`Open ${c.name || 'candidate'} profile`}
+                      className="text-sm font-bold text-white hover:text-accent hover:underline"
+                    >
+                      {c.name}
+                    </button>
                     {a.createdAt && (
                       <span
                         className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400"
@@ -168,22 +178,41 @@ export default function ApplicantsPage() {
                     </div>
                   )}
                 </div>
-                <label className="sr-only" htmlFor={`status-${a._id}`}>Application status</label>
-                <select
-                  id={`status-${a._id}`}
-                  value={a.status}
-                  onChange={(e) => setStatus(a._id, e.target.value)}
-                  className="rounded-md border border-white/10 bg-panel2 px-2 py-1 text-xs text-white"
-                >
-                  {STAGES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <div className="flex flex-col items-end gap-2">
+                  <label className="sr-only" htmlFor={`status-${a._id}`}>Application status</label>
+                  <select
+                    id={`status-${a._id}`}
+                    value={a.status}
+                    onChange={(e) => setStatus(a._id, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="rounded-md border border-white/10 bg-panel2 px-2 py-1 text-xs text-white"
+                  >
+                    {STAGES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(a._id)}
+                    className="text-[11px] font-semibold text-accent hover:underline"
+                  >
+                    View profile →
+                  </button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+      {selected && (
+        <ApplicantDetail
+          app={selected}
+          jobTitle={title}
+          now={now}
+          onClose={() => setSelectedId(null)}
+          onStatusChange={setStatus}
+        />
+      )}
     </section>
   );
 }
