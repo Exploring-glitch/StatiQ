@@ -49,6 +49,20 @@ app.use((req, _res, next) => {
   if (req.params && typeof req.params === 'object') {
     for (const [k, v] of Object.entries(sanitizeObject(req.params))) req.params[k] = v;
   }
+  // Express 5 exposes req.query via a getter — never reassign it, clean keys in place.
+  if (req.query && typeof req.query === 'object') {
+    try {
+      for (const k of Object.keys(req.query)) {
+        if (k.startsWith('$') || k.includes('.')) {
+          delete req.query[k];
+        } else {
+          req.query[k] = sanitizeObject(req.query[k]);
+        }
+      }
+    } catch {
+      // Query is frozen/unparseable — downstream allowlists still reject bad values.
+    }
+  }
   next();
 });
 
