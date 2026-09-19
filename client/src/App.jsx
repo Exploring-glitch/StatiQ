@@ -21,6 +21,7 @@ import ProfilePage from './pages/ProfilePage';
 import LogoutPage from './pages/LogoutPage';
 import DashboardPage from './pages/DashboardPage';
 import ApplicantsPage from './pages/ApplicantsPage';
+import ApplicantProfilePage from './pages/ApplicantProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const seeker = ['jobseeker', 'admin'];
@@ -57,6 +58,7 @@ function App() {
         <Route path="/post-job" element={<ProtectedRoute roles={employer}><PostJobPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute roles={employer}><DashboardPage /></ProtectedRoute>} />
         <Route path="/jobs/:id/applicants" element={<ProtectedRoute roles={employer}><ApplicantsPage /></ProtectedRoute>} />
+        <Route path="/jobs/:jobId/applicants/:appId" element={<ProtectedRoute roles={employer}><ApplicantProfilePage /></ProtectedRoute>} />
         <Route path="/my-applications" element={<ProtectedRoute roles={seeker}><MyApplicationsPage /></ProtectedRoute>} />
         <Route path="/saved" element={<ProtectedRoute roles={seeker}><SavedJobsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute roles={[...seeker, ...employer]}><ProfilePage /></ProtectedRoute>} />
