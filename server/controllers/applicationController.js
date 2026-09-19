@@ -1,17 +1,24 @@
+import { body, validationResult } from 'express-validator';
 import Application from '../models/Application.js';
 import Job from '../models/Job.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { isValidObjectId } from '../lib/validate.js';
 
+export const applyRules = [
+  body('jobId').isMongoId().withMessage('Invalid job id'),
+  body('coverNote').trim().isLength({ min: 50, max: 2000 }).withMessage('Tell the company why you want to join (50–2000 characters)'),
+];
+
 // POST /api/applications { jobId, coverNote } (jobseeker)
 // coverNote is the required "Why our company?" answer (50–2000 chars).
 export const apply = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400);
+    throw new Error(errors.array().map((e) => e.msg).join(', '));
+  }
   const { jobId } = req.body;
   const coverNote = String(req.body?.coverNote ?? '').trim().slice(0, 2000);
-  if (coverNote.length < 50) {
-    res.status(400);
-    throw new Error('Tell the company why you want to join (50+ characters)');
-  }
   if (!jobId || !isValidObjectId(jobId)) {
     res.status(404);
     throw new Error('Job not open for applications');
