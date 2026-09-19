@@ -3,10 +3,10 @@
 
 export const MARKS = [
   { v: '', l: 'Not marked' },
-  { v: 'best', l: '⭐ Best' },
-  { v: 'good', l: '👍 Good candidate' },
-  { v: 'maybe', l: '🤔 Maybe' },
-  { v: 'not-good', l: '👎 Not good enough' },
+  { v: 'best', l: 'Best candidate' },
+  { v: 'good', l: 'Good candidate' },
+  { v: 'maybe', l: 'Maybe a candidate' },
+  { v: 'not-good', l: 'Not good enough' },
 ];
 
 export const markLabel = (v) => MARKS.find((m) => m.v === (v || ''))?.l || 'Not marked';
