@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { timeAgo, useNow } from '../lib/time';
+import { MARKS, markBadge, markLabel } from '../lib/marks';
 import { useToast } from '../components/Toast';
 import ApplicantDetail from '../components/ApplicantDetail';
 import ResumeLink from '../components/ResumeLink';
@@ -57,6 +58,21 @@ export default function ApplicantsPage() {
     } catch (e) {
       // Revert optimistic update so the select reflects the server state.
       setApps((list) => list.map((a) => (a._id === appId ? { ...a, status: prev ?? a.status } : a)));
+      setError(e.message);
+      toast?.notify(e.message, 'error');
+    }
+  };
+
+  const setMark = async (appId, mark) => {
+    const prev = apps.find((a) => a._id === appId)?.mark;
+    setApps((list) => list.map((a) => (a._id === appId ? { ...a, mark } : a)));
+    setError('');
+    try {
+      const updated = await api.setApplicantMark(appId, mark);
+      setApps((list) => list.map((a) => (a._id === appId ? updated : a)));
+      toast?.notify(mark ? `Marked as ${markLabel(mark)}` : 'Mark removed', 'success');
+    } catch (e) {
+      setApps((list) => list.map((a) => (a._id === appId ? { ...a, mark: prev ?? a.mark } : a)));
       setError(e.message);
       toast?.notify(e.message, 'error');
     }
@@ -127,6 +143,11 @@ export default function ApplicantsPage() {
                         title={new Date(a.createdAt).toLocaleString()}
                       >
                         🕒 {timeAgo(a.createdAt, 'Applied', now)}
+                      </span>
+                    )}
+                    {a.mark && (
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${markBadge(a.mark)}`}>
+                        {markLabel(a.mark)}
                       </span>
                     )}
                     {c.openToWork && (
@@ -201,6 +222,18 @@ export default function ApplicantsPage() {
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
+                  <label className="sr-only" htmlFor={`mark-${a._id}`}>Employer mark</label>
+                  <select
+                    id={`mark-${a._id}`}
+                    value={a.mark || ''}
+                    onChange={(e) => setMark(a._id, e.target.value)}
+                    title="Mark this candidate (only you see this)"
+                    className="max-w-36 rounded-md border border-white/10 bg-panel2 px-2 py-1 text-xs text-white"
+                  >
+                    {MARKS.map((m) => (
+                      <option key={m.v} value={m.v}>{m.l}</option>
+                    ))}
+                  </select>
                   <span className="text-[11px] font-semibold text-accent">View profile →</span>
                   <Link
                     to={`/jobs/${id}/applicants/${a._id}`}
@@ -223,6 +256,7 @@ export default function ApplicantsPage() {
           profileUrl={`/jobs/${id}/applicants/${selected._id}`}
           onClose={() => setSelectedId(null)}
           onStatusChange={setStatus}
+          onMarkChange={setMark}
         />
       )}
     </section>
