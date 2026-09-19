@@ -28,6 +28,12 @@ export default function ApplicantsPage() {
     setSearchParams(next, { replace: true });
   };
   const selected = apps.find((x) => x._id === selectedId) || null;
+  const [markFilter, setMarkFilter] = useState('all');
+  const visible = apps.filter((a) => {
+    if (markFilter === 'all') return true;
+    if (markFilter === 'unmarked') return !a.mark;
+    return a.mark === markFilter;
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -118,8 +124,28 @@ export default function ApplicantsPage() {
           No applicants yet. Share your role to get discovered.
         </p>
       )}
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter by mark">
+        {[{ v: 'all', l: 'All' }, { v: 'unmarked', l: '○ Not marked' }, ...MARKS.filter((m) => m.v)].map((f) => (
+          <button
+            key={f.v}
+            type="button"
+            aria-pressed={markFilter === f.v}
+            onClick={() => setMarkFilter(f.v)}
+            className={markFilter === f.v
+              ? 'rounded-full border border-accent bg-accent/15 px-3 py-1 text-xs font-medium text-accent'
+              : 'rounded-full border border-white/15 px-3 py-1 text-xs text-neutral-300 hover:border-accent'}
+          >
+            {f.l}
+          </button>
+        ))}
+      </div>
       <div className="mt-6 space-y-3">
-        {apps.map((a) => {
+        {visible.length === 0 && !loading && !error && apps.length > 0 && (
+          <p className="rounded-xl border border-white/10 bg-panel p-6 text-sm text-neutral-400">
+            No applicants with this mark yet.
+          </p>
+        )}
+        {visible.map((a) => {
           const c = a.applicant || {};
           const jobs = Array.isArray(c.workExperiences) ? c.workExperiences : [];
           return (
