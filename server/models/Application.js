@@ -10,6 +10,13 @@ const applicationSchema = new mongoose.Schema(
       enum: ['applied', 'reviewing', 'interview', 'offer', 'rejected'],
       default: 'applied',
     },
+    // Employer-internal mark (never shown to the seeker): best / good /
+    // maybe / not-good. Empty = not marked yet.
+    mark: {
+      type: String,
+      enum: ['', 'best', 'good', 'maybe', 'not-good'],
+      default: '',
+    },
   },
   { timestamps: true }
 );
