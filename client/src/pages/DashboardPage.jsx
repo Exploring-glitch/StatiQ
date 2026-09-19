@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { timeAgo } from '../lib/time';
 import { Skeleton } from '../components/Skeleton';
 
 export default function DashboardPage() {
@@ -103,7 +104,10 @@ export default function DashboardPage() {
             <div key={id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-panel p-4">
               <div>
                 <p className="text-sm font-bold text-white">{j.title}</p>
-                <p className="text-xs text-neutral-500">{j.location} · {counts[id] ?? '…'} applicants</p>
+                <p className="text-xs text-neutral-500">
+                  {j.location} · {counts[id] ?? '…'} applicants
+                  {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted').toLowerCase()}` : ''}
+                </p>
               </div>
               <div className="flex gap-2">
                 <Link to={`/jobs/${id}`} className="rounded-md border border-white/15 px-3 py-1 text-xs text-white">View</Link>
