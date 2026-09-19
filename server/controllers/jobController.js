@@ -27,7 +27,18 @@ export const jobRules = [
   body('company').trim().notEmpty().withMessage('Company is required'),
   body('location').trim().notEmpty().withMessage('Location is required'),
   body('salaryMin').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Min salary must be positive'),
-  body('salaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive'),
+  body('salaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive')
+    .custom((v, { req }) => {
+      const min = req.body?.salaryMin;
+      if (min != null && min !== '' && v != null && v !== '' && Number(v) < Number(min)) {
+        throw new Error('Max salary must be >= min salary');
+      }
+      return true;
+    }),
+  body('type').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Internship']).withMessage('Invalid job type'),
+  body('status').optional().isIn(['open', 'closed']).withMessage('Invalid status'),
+  body('tags').optional().isArray({ max: 20 }).withMessage('Tags must be an array'),
+  body('description').optional().isString().isLength({ max: 10000 }).withMessage('Description too long'),
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
 ];
@@ -39,7 +50,18 @@ export const jobUpdateRules = [
   body('company').optional().trim().notEmpty().withMessage('Company cannot be empty'),
   body('location').optional().trim().notEmpty().withMessage('Location cannot be empty'),
   body('salaryMin').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Min salary must be positive'),
-  body('salaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive'),
+  body('salaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive')
+    .custom((v, { req }) => {
+      const min = req.body?.salaryMin;
+      if (min != null && min !== '' && v != null && v !== '' && Number(v) < Number(min)) {
+        throw new Error('Max salary must be >= min salary');
+      }
+      return true;
+    }),
+  body('type').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Internship']).withMessage('Invalid job type'),
+  body('status').optional().isIn(['open', 'closed']).withMessage('Invalid status'),
+  body('tags').optional().isArray({ max: 20 }).withMessage('Tags must be an array'),
+  body('description').optional().isString().isLength({ max: 10000 }).withMessage('Description too long'),
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
 ];
