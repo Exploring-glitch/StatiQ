@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, fileUrl } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import RichTextEditor from '../components/RichTextEditor';
 
 const input = 'w-full rounded-lg border border-white/10 bg-panel2 px-3.5 py-2.5 text-sm text-white placeholder:text-neutral-500 outline-none transition focus:border-accent/70 focus:ring-2 focus:ring-accent/20';
 const label = 'mb-1.5 block text-xs font-semibold text-neutral-300';
@@ -181,6 +182,23 @@ export default function CompanyManagePage() {
           className="mt-5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accentHover disabled:opacity-60"
         >
           {saving ? 'Saving…' : 'Save basics'}
+        </button>
+      </div>
+
+      {/* ── Overview: rich description (WYSIWYG, spacing preserved) ── */}
+      <div className={`${card} mt-4`}>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">Overview</h2>
+        <p className="mt-1 text-xs text-neutral-500">
+          Detailed company description — bold, italic, underline, headings and text sizes supported. Spacing is kept exactly as typed.
+        </p>
+        <div className="mt-3">
+          <RichTextEditor value={form.overviewHtml} onChange={(v) => set('overviewHtml', v)} />
+        </div>
+        <button
+          type="button" onClick={() => save()} disabled={saving}
+          className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
+        >
+          {saving ? 'Saving…' : 'Save overview'}
         </button>
       </div>
     </section>
