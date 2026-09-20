@@ -42,6 +42,7 @@ const jobSchema = new mongoose.Schema(
     description: { type: String, default: '' },
     responsibilities: { type: [String], default: [] },
     status: { type: String, enum: ['open', 'closed'], default: 'open' },
+    companySlug: { type: String, trim: true, lowercase: true, default: '', maxlength: 100 },
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
@@ -49,6 +50,10 @@ const jobSchema = new mongoose.Schema(
 
 // Backfill filterable fields from legacy free-text fields on save.
 jobSchema.pre('save', function (next) {
+  if (this.company && !this.companySlug) {
+    this.companySlug = String(this.company)
+      .trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100);
+  }
   if (this.salary && (this.salaryMin == null || this.salaryMax == null)) {
     const { min, max } = parseSalaryRange(this.salary);
     if (this.salaryMin == null) this.salaryMin = min;

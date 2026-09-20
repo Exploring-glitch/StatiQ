@@ -9,6 +9,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import jobRoutes from './routes/jobs.js';
 import applicationRoutes from './routes/applications.js';
+import companyRoutes from './routes/companies.js';
 import Job from './models/Job.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 import { publicLimiter } from './middleware/rateLimit.js';
@@ -127,6 +128,15 @@ app.use('/api/jobs', publicLimiter, async (req, res, next) => {
   next();
 }, jobRoutes);
 app.use('/api/applications', dbGate, applicationRoutes);
+app.use('/api/companies', publicLimiter, async (req, res, next) => {
+  // Public GETs work even before Mongo is configured (empty list fallback).
+  if (req.method === 'GET' && !Job.db?.readyState) {
+    if (req.path === '/' || req.path === '') return res.json({ items: [], total: 0, page: 1, pages: 1 });
+    return next();
+  }
+  if (req.method !== 'GET') return dbGate(req, res, next);
+  next();
+}, companyRoutes);
 
 app.use('/api', notFound);
 app.use(errorHandler);

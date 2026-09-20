@@ -15,7 +15,7 @@ const check = (req, res) => {
 // Fields a client may set on create/update. Everything else
 // (postedBy, _id, timestamps, ...) is never taken from the request body.
 const JOB_WRITE_FIELDS = [
-  'title', 'company', 'location', 'salary', 'salaryMin', 'salaryMax',
+  'title', 'company', 'companySlug', 'location', 'salary', 'salaryMin', 'salaryMax',
   'type', 'remote', 'workMode', 'experienceLevel', 'tags',
   'description', 'responsibilities', 'status',
 ];
