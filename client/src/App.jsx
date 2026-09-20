@@ -22,6 +22,9 @@ import LogoutPage from './pages/LogoutPage';
 import DashboardPage from './pages/DashboardPage';
 import ApplicantsPage from './pages/ApplicantsPage';
 import ApplicantProfilePage from './pages/ApplicantProfilePage';
+import CompanyProfilePage from './pages/CompanyProfilePage';
+import CompaniesPage from './pages/CompaniesPage';
+import CompanyManagePage from './pages/CompanyManagePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const seeker = ['jobseeker', 'admin'];
@@ -53,6 +56,9 @@ function App() {
       <Route element={<AppLayout />}>
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/jobs/:id" element={<JobDetailPage />} />
+        <Route path="/companies" element={<CompaniesPage />} />
+        <Route path="/companies/:slug" element={<CompanyProfilePage />} />
+        <Route path="/company/manage" element={<ProtectedRoute roles={employer}><CompanyManagePage /></ProtectedRoute>} />
         <Route path="/for-companies" element={<ForCompaniesPage />} />
         <Route path="/for-job-seekers" element={<ForSeekersPage />} />
         <Route path="/post-job" element={<ProtectedRoute roles={employer}><PostJobPage /></ProtectedRoute>} />
