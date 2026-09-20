@@ -69,3 +69,31 @@ input, select, textarea {
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+/* Company rich-text: render exactly what the employer typed.
+   white-space:pre-wrap keeps blank lines / double spacing intact. */
+.company-richtext,
+.company-richtext-view {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.company-richtext:empty::before,
+.company-richtext-view:empty::before {
+  content: attr(data-placeholder);
+  color: #63666b;
+  pointer-events: none;
+}
+.company-richtext-view h1,
+.company-richtext-view h2 { font-weight: 800; color: #fff; margin: 0.75em 0 0.4em; }
+.company-richtext-view h1 { font-size: 1.35rem; }
+.company-richtext-view h2 { font-size: 1.15rem; }
+.company-richtext-view h3 { font-weight: 700; color: #fff; font-size: 1rem; margin: 0.6em 0 0.3em; }
+.company-richtext-view h4 { font-weight: 700; color: #e4e4e7; font-size: 0.9rem; margin: 0.5em 0 0.25em; }
+.company-richtext-view p { margin: 0.4em 0; }
+.company-richtext-view ul { list-style: disc; padding-left: 1.4em; margin: 0.4em 0; }
+.company-richtext-view ol { list-style: decimal; padding-left: 1.4em; margin: 0.4em 0; }
+.company-richtext-view li { margin: 0.2em 0; }
+.company-richtext-view blockquote { border-left: 3px solid #6366f1; padding-left: 0.8em; color: #a1a1aa; margin: 0.6em 0; }
+.company-richtext-view a { color: #818cf8; text-decoration: underline; }
+.company-richtext-view b, .company-richtext-view strong { font-weight: 800; color: #fafafa; }
+.company-richtext-view u { text-decoration: underline; }
