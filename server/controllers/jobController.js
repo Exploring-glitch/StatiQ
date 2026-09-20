@@ -136,7 +136,22 @@ export const createJob = asyncHandler(async (req, res) => {
   for (const k of ['salaryMin', 'salaryMax']) {
     if (body[k] === '' || body[k] === undefined) body[k] = null;
   }
+  if (body.company && !body.companySlug) {
+    body.companySlug = String(body.company).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100);
+  }
   const job = await Job.create({ ...body, postedBy: req.user._id });
+  // Keep the public company profile in sync: first post creates it so the
+  // Jobs tab lists every role for the brand without extra employer steps.
+  try {
+    const { default: Company } = await import('../models/Company.js');
+    if (body.company) {
+      const slug = body.companySlug;
+      const exists = await Company.exists({ $or: [{ slug }, { owner: req.user._id }] });
+      if (!exists && slug) {
+        await Company.create({ name: String(body.company).trim().slice(0, 120), slug, owner: req.user._id });
+      }
+    }
+  } catch { /* profile sync is best-effort; job creation already succeeded */ }
   res.status(201).json(job);
 });
 
