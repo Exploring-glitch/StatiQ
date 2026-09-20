@@ -9,9 +9,11 @@ const input = 'w-full rounded-lg border border-white/10 bg-panel2 px-3.5 py-2.5 
 const label = 'mb-1.5 block text-xs font-semibold text-neutral-300';
 const card = 'rounded-xl border border-white/10 bg-panel p-5 sm:p-6';
 
+const blankPerson = { name: '', title: '', bio: '', photoUrl: '' };
 const blank = {
   name: '', logoUrl: '', tagline: '', bio: '', overviewHtml: '',
   employeeCount: '', companySize: '', website: '', companyType: '', industry: '', location: '', foundedYear: '',
+  founder: { ...blankPerson }, team: [],
 };
 
 export default function CompanyManagePage() {
@@ -35,6 +37,8 @@ export default function CompanyManagePage() {
           overviewHtml: c.overviewHtml || '', employeeCount: c.employeeCount ?? '', companySize: c.companySize || '',
           website: c.website || '', companyType: c.companyType || '', industry: c.industry || '',
           location: c.location || '', foundedYear: c.foundedYear ?? '',
+          founder: { ...blankPerson, ...(c.founder || {}) },
+          team: Array.isArray(c.team) ? c.team.map((m) => ({ ...blankPerson, ...m })) : [],
         });
       })
       .catch(() => {})
@@ -182,6 +186,36 @@ export default function CompanyManagePage() {
           className="mt-5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accentHover disabled:opacity-60"
         >
           {saving ? 'Saving…' : 'Save basics'}
+        </button>
+      </div>
+
+      {/* ── People: founder ── */}
+      <div className={`${card} mt-4`}>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">People · Founder</h2>
+        <p className="mt-1 text-xs text-neutral-500">Shown under “Meet the people” — photo, name, title and bio.</p>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="f-name" className={label}>Founder name</label>
+            <input id="f-name" value={form.founder.name} onChange={(e) => set('founder', { ...form.founder, name: e.target.value })} placeholder="e.g. Jane Doe" className={input} />
+          </div>
+          <div>
+            <label htmlFor="f-title" className={label}>Founder title</label>
+            <input id="f-title" value={form.founder.title} onChange={(e) => set('founder', { ...form.founder, title: e.target.value })} placeholder="e.g. Co-founder & CEO" className={input} />
+          </div>
+        </div>
+        <div className="mt-4">
+          <label htmlFor="f-photo" className={label}>Founder photo URL</label>
+          <input id="f-photo" value={form.founder.photoUrl} onChange={(e) => set('founder', { ...form.founder, photoUrl: e.target.value })} placeholder="https://… or /uploads/…" className={input} />
+        </div>
+        <div className="mt-4">
+          <label htmlFor="f-bio" className={label}>Founder bio</label>
+          <textarea id="f-bio" value={form.founder.bio} onChange={(e) => set('founder', { ...form.founder, bio: e.target.value })} rows={3} placeholder="Background, mission, what they lead…" className={input} />
+        </div>
+        <button
+          type="button" onClick={() => save()} disabled={saving}
+          className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
+        >
+          {saving ? 'Saving…' : 'Save founder'}
         </button>
       </div>
 
