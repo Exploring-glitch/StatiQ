@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { normalizeJob, filterMock } from '../lib/jobs';
 import { useAuth } from '../context/AuthContext';
 import JobCard from '../components/JobCard';
+import CompanyCard from '../components/CompanyCard';
 import { JobCardSkeleton } from '../components/Skeleton';
 
 const MODES = ['Remote', 'Hybrid', 'On-site'];
@@ -57,6 +58,7 @@ export default function JobsPage() {
   const [offline, setOffline] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [companies, setCompanies] = useState([]);
 
   const workModes = useMemo(() => csv(params, 'mode'), [params]);
   const types = useMemo(() => csv(params, 'type'), [params]);
@@ -187,6 +189,23 @@ export default function JobsPage() {
   const hasSearch = Boolean((params.get('q') || '').trim() || (params.get('location') || '').trim());
   const showRecommended = page === 1 && !hasSearch && activeCount === 0;
 
+  // Seeker discovery: when searching a company or role, surface matching
+  // company profiles (logo → overview/people/culture/jobs) above the roles.
+  useEffect(() => {
+    const needle = (params.get('q') || '').trim();
+    if (!needle) { setCompanies([]); return; }
+    let alive = true;
+    const t = setTimeout(async () => {
+      try {
+        const data = await api.companies({ q: needle, limit: 3 });
+        if (alive) setCompanies(data.items || []);
+      } catch {
+        if (alive) setCompanies([]);
+      }
+    }, 350);
+    return () => { alive = false; clearTimeout(t); };
+  }, [params]);
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       {isEmployer && (
@@ -277,6 +296,20 @@ export default function JobsPage() {
           {activeCount > 0 && (
             <button onClick={clearAll} className="text-xs text-accent hover:underline">Clear all filters ✕</button>
           )}
+        </div>
+      )}
+
+      {companies.length > 0 && (
+        <div className="mt-8">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-white">Companies matching “{(params.get('q') || '').trim()}”</h2>
+            <a href="/companies" className="text-xs text-accent hover:underline">Browse all →</a>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {companies.map((c) => (
+              <CompanyCard key={c.id || c._id || c.slug} company={c} />
+            ))}
+          </div>
         </div>
       )}
 
