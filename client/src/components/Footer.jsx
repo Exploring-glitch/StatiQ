@@ -15,6 +15,7 @@ const cols = [
     links: [
       { label: 'Candidate overview', to: '/for-job-seekers' },
       { label: 'Startup jobs', to: '/jobs' },
+      { label: 'Explore companies', to: '/companies' },
       { label: 'Remote jobs', to: '/jobs?mode=Remote' },
       { label: 'Get discovered', to: '/signup/job' },
     ],
