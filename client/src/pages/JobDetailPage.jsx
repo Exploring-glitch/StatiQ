@@ -157,7 +157,16 @@ export default function JobDetailPage() {
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <div className="rounded-xl border border-white/10 bg-panel p-6 lg:col-span-2">
           <p className="text-sm font-bold text-white">{job.role}</p>
-          <p className="mt-1 text-xs text-neutral-400">{job.company} · {job.location} · {job.salary} · {job.type}</p>
+          <p className="mt-1 text-xs text-neutral-400">
+            <Link
+              to={`/companies/${encodeURIComponent(job.companySlug || String(job.company || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
+              className="font-semibold text-accent hover:underline"
+              title={`View ${job.company} profile`}
+            >
+              {job.company}
+            </Link>
+            {' '}· {job.location} · {job.salary} · {job.type}
+          </p>
           {timeAgo(job.createdAt, 'Posted', now) && (
             <p className="mt-1 text-xs text-neutral-500" title={job.createdAt ? new Date(job.createdAt).toLocaleString() : ''}>
               {timeAgo(job.createdAt, 'Posted', now)}
@@ -188,6 +197,12 @@ export default function JobDetailPage() {
           <p className="mt-3 text-sm font-bold text-white">{job.company}</p>
           <p className="text-xs text-neutral-400">{job.tagline}</p>
           <p className="mt-2 text-xs text-neutral-500">{job.note}</p>
+          <Link
+            to={`/companies/${encodeURIComponent(job.companySlug || String(job.company || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
+            className="mt-3 block rounded-md border border-white/15 px-4 py-2 text-center text-sm text-white hover:border-accent"
+          >
+            View company profile →
+          </Link>
           {isEmployer ? (
             <div className="mt-4 space-y-2">
               <Link
