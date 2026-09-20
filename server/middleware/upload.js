@@ -8,14 +8,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const uploadsDir = path.join(__dirname, '..', 'uploads');
 export const avatarsDir = path.join(uploadsDir, 'avatars');
 export const resumesDir = path.join(uploadsDir, 'resumes');
-for (const d of [uploadsDir, avatarsDir, resumesDir]) fs.mkdirSync(d, { recursive: true });
+export const logosDir = path.join(uploadsDir, 'logos');
+for (const d of [uploadsDir, avatarsDir, resumesDir, logosDir]) fs.mkdirSync(d, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: (_req, file, cb) =>
-    cb(null, file.fieldname === 'avatar' ? avatarsDir : resumesDir),
+  destination: (_req, file, cb) => {
+    if (file.fieldname === 'avatar') return cb(null, avatarsDir);
+    if (file.fieldname === 'logo') return cb(null, logosDir);
+    return cb(null, resumesDir);
+  },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    const prefix = file.fieldname === 'avatar' ? 'avatar' : 'resume';
+    const prefix = file.fieldname === 'avatar' ? 'avatar' : file.fieldname === 'logo' ? 'logo' : 'resume';
     // Random suffix so filenames can't be guessed/enumerated.
     const rand = crypto.randomBytes(8).toString('hex');
     const safe = `${prefix}-${req.user._id}-${Date.now()}-${rand}${ext}`;
@@ -54,6 +58,12 @@ const AVATAR_ALLOWED = {
 };
 
 export const avatarUpload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  fileFilter: checkFile(AVATAR_ALLOWED, 'Only JPG, PNG or WebP images are allowed'),
+});
+
+export const logoUpload = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
   fileFilter: checkFile(AVATAR_ALLOWED, 'Only JPG, PNG or WebP images are allowed'),
