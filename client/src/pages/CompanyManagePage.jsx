@@ -219,6 +219,48 @@ export default function CompanyManagePage() {
         </button>
       </div>
 
+      {/* ── People: team (founder auto-included on public page) ── */}
+      <div className={`${card} mt-4`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">People · Team ({form.team.length})</h2>
+          <button
+            type="button"
+            onClick={() => set('team', [...form.team, { ...blankPerson }])}
+            className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-white hover:border-accent"
+          >
+            + Add member
+          </button>
+        </div>
+        {form.team.length === 0 ? (
+          <p className="mt-3 text-xs text-neutral-500">No extra members yet — the founder is always shown first on the public page.</p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {form.team.map((m, i) => (
+              <div key={i} className="rounded-lg border border-white/10 bg-panel2 p-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input value={m.name} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} placeholder="Name" aria-label={`Team member ${i + 1} name`} className={input} />
+                  <input value={m.title} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} placeholder="Title" aria-label={`Team member ${i + 1} title`} className={input} />
+                </div>
+                <input value={m.photoUrl} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, photoUrl: e.target.value } : x)))} placeholder="Photo URL (optional)" aria-label={`Team member ${i + 1} photo`} className={`${input} mt-3`} />
+                <textarea value={m.bio} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, bio: e.target.value } : x)))} placeholder="Short bio (optional)" rows={2} aria-label={`Team member ${i + 1} bio`} className={`${input} mt-3`} />
+                <button
+                  type="button" onClick={() => set('team', form.team.filter((_, j) => j !== i))}
+                  className="mt-2 text-xs text-red-400 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          type="button" onClick={() => save()} disabled={saving}
+          className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
+        >
+          {saving ? 'Saving…' : 'Save team'}
+        </button>
+      </div>
+
       {/* ── Overview: rich description (WYSIWYG, spacing preserved) ── */}
       <div className={`${card} mt-4`}>
         <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">Overview</h2>
