@@ -42,6 +42,7 @@ export default function SeekerNavbar() {
 
         <nav className="hidden items-center gap-1 md:flex">
           <NavLink to="/jobs" end className={link}>Find jobs</NavLink>
+          <NavLink to="/companies" className={link}>Companies</NavLink>
           <NavLink to="/my-applications" className={link}>My applications</NavLink>
           <NavLink to="/saved" className={link}>Saved</NavLink>
         </nav>
@@ -88,6 +89,7 @@ export default function SeekerNavbar() {
         <div className="space-y-2 border-t border-white/10 bg-ink px-4 py-4 text-sm md:hidden">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-400">For job seekers</p>
           <NavLink to="/jobs" end onClick={() => setOpen(false)} className="block text-neutral-200">Find jobs</NavLink>
+          <NavLink to="/companies" onClick={() => setOpen(false)} className="block text-neutral-200">Companies</NavLink>
           <NavLink to="/my-applications" onClick={() => setOpen(false)} className="block text-neutral-200">My applications</NavLink>
           <NavLink to="/saved" onClick={() => setOpen(false)} className="block text-neutral-200">Saved</NavLink>
           <Link to="/profile" onClick={() => setOpen(false)} className="block font-semibold text-accent">Profile →</Link>
