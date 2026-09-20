@@ -1,8 +1,11 @@
 import { body, validationResult } from 'express-validator';
+import fs from 'fs';
+import path from 'path';
 import Company, { sanitizeCompanyHtml } from '../models/Company.js';
 import Job from '../models/Job.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { escapeRegExp, isValidObjectId } from '../lib/validate.js';
+import { logosDir, verifyUploadMagic } from '../middleware/upload.js';
 
 const check = (req, res) => {
   const errors = validationResult(req);
@@ -146,6 +149,36 @@ export const upsertMyCompany = asyncHandler(async (req, res) => {
   const jobs = await companyJobs(updated.toObject());
   const obj = updated.toObject();
   res.json({ ...obj, id: obj._id, jobsCount: jobs.length });
+});
+
+// POST /api/companies/me/logo (employer, multipart field: "logo")
+export const uploadLogo = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error('No file received — attach it as the "logo" field');
+  }
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  const bad = verifyUploadMagic(req.file.path, ext);
+  if (bad) {
+    fs.unlink(req.file.path, () => {});
+    res.status(400);
+    throw new Error(bad);
+  }
+  const url = `/uploads/logos/${req.file.filename}`;
+  const updated = await Company.findOneAndUpdate(
+    { owner: req.user._id },
+    { $set: { logoUrl: url, owner: req.user._id } },
+    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+  );
+  // Clean up any previous logo file so disk doesn't fill with orphans.
+  try {
+    for (const f of fs.readdirSync(logosDir)) {
+      const full = path.join(logosDir, f);
+      if (full !== req.file.path && f.startsWith(`logo-${req.user._id}-`)) fs.unlink(full, () => {});
+    }
+  } catch { /* best-effort cleanup */ }
+  const obj = updated.toObject();
+  res.status(201).json({ ...obj, id: obj._id, logoUrl: url });
 });
 
 // GET /api/companies/:slug — public profile + jobs for seekers
