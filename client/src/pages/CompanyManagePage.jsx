@@ -14,6 +14,8 @@ const blank = {
   name: '', logoUrl: '', tagline: '', bio: '', overviewHtml: '',
   employeeCount: '', companySize: '', website: '', companyType: '', industry: '', location: '', foundedYear: '',
   founder: { ...blankPerson }, team: [],
+  culture: { remotePolicy: '', values: [], benefits: [], description: '' },
+  newValue: '', newBenefit: '',
 };
 
 export default function CompanyManagePage() {
@@ -39,6 +41,12 @@ export default function CompanyManagePage() {
           location: c.location || '', foundedYear: c.foundedYear ?? '',
           founder: { ...blankPerson, ...(c.founder || {}) },
           team: Array.isArray(c.team) ? c.team.map((m) => ({ ...blankPerson, ...m })) : [],
+          culture: {
+            remotePolicy: c.culture?.remotePolicy || '',
+            values: Array.isArray(c.culture?.values) ? c.culture.values : [],
+            benefits: Array.isArray(c.culture?.benefits) ? c.culture.benefits : [],
+            description: c.culture?.description || '',
+          },
         });
       })
       .catch(() => {})
@@ -275,6 +283,74 @@ export default function CompanyManagePage() {
           className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
         >
           {saving ? 'Saving…' : 'Save overview'}
+        </button>
+      </div>
+
+      {/* ── Culture & Benefits: remote, values, perks (add/remove) ── */}
+      <div className={`${card} mt-4`}>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">Culture & Benefits</h2>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="c-remote" className={label}>Work setup</label>
+            <select id="c-remote" value={form.culture.remotePolicy} onChange={(e) => set('culture', { ...form.culture, remotePolicy: e.target.value })} className={input}>
+              <option value="">Select…</option>
+              {['On-site', 'Hybrid', 'Remote-friendly', 'Remote-first'].map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="mt-4">
+          <label htmlFor="c-culture-desc" className={label}>Culture description</label>
+          <textarea id="c-culture-desc" value={form.culture.description} onChange={(e) => set('culture', { ...form.culture, description: e.target.value })} rows={3} placeholder="How the team works — remote norms, rituals, offsites…" className={input} />
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <span className={label}>Values (add your own)</span>
+            <div className="flex gap-2">
+              <input value={form.newValue} onChange={(e) => set('newValue', e.target.value)} placeholder="e.g. Craft over speed" aria-label="New value" className={input} />
+              <button
+                type="button"
+                onClick={() => { const v = form.newValue.trim(); if (v) set('culture', { ...form.culture, values: [...form.culture.values, v] }); set('newValue', ''); }}
+                className="shrink-0 rounded-md border border-white/15 px-3 text-sm text-white hover:border-accent"
+              >
+                Add
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {form.culture.values.map((v) => (
+                <button key={v} type="button" title="Remove" onClick={() => set('culture', { ...form.culture, values: form.culture.values.filter((x) => x !== v) })} className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs text-accent hover:opacity-80">
+                  {v} ✕
+                </button>
+              ))}
+              {form.culture.values.length === 0 && <span className="text-xs text-neutral-500">No values yet.</span>}
+            </div>
+          </div>
+          <div>
+            <span className={label}>Benefits & perks (add your own)</span>
+            <div className="flex gap-2">
+              <input value={form.newBenefit} onChange={(e) => set('newBenefit', e.target.value)} placeholder="e.g. Remote stipend" aria-label="New benefit" className={input} />
+              <button
+                type="button"
+                onClick={() => { const v = form.newBenefit.trim(); if (v) set('culture', { ...form.culture, benefits: [...form.culture.benefits, v] }); set('newBenefit', ''); }}
+                className="shrink-0 rounded-md border border-white/15 px-3 text-sm text-white hover:border-accent"
+              >
+                Add
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {form.culture.benefits.map((b) => (
+                <button key={b} type="button" title="Remove" onClick={() => set('culture', { ...form.culture, benefits: form.culture.benefits.filter((x) => x !== b) })} className="rounded-full border border-white/15 px-3 py-1 text-xs text-neutral-200 hover:border-accent">
+                  {b} ✕
+                </button>
+              ))}
+              {form.culture.benefits.length === 0 && <span className="text-xs text-neutral-500">No benefits yet.</span>}
+            </div>
+          </div>
+        </div>
+        <button
+          type="button" onClick={() => save()} disabled={saving}
+          className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
+        >
+          {saving ? 'Saving…' : 'Save culture'}
         </button>
       </div>
     </section>
