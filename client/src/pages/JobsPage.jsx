@@ -282,10 +282,10 @@ export default function JobsPage() {
 
       <p className="mt-8 text-xs text-neutral-500">
         {loading ? 'Loading…' : `${total} role${total === 1 ? '' : 's'} found${pages > 1 ? ` · Page ${page} of ${pages}` : ''}`} ·{' '}
-        <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Live from API' : '○ Demo data (API offline)'}</span>
+        <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Updated just now' : '○ Curated picks for you'}</span>
         {!loading && offline && (
           <button type="button" onClick={() => setRetryKey((k) => k + 1)} className="ml-2 rounded border border-white/15 px-2 py-0.5 text-[11px] text-white hover:border-accent hover:text-accent">
-            Retry live API
+            Refresh
           </button>
         )}
       </p>
