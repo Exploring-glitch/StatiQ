@@ -280,52 +280,58 @@ export default function JobsPage() {
         </div>
       )}
 
-      <p className="mt-8 text-xs text-neutral-500">
-        {loading ? 'Loading…' : `${total} role${total === 1 ? '' : 's'} found${pages > 1 ? ` · Page ${page} of ${pages}` : ''}`} ·{' '}
-        <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Updated just now' : '○ Curated picks for you'}</span>
-        {!loading && offline && (
-          <button type="button" onClick={() => setRetryKey((k) => k + 1)} className="ml-2 rounded border border-white/15 px-2 py-0.5 text-[11px] text-white hover:border-accent hover:text-accent">
-            Refresh
-          </button>
-        )}
-      </p>
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {loading
-          ? Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)
-          : items.map((j) => <JobCard key={j.id} job={j} />)}
-      </div>
-      {!loading && items.length === 0 && (
-        <div className="mt-8 rounded-xl border border-white/10 bg-panel p-6 text-center">
-          <p className="text-sm text-neutral-400">No roles match these filters.</p>
-          <button onClick={clearAll} className="mt-2 text-sm text-accent hover:underline">Clear search & filters →</button>
+      <div className="mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-white">Fresh openings</h2>
+          <span className="text-xs text-neutral-500">Posted directly by startups hiring now</span>
         </div>
-      )}
-      {!loading && pages > 1 && (
-        <nav aria-label="Jobs pages" className="mt-8 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => goPage(page - 1)}
-            className="rounded-md border border-white/15 px-4 py-2 text-sm text-white transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:text-white"
-          >
-            ← Prev
-          </button>
-          <span className="text-xs text-neutral-400" aria-live="polite">
-            Page {page} of {pages} · {total} role{total === 1 ? '' : 's'}
-          </span>
-          <button
-            type="button"
-            disabled={page >= pages}
-            onClick={() => goPage(page + 1)}
-            className="rounded-md border border-white/15 px-4 py-2 text-sm text-white transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:text-white"
-          >
-            Next →
-          </button>
-        </nav>
-      )}
+        <p className="mt-1 text-xs text-neutral-500">
+          {loading ? 'Loading…' : `${total} role${total === 1 ? '' : 's'} found${pages > 1 ? ` · Page ${page} of ${pages}` : ''}`} ·{' '}
+          <span className={live ? 'text-accent' : 'text-neutral-500'}>{live ? '● Updated just now' : '○ Curated picks for you'}</span>
+          {!loading && offline && (
+            <button type="button" onClick={() => setRetryKey((k) => k + 1)} className="ml-2 rounded border border-white/15 px-2 py-0.5 text-[11px] text-white hover:border-accent hover:text-accent">
+              Refresh
+            </button>
+          )}
+        </p>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)
+            : items.map((j) => <JobCard key={j.id} job={j} />)}
+        </div>
+        {!loading && items.length === 0 && (
+          <div className="mt-4 rounded-xl border border-white/10 bg-panel p-6 text-center">
+            <p className="text-sm text-neutral-400">No roles match these filters.</p>
+            <button onClick={clearAll} className="mt-2 text-sm text-accent hover:underline">Clear search & filters →</button>
+          </div>
+        )}
+        {!loading && pages > 1 && (
+          <nav aria-label="Jobs pages" className="mt-8 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => goPage(page - 1)}
+              className="rounded-md border border-white/15 px-4 py-2 text-sm text-white transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:text-white"
+            >
+              ← Prev
+            </button>
+            <span className="text-xs text-neutral-400" aria-live="polite">
+              Page {page} of {pages} · {total} role{total === 1 ? '' : 's'}
+            </span>
+            <button
+              type="button"
+              disabled={page >= pages}
+              onClick={() => goPage(page + 1)}
+              className="rounded-md border border-white/15 px-4 py-2 text-sm text-white transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:text-white"
+            >
+              Next →
+            </button>
+          </nav>
+        )}
+      </div>
 
       {showRecommended && (
-      <div className="mt-8">
+      <div className="mt-10">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-white">Recommended jobs</h2>
           <span className="text-xs text-neutral-500">External listings · apply on the company site</span>
