@@ -19,7 +19,15 @@ export default function JobCard({ job }) {
         </span>
         <div>
           <p className="text-sm font-bold text-white">
-            {job.company} <span className="ml-1 text-xs font-normal text-accent">● {job.status}</span>
+            <Link
+              to={`/companies/${encodeURIComponent(job.companySlug || String(job.company || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:text-accent hover:underline"
+              title={`View ${job.company} profile`}
+            >
+              {job.company}
+            </Link>{' '}
+            <span className="ml-1 text-xs font-normal text-accent">● {job.status}</span>
           </p>
           <p className="text-xs text-neutral-400">{job.tagline}</p>
         </div>
