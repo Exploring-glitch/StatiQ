@@ -102,6 +102,25 @@ export const api = {
   getSavedJobs: () => request('/auth/me/saved'),
   saveJobs: (jobIds) => request('/auth/me/saved', { method: 'PUT', body: { jobIds } }),
   myApplications: () => request('/applications/mine'),
+  companies: (params = {}) => {
+    const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+    return request(`/companies${qs ? `?${qs}` : ''}`);
+  },
+  company: (slug) => request(`/companies/${encodeURIComponent(slug)}`),
+  myCompany: () => request('/companies/me'),
+  saveCompany: (payload) => request('/companies/me', { method: 'PUT', body: payload }),
+  uploadCompanyLogo: async (file) => {
+    const fd = new FormData();
+    fd.append('logo', file);
+    const res = await fetch(`${BASE}/companies/me/logo`, {
+      method: 'POST',
+      headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+      body: fd,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Upload failed (${res.status})`);
+    return data;
+  },
   myPostedJobs: () => request('/jobs/mine/posted'),
   jobApplicants: (jobId) => request(`/applications/job/${jobId}`),
   setApplicantStatus: (appId, status) => request(`/applications/${appId}`, { method: 'PATCH', body: { status } }),
