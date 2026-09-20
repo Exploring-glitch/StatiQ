@@ -30,8 +30,8 @@ lists; spacing preserved), **People** (founder + team), **Culture & Benefits**
 location, accepted remote, type + clear.
 
 - Employers: Dashboard → **Manage company profile** (`/company/manage`) to edit
-  basics, logo upload, WYSIWYG overview, founder/team, culture. First job post
-  auto-creates the profile.
+  basics, logo upload, WYSIWYG overview, founder/team, culture. The first job
+  post auto-creates the profile.
 - Seekers: `/companies` search, matching companies above `/jobs` results, and
   company links on job cards + `/jobs/:id`.
 - API: `GET /api/companies`, `GET /api/companies/:slug`, `GET|PUT
