@@ -71,6 +71,8 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-white/10 bg-panel p-5">
           <Link to="/post-job" className="text-sm font-semibold text-accent">+ Post a new job →</Link>
           <p className="mt-1 text-xs text-neutral-500">Free, takes a minute</p>
+          <Link to="/company/manage" className="mt-2 block text-sm font-semibold text-white hover:text-accent">Manage company profile →</Link>
+          <p className="mt-1 text-xs text-neutral-500">Logo, overview, people, culture</p>
         </div>
       </div>
       <h2 className="mt-10 text-xl font-bold text-white">Your roles</h2>
