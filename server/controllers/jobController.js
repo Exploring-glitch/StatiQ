@@ -68,6 +68,11 @@ export const jobUpdateRules = [
   body('status').optional().isIn(['open', 'closed']).withMessage('Invalid status'),
   body('tags').optional().isArray({ max: 20 }).withMessage('Tags must be an array'),
   body('description').optional().isString().isLength({ max: 10000 }).withMessage('Description too long'),
+  body('responsibilities').optional().isArray({ max: 30 }).withMessage('Responsibilities must be an array'),
+  body('requirements').optional().isArray({ max: 30 }).withMessage('Requirements must be an array'),
+  body('benefits').optional().isArray({ max: 30 }).withMessage('Benefits must be an array'),
+  body('openings').optional({ nullable: true }).toInt().isInt({ min: 1, max: 10000 }).withMessage('Openings must be at least 1'),
+  body('deadline').optional({ nullable: true }).isISO8601().withMessage('Deadline must be a valid date'),
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
 ];
