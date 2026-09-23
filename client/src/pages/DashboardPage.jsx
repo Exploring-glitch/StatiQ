@@ -56,6 +56,31 @@ export default function DashboardPage() {
 
   const totalApps = Object.values(counts).reduce((a, b) => a + b, 0);
 
+  const toggleStatus = async (j) => {
+    const id = j._id || j.id;
+    setActingId(id);
+    try {
+      const updated = await api.updateJob(id, { status: j.status === 'closed' ? 'open' : 'closed' });
+      setJobs((prev) => prev.map((x) => ((x._id || x.id) === id ? { ...x, status: updated.status } : x)));
+    } catch {
+      setAttempt((a) => a + 1);
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const removeJob = async (j) => {
+    const id = j._id || j.id;
+    if (!window.confirm(`Delete “${j.title}” permanently?`)) return;
+    setActingId(id);
+    try {
+      await api.deleteJob(id);
+      setJobs((prev) => prev.filter((x) => (x._id || x.id) !== id));
+    } finally {
+      setActingId(null);
+    }
+  };
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Employer dashboard</p>
