@@ -98,6 +98,8 @@ export const api = {
   },
   job: (id) => request(`/jobs/${id}`),
   createJob: (payload) => request('/jobs', { method: 'POST', body: payload }),
+  updateJob: (id, payload) => request(`/jobs/${id}`, { method: 'PUT', body: payload }),
+  deleteJob: (id) => request(`/jobs/${id}`, { method: 'DELETE' }),
   apply: (jobId, coverNote = '') => request('/applications', { method: 'POST', body: { jobId, coverNote } }),
   getSavedJobs: () => request('/auth/me/saved'),
   saveJobs: (jobIds) => request('/auth/me/saved', { method: 'PUT', body: { jobIds } }),
