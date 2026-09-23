@@ -273,6 +273,20 @@ export default function JobDetailPage() {
               >
                 View applicants →
               </Link>
+              <div className="flex gap-2">
+                <button
+                  onClick={toggleStatus} disabled={managing}
+                  className="flex-1 rounded-md border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
+                >
+                  {managing ? 'Updating…' : job.status === 'Closed' ? 'Reopen role' : 'Close role'}
+                </button>
+                <button
+                  onClick={removeJob} disabled={managing}
+                  className="flex-1 rounded-md border border-red-500/30 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 disabled:opacity-60"
+                >
+                  Delete
+                </button>
+              </div>
               <Link
                 to="/dashboard"
                 className="block w-full rounded-md border border-white/15 px-4 py-2 text-center text-sm text-white hover:border-accent"
