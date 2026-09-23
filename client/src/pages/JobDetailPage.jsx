@@ -133,6 +133,33 @@ export default function JobDetailPage() {
     }
   };
 
+  const toggleStatus = async () => {
+    setManaging(true);
+    try {
+      const next = job.status === 'Closed' ? 'open' : 'closed';
+      const updated = await api.updateJob(id, { status: next });
+      setJob(normalizeJob(updated));
+      toast?.notify(next === 'closed' ? 'Role closed' : 'Role reopened', 'success');
+    } catch (err) {
+      toast?.notify(err.message, 'error');
+    } finally {
+      setManaging(false);
+    }
+  };
+
+  const removeJob = async () => {
+    if (!window.confirm(`Delete “${job.role}” permanently?`)) return;
+    setManaging(true);
+    try {
+      await api.deleteJob(id);
+      toast?.notify('Role deleted', 'success');
+      nav('/dashboard');
+    } catch (err) {
+      toast?.notify(err.message, 'error');
+      setManaging(false);
+    }
+  };
+
   if (missing) {
     return (
       <section className="mx-auto max-w-3xl px-4 py-16 text-center">
