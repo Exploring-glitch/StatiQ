@@ -172,7 +172,7 @@ export default function JobDetailPage() {
     return <p className="mx-auto max-w-6xl px-4 py-16 text-center text-sm text-neutral-400">Loading role…</p>;
   }
   const isClosed = job.status === 'Closed';
-  const isExpired = job.deadline ? new Date(job.deadline).getTime() < Date.now() : false;
+  const isExpired = job.deadline ? new Date(job.deadline).getTime() < now : false;
   const isInactive = isClosed || isExpired;
 
   return (
