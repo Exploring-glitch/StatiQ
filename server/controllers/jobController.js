@@ -17,7 +17,8 @@ const check = (req, res) => {
 const JOB_WRITE_FIELDS = [
   'title', 'company', 'companySlug', 'location', 'salary', 'salaryMin', 'salaryMax',
   'type', 'remote', 'workMode', 'experienceLevel', 'tags',
-  'description', 'responsibilities', 'status',
+  'description', 'responsibilities', 'requirements', 'benefits',
+  'openings', 'deadline', 'status',
 ];
 const pickJobFields = (body = {}) =>
   Object.fromEntries(JOB_WRITE_FIELDS.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
