@@ -103,13 +103,20 @@ export default function DashboardPage() {
       <div className="mt-4 space-y-3">
         {jobs.map((j) => {
           const id = j._id || j.id;
+          const closed = j.status === 'closed';
           return (
             <div key={id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-panel p-4">
               <div>
-                <p className="text-sm font-bold text-white">{j.title}</p>
+                <p className="flex items-center gap-2 text-sm font-bold text-white">
+                  {j.title}
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${closed ? 'bg-red-500/15 text-red-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                    {closed ? 'Closed' : 'Open'}
+                  </span>
+                </p>
                 <p className="text-xs text-neutral-500">
                   {j.location} · {counts[id] ?? '…'} applicants
                   {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted', now).toLowerCase()}` : ''}
+                  {j.deadline ? ` · apply by ${new Date(j.deadline).toLocaleDateString()}` : ''}
                 </p>
               </div>
               <div className="flex gap-2">
