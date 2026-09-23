@@ -189,7 +189,13 @@ export const updateJob = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error('Not your job to edit');
   }
-  Object.assign(job, pickJobFields(req.body));
+  const patch = pickJobFields(req.body);
+  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags']) {
+    if (Array.isArray(patch[k])) patch[k] = patch[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  }
+  if (patch.openings === '') patch.openings = 1;
+  if (patch.deadline === '') patch.deadline = null;
+  Object.assign(job, patch);
   await job.save();
   res.json(job);
 });
