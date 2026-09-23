@@ -30,6 +30,14 @@ function deriveWorkMode(j) {
 }
 
 // API job → card shape used across pages
+export function formatSalaryRange(min, max, fallback = '') {
+  const fmt = (n) => (n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`);
+  if (min != null && max != null) return min === max ? fmt(min) : `${fmt(min)} – ${fmt(max)}`;
+  if (min != null) return `${fmt(min)}+`;
+  if (max != null) return `Up to ${fmt(max)}`;
+  return fallback || '';
+}
+
 export function normalizeJob(j) {
   const id = j._id || j.id;
   const range = j.salaryMin != null || j.salaryMax != null
