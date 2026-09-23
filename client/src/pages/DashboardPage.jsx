@@ -150,6 +150,18 @@ export default function DashboardPage() {
                 <Link to={`/jobs/${id}/applicants`} className="rounded-md bg-[#f4f4f5] px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">
                   Applicants →
                 </Link>
+                <button
+                  onClick={() => toggleStatus(j)} disabled={actingId === id}
+                  className="rounded-md border border-white/15 px-3 py-1 text-xs text-white hover:border-accent disabled:opacity-60"
+                >
+                  {actingId === id ? '…' : closed ? 'Reopen' : 'Close'}
+                </button>
+                <button
+                  onClick={() => removeJob(j)} disabled={actingId === id}
+                  className="rounded-md border border-red-500/30 px-3 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:opacity-60"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           );
