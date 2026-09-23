@@ -147,6 +147,12 @@ export const createJob = asyncHandler(async (req, res) => {
   for (const k of ['salaryMin', 'salaryMax']) {
     if (body[k] === '' || body[k] === undefined) body[k] = null;
   }
+  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags']) {
+    if (Array.isArray(body[k])) body[k] = body[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  }
+  if (body.openings === '' || body.openings === undefined || body.openings === null) body.openings = 1;
+  else body.openings = Math.max(1, Number(body.openings) || 1);
+  if (body.deadline === '' || body.deadline === undefined) body.deadline = null;
   if (body.company && !body.companySlug) {
     body.companySlug = String(body.company).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100);
   }
