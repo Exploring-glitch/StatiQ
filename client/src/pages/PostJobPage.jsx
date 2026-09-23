@@ -9,6 +9,7 @@ const empty = {
   salaryMin: '', salaryMax: '', type: 'Full-time',
   workMode: 'On-site', experienceLevel: '',
   tags: '', description: '', responsibilities: '',
+  requirements: '', benefits: '', openings: '1', deadline: '',
 };
 
 export default function PostJobPage() {
