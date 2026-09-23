@@ -49,9 +49,13 @@ export default function PostJobPage() {
         ...form,
         salaryMin: form.salaryMin === '' ? null : Number(form.salaryMin),
         salaryMax: form.salaryMax === '' ? null : Number(form.salaryMax),
+        openings: form.openings === '' ? 1 : Math.max(1, Number(form.openings) || 1),
+        deadline: form.deadline === '' ? null : new Date(form.deadline).toISOString(),
         remote: form.workMode === 'Remote',
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         responsibilities: form.responsibilities.split('\n').map((r) => r.trim()).filter(Boolean),
+        requirements: form.requirements.split('\n').map((r) => r.trim()).filter(Boolean),
+        benefits: form.benefits.split('\n').map((r) => r.trim()).filter(Boolean),
       };
       const created = await api.createJob(payload);
       setMsg(`Posted “${created.title}” successfully.`);
