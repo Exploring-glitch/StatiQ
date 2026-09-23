@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const [actingId, setActingId] = useState(null);
 
   useEffect(() => {
     const load = async () => {
