@@ -259,6 +259,30 @@ export default function JobDetailPage() {
               </p>
               {answer && <p className="mt-2 text-xs italic text-neutral-400">“{answer}”</p>}
             </div>
+          ) : isInactive ? (
+            <div className="mt-4 rounded-md border border-white/10 bg-panel2 p-3">
+              <p className="text-sm font-semibold text-white">
+                {isClosed ? 'Applications closed' : 'Application deadline passed'}
+              </p>
+              <p className="mt-1 text-xs text-neutral-400">
+                This role is no longer accepting applications, but you can save it or explore similar roles below.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => setSaved(toggleSaved(job.id))}
+                  className={`flex-1 rounded-md border px-4 py-2 text-sm ${saved ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white hover:border-accent'}`}
+                >
+                  {saved ? 'Saved ✓' : 'Save'}
+                </button>
+                <button
+                  onClick={share}
+                  title="Copy link to this role"
+                  className="flex-1 rounded-md border border-white/15 px-4 py-2 text-sm text-white hover:border-accent"
+                >
+                  {copied ? 'Copied ✓' : 'Share'}
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="mt-4 space-y-2">
               <button
