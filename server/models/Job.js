@@ -43,6 +43,8 @@ const jobSchema = new mongoose.Schema(
     responsibilities: { type: [String], default: [] },
     requirements: { type: [String], default: [] },
     benefits: { type: [String], default: [] },
+    openings: { type: Number, min: 1, default: 1 },
+    deadline: { type: Date, default: null },
     status: { type: String, enum: ['open', 'closed'], default: 'open' },
     companySlug: { type: String, trim: true, lowercase: true, default: '', maxlength: 100 },
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
