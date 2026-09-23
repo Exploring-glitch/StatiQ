@@ -156,7 +156,12 @@ export default function JobDetailPage() {
       )}
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <div className="rounded-xl border border-white/10 bg-panel p-6 lg:col-span-2">
-          <p className="text-sm font-bold text-white">{job.role}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-bold text-white">{job.role}</p>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${job.status === 'Closed' ? 'bg-red-500/15 text-red-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+              {job.status}
+            </span>
+          </div>
           <p className="mt-1 text-xs text-neutral-400">
             <Link
               to={`/companies/${encodeURIComponent(job.companySlug || String(job.company || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
@@ -165,8 +170,14 @@ export default function JobDetailPage() {
             >
               {job.company}
             </Link>
-            {' '}· {job.location} · {job.salary} · {job.type}
+            {' '}· {job.location} · {job.salaryDisplay || job.salary} · {job.type}
           </p>
+          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+            {job.workMode && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">{job.workMode}</span>}
+            {job.experienceLevel && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300 capitalize">{job.experienceLevel}</span>}
+            {job.openings > 1 && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">{job.openings} openings</span>}
+            {job.deadline && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">Apply by {new Date(job.deadline).toLocaleDateString()}</span>}
+          </div>
           {timeAgo(job.createdAt, 'Posted', now) && (
             <p className="mt-1 text-xs text-neutral-500" title={job.createdAt ? new Date(job.createdAt).toLocaleString() : ''}>
               {timeAgo(job.createdAt, 'Posted', now)}
