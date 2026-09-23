@@ -24,6 +24,7 @@ export default function JobDetailPage() {
   const [showApply, setShowApply] = useState(false);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
+  const [managing, setManaging] = useState(false);
   const [saved, setSaved] = useState(() => isSaved(id));
   const [copied, setCopied] = useState(false);
   const [similar, setSimilar] = useState([]);
