@@ -189,13 +189,33 @@ export default function JobDetailPage() {
             ))}
           </div>
           <h2 className="mt-6 text-sm font-bold text-white">About the role</h2>
-          <p className="mt-2 text-sm text-neutral-400">{job.description || 'No description yet.'}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-neutral-400">{job.description || 'No description yet.'}</p>
           {job.responsibilities.length > 0 && (
             <>
               <h2 className="mt-6 text-sm font-bold text-white">What you&apos;ll do</h2>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
-                {job.responsibilities.map((r) => (
-                  <li key={r}>{r}</li>
+                {job.responsibilities.map((r, i) => (
+                  <li key={`${r}-${i}`}>{r}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {(job.requirements?.length > 0) && (
+            <>
+              <h2 className="mt-6 text-sm font-bold text-white">Requirements</h2>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
+                {job.requirements.map((r, i) => (
+                  <li key={`${r}-${i}`}>{r}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {(job.benefits?.length > 0) && (
+            <>
+              <h2 className="mt-6 text-sm font-bold text-white">Benefits</h2>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
+                {job.benefits.map((r, i) => (
+                  <li key={`${r}-${i}`}>{r}</li>
                 ))}
               </ul>
             </>
