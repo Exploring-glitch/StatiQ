@@ -120,6 +120,16 @@ export default function PostJobPage() {
           <input value={form.tags} onChange={set('tags')} placeholder="Tags (comma separated: AI, Fintech)" className={input} />
           <textarea value={form.description} onChange={set('description')} placeholder="Role description" rows={4} className={`${input} resize-y`} />
           <textarea value={form.responsibilities} onChange={set('responsibilities')} placeholder="Responsibilities (one per line)" rows={3} className={`${input} resize-y`} />
+          <textarea value={form.requirements} onChange={set('requirements')} placeholder="Requirements (one per line: 3+ yrs React, etc.)" rows={3} className={`${input} resize-y`} />
+          <textarea value={form.benefits} onChange={set('benefits')} placeholder="Benefits (one per line: health, equity, PTO)" rows={3} className={`${input} resize-y`} />
+          <div className="grid grid-cols-2 gap-3">
+            <div><span className={label}>Openings</span>
+              <input type="number" min="1" value={form.openings} onChange={set('openings')} placeholder="1" className={input} />
+            </div>
+            <div><span className={label}>Apply by (deadline)</span>
+              <input type="date" value={form.deadline} onChange={set('deadline')} className={input} />
+            </div>
+          </div>
           {msg && <p className="rounded-md border border-accent/30 bg-accent/10 p-2 text-xs text-accent">{msg}</p>}
           <button type="submit" disabled={busy} className="w-full rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300 disabled:opacity-60">
             {busy ? 'Posting…' : 'Post job →'}
