@@ -62,6 +62,7 @@ export default function EmployerNavbar() {
           <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">Company</p>
           <NavLink to="/profile" className={sideLink}>👤 My profile</NavLink>
           <NavLink to="/company/manage" className={sideLink}>🏢 Manage company <span className="text-[11px] text-neutral-600">profile</span></NavLink>
+          <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">Account</p>
         </nav>
 
         <div className="border-t border-white/10 p-3">
