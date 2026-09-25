@@ -20,7 +20,7 @@ const sideLogoutLink = ({ isActive }) =>
 // ── Employer shell: ATS-style sidebar + company topbar ──
 // Deliberately different structure from the seeker top-nav so the
 // "I'm hiring" product feels like a different app.
-// Sidebar sections: Hire (dashboard/jobs) · Company (my profile + manage company) · Account (logout).
+// Sidebar sections: Hire (dashboard/jobs) · Company (my profile + manage company) · Account (notifications + logout).
 export default function EmployerNavbar() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
