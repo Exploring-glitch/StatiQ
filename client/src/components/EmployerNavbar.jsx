@@ -86,18 +86,21 @@ export default function EmployerNavbar() {
 
       {/* Mobile / tablet topbar */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0E1116]/95 backdrop-blur lg:hidden">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link to="/dashboard" className="text-xl font-extrabold tracking-tight text-white">
             Stati<span className="text-accent">Q</span>
             <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 align-middle text-[11px] font-semibold text-accent">Hiring</span>
           </Link>
-          <button
-            className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
-          >
-            Menu
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell compact />
+            <button
+              className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white"
+              onClick={() => setOpen(!open)}
+              aria-label="Toggle menu"
+            >
+              Menu
+            </button>
+          </div>
         </div>
         {open && (
           <div className="space-y-2 border-t border-white/10 px-4 py-4 text-sm">
