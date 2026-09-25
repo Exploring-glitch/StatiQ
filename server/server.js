@@ -131,6 +131,8 @@ app.use('/api/jobs', publicLimiter, async (req, res, next) => {
   next();
 }, jobRoutes);
 app.use('/api/applications', dbGate, applicationRoutes);
+app.use('/api/notifications', dbGate, notificationRoutes);
+app.use('/api/alerts', dbGate, alertRoutes);
 app.use('/api/companies', publicLimiter, async (req, res, next) => {
   // Public GETs work even before Mongo is configured (empty list fallback).
   if (req.method === 'GET' && !Job.db?.readyState) {
