@@ -10,6 +10,8 @@ import authRoutes from './routes/auth.js';
 import jobRoutes from './routes/jobs.js';
 import applicationRoutes from './routes/applications.js';
 import companyRoutes from './routes/companies.js';
+import notificationRoutes from './routes/notifications.js';
+import alertRoutes from './routes/alerts.js';
 import Job from './models/Job.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 import { publicLimiter } from './middleware/rateLimit.js';
