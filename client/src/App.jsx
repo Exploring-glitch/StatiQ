@@ -69,6 +69,8 @@ function App() {
         <Route path="/jobs/:jobId/applicants/:appId" element={<ProtectedRoute roles={employer}><ApplicantProfilePage /></ProtectedRoute>} />
         <Route path="/my-applications" element={<ProtectedRoute roles={seeker}><MyApplicationsPage /></ProtectedRoute>} />
         <Route path="/saved" element={<ProtectedRoute roles={seeker}><SavedJobsPage /></ProtectedRoute>} />
+        <Route path="/alerts" element={<ProtectedRoute roles={seeker}><JobAlertsPage /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute roles={[...seeker, ...employer]}><NotificationsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute roles={[...seeker, ...employer]}><ProfilePage /></ProtectedRoute>} />
         <Route path="/logout" element={<ProtectedRoute roles={[...seeker, ...employer]}><LogoutPage /></ProtectedRoute>} />
       </Route>
