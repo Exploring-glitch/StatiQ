@@ -5,6 +5,7 @@ import { normalizeJob, filterMock } from '../lib/jobs';
 import { useAuth } from '../context/AuthContext';
 import JobCard from '../components/JobCard';
 import CompanyCard from '../components/CompanyCard';
+import SaveSearchButton from '../components/SaveSearchButton';
 import { JobCardSkeleton } from '../components/Skeleton';
 
 const MODES = ['Remote', 'Hybrid', 'On-site'];
