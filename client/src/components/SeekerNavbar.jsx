@@ -46,9 +46,11 @@ export default function SeekerNavbar() {
           <NavLink to="/companies" className={link}>Companies</NavLink>
           <NavLink to="/my-applications" className={link}>My applications</NavLink>
           <NavLink to="/saved" className={link}>Saved</NavLink>
+          <NavLink to="/alerts" className={link}>Alerts</NavLink>
         </nav>
 
         <div className="relative hidden items-center gap-3 md:flex" ref={menuRef}>
+          <NotificationBell />
           <button
             type="button"
             onClick={() => setMenu(!menu)}
