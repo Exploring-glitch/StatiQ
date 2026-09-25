@@ -17,6 +17,8 @@ import EmployerSignupPage from './pages/EmployerSignupPage';
 import PostJobPage from './pages/PostJobPage';
 import MyApplicationsPage from './pages/MyApplicationsPage';
 import SavedJobsPage from './pages/SavedJobsPage';
+import NotificationsPage from './pages/NotificationsPage';
+import JobAlertsPage from './pages/JobAlertsPage';
 import ProfilePage from './pages/ProfilePage';
 import LogoutPage from './pages/LogoutPage';
 import DashboardPage from './pages/DashboardPage';
