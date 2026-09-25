@@ -127,4 +127,11 @@ export const api = {
   jobApplicants: (jobId) => request(`/applications/job/${jobId}`),
   setApplicantStatus: (appId, status) => request(`/applications/${appId}`, { method: 'PATCH', body: { status } }),
   setApplicantMark: (appId, mark) => request(`/applications/${appId}`, { method: 'PATCH', body: { mark } }),
+  listNotifications: (params = {}) => {
+    const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+    return request(`/notifications${qs ? `?${qs}` : ''}`);
+  },
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' }),
+  deleteNotification: (id) => request(`/notifications/${id}`, { method: 'DELETE' }),
 };
