@@ -97,6 +97,8 @@ export default function SeekerNavbar() {
           <NavLink to="/companies" onClick={() => setOpen(false)} className="block text-neutral-200">Companies</NavLink>
           <NavLink to="/my-applications" onClick={() => setOpen(false)} className="block text-neutral-200">My applications</NavLink>
           <NavLink to="/saved" onClick={() => setOpen(false)} className="block text-neutral-200">Saved</NavLink>
+          <NavLink to="/alerts" onClick={() => setOpen(false)} className="block text-neutral-200">Job alerts</NavLink>
+          <NavLink to="/notifications" onClick={() => setOpen(false)} className="block text-neutral-200">Notifications</NavLink>
           <Link to="/profile" onClick={() => setOpen(false)} className="block font-semibold text-accent">Profile →</Link>
           <Link to="/logout" onClick={() => setOpen(false)} className="block text-neutral-400">Log out</Link>
         </div>
