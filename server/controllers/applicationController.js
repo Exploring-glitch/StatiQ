@@ -113,5 +113,11 @@ export const setStatus = asyncHandler(async (req, res) => {
   if (hasStatus) app.status = req.body.status;
   if (hasMark) app.mark = req.body.mark;
   await app.save();
+  if (hasStatus) {
+    try {
+      const { notifyStatusChanged } = await import('../lib/notify.js');
+      notifyStatusChanged({ applicantId: app.applicant, job: app.job, status: app.status, applicationId: app._id }).catch(() => {});
+    } catch { /* best-effort */ }
+  }
   res.json(app);
 });
