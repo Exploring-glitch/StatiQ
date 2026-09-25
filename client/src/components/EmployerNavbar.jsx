@@ -65,6 +65,7 @@ export default function EmployerNavbar() {
           <NavLink to="/profile" className={sideLink}>👤 My profile</NavLink>
           <NavLink to="/company/manage" className={sideLink}>🏢 Manage company <span className="text-[11px] text-neutral-600">profile</span></NavLink>
           <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">Account</p>
+          <NavLink to="/notifications" className={sideLink}>🔔 Notifications</NavLink>
           <NavLink to="/logout" className={sideLogoutLink}>↩ Log out</NavLink>
         </nav>
 
