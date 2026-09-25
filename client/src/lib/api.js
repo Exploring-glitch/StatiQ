@@ -134,4 +134,12 @@ export const api = {
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
   markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' }),
   deleteNotification: (id) => request(`/notifications/${id}`, { method: 'DELETE' }),
+  listAlerts: () => request('/alerts/mine'),
+  createAlert: (payload) => request('/alerts', { method: 'POST', body: payload }),
+  updateAlert: (id, payload) => request(`/alerts/${id}`, { method: 'PUT', body: payload }),
+  deleteAlert: (id) => request(`/alerts/${id}`, { method: 'DELETE' }),
+  previewAlert: (params = {}) => {
+    const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+    return request(`/alerts/preview${qs ? `?${qs}` : ''}`);
+  },
 };
