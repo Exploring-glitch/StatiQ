@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const sideLink = ({ isActive }) =>
   `flex items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
