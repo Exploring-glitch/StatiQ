@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fileUrl } from '../lib/api';
+import NotificationBell from './NotificationBell';
 
 const link = ({ isActive }) =>
   `rounded-full px-3 py-1.5 text-sm transition ${
