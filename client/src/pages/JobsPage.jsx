@@ -48,6 +48,7 @@ const PAGE_SIZE = 12;
 export default function JobsPage() {
   const { user } = useAuth();
   const isEmployer = user?.role === 'employer';
+  const isSeeker = user?.role === 'jobseeker' || user?.role === 'admin';
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get('q') || '');
   const [location, setLocation] = useState(params.get('location') || '');
