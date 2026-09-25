@@ -9,6 +9,13 @@ const sideLink = ({ isActive }) =>
       : 'text-neutral-400 hover:bg-white/5 hover:text-white'
   }`;
 
+const sideLogoutLink = ({ isActive }) =>
+  `flex items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
+    isActive
+      ? 'bg-red-500/15 font-semibold text-red-400'
+      : 'text-neutral-400 hover:bg-red-500/10 hover:text-red-400'
+  }`;
+
 // ── Employer shell: ATS-style sidebar + company topbar ──
 // Deliberately different structure from the seeker top-nav so the
 // "I'm hiring" product feels like a different app.
