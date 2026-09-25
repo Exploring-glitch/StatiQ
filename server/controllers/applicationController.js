@@ -30,6 +30,10 @@ export const apply = asyncHandler(async (req, res) => {
   }
   try {
     const app = await Application.create({ job: jobId, applicant: req.user._id, coverNote });
+    try {
+      const { notifyNewApplicant } = await import('../lib/notify.js');
+      notifyNewApplicant({ employerId: job.postedBy, job, applicantName: req.user.name }).catch(() => {});
+    } catch { /* best-effort */ }
     res.status(201).json(app);
   } catch (e) {
     if (e.code === 11000) {
