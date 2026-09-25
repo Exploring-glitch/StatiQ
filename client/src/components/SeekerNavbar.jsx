@@ -74,6 +74,8 @@ export default function SeekerNavbar() {
           {menu && (
             <div role="menu" className="absolute right-0 top-10 w-44 rounded-lg border border-white/10 bg-panel2 p-1 shadow-2xl">
               <Link role="menuitem" to="/profile" onClick={() => setMenu(false)} className="block rounded-md px-3 py-2 text-sm text-neutral-200 hover:bg-white/5 hover:text-white">Profile</Link>
+              <Link role="menuitem" to="/alerts" onClick={() => setMenu(false)} className="block rounded-md px-3 py-2 text-sm text-neutral-200 hover:bg-white/5 hover:text-white">Job alerts</Link>
+              <Link role="menuitem" to="/notifications" onClick={() => setMenu(false)} className="block rounded-md px-3 py-2 text-sm text-neutral-200 hover:bg-white/5 hover:text-white">Notifications</Link>
               <Link role="menuitem" to="/logout" onClick={() => setMenu(false)} className="block rounded-md px-3 py-2 text-sm text-neutral-400 hover:bg-white/5 hover:text-white">Log out</Link>
             </div>
           )}
