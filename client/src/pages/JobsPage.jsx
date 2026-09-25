@@ -254,6 +254,19 @@ export default function JobsPage() {
           )}
           <span aria-hidden="true" className="text-xs">{showFilters ? '▴' : '▾'}</span>
         </button>
+        {isSeeker && (
+          <SaveSearchButton
+            getQuery={() => ({
+              q: params.get('q') || '',
+              location: params.get('location') || '',
+              type: params.get('type') || '',
+              workMode: params.get('mode') || '',
+              experienceLevel: params.get('level') || '',
+              minSalary: params.get('min') || '',
+              sort: params.get('sort') || '',
+            })}
+          />
+        )}
       </div>
 
       {showFilters && (
