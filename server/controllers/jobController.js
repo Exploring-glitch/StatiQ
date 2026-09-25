@@ -157,6 +157,11 @@ export const createJob = asyncHandler(async (req, res) => {
     body.companySlug = String(body.company).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100);
   }
   const job = await Job.create({ ...body, postedBy: req.user._id });
+  // Instant job-alert fan-out: seekers with matching active alerts get a notification.
+  try {
+    const { fanoutNewJobMatches } = await import('../lib/notify.js');
+    fanoutNewJobMatches(job).catch(() => {});
+  } catch { /* notifications are best-effort */ }
   // Keep the public company profile in sync: first post creates it so the
   // Jobs tab lists every role for the brand without extra employer steps.
   try {
