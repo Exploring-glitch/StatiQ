@@ -101,7 +101,8 @@ export default function EmployerNavbar() {
             <NavLink to="/dashboard" end onClick={() => setOpen(false)} className="block text-neutral-200">📊 Dashboard</NavLink>
             <NavLink to="/post-job" onClick={() => setOpen(false)} className="block text-neutral-200">＋ Post a job</NavLink>
             <NavLink to="/jobs" onClick={() => setOpen(false)} className="block text-neutral-200">👁 Preview listings</NavLink>
-            <NavLink to="/profile" onClick={() => setOpen(false)} className="block text-neutral-200">🏢 Company profile</NavLink>
+            <NavLink to="/profile" onClick={() => setOpen(false)} className="block text-neutral-200">👤 My profile</NavLink>
+            <NavLink to="/company/manage" onClick={() => setOpen(false)} className="block text-neutral-200">🏢 Manage company</NavLink>
             <Link to="/logout" onClick={() => setOpen(false)} className="block text-neutral-400">Log out</Link>
           </div>
         )}
