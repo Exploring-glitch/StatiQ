@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, fileUrl } from '../lib/api';
+import { sanitizeHtml } from '../lib/companies';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import RichTextEditor from '../components/RichTextEditor';
@@ -142,12 +143,15 @@ export default function CompanyManagePage() {
     setSecBusy(key);
     try {
       const saved = await api.saveCompany(buildPayload());
-      setSlug(saved.slug || slug);
+      setSlug(saved?.slug || slug);
       snapshot.current = { ...form, newValue: '', newBenefit: '' };
       setEditing((e) => ({ ...e, [key]: false }));
       toast?.notify('Company profile saved', 'success');
     } catch (e) {
-      toast?.notify(e.message, 'error');
+      // Log full context to the console so a failure is diagnosable from
+      // DevTools (the toast alone only carries the message).
+      console.error(`[company-manage] save '${key}' failed:`, e);
+      toast?.notify(e?.message || 'Save failed — please try again.', 'error');
     } finally {
       setSecBusy('');
     }
@@ -455,7 +459,7 @@ export default function CompanyManagePage() {
             {form.overviewHtml ? (
               <div
                 className="company-richtext-view text-sm leading-relaxed text-neutral-300"
-                dangerouslySetInnerHTML={{ __html: form.overviewHtml }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.overviewHtml) }}
               />
             ) : (
               <p className="text-sm text-neutral-600">No overview yet — click Edit to write one.</p>
