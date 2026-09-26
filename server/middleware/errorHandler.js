@@ -14,6 +14,12 @@ export function errorHandler(err, req, res, _next) {
     if (res.statusCode === 200) res.status(400);
   }
   const status = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+  // 5xx would otherwise be silent — log route + message so the server
+  // terminal names the culprit (client only ever sees err.message).
+  if (status >= 500) {
+    console.error(`[api] ${req.method} ${req.originalUrl} → ${status}: ${err?.message}`);
+    if (err?.stack) console.error(err.stack.split('\n').slice(1, 4).join('\n'));
+  }
   res.status(status).json({
     message: err.message || 'Server error',
     // Stack traces only in explicit development — never by default.

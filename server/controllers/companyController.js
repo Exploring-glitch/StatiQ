@@ -1,7 +1,7 @@
 import { body, validationResult } from 'express-validator';
 import fs from 'fs';
 import path from 'path';
-import Company, { sanitizeCompanyHtml } from '../models/Company.js';
+import Company, { sanitizeCompanyHtml, slugify } from '../models/Company.js';
 import Job from '../models/Job.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { escapeRegExp, isValidObjectId } from '../lib/validate.js';
@@ -28,13 +28,24 @@ export const companyWriteRules = [
   body('tagline').optional().trim().isLength({ max: 160 }),
   body('bio').optional().trim().isLength({ max: 500 }),
   body('overviewHtml').optional().isString().isLength({ max: 50000 }).withMessage('Overview too long'),
-  body('employeeCount').optional({ nullable: true }).toInt().isInt({ min: 0, max: 1000000 }),
+  // Raw form posts send '' for untouched number inputs — accept those as
+  // empty (pickCompanyFields normalizes them to null) instead of 400ing
+  // with a cryptic "Invalid value".
+  body('employeeCount').optional({ nullable: true }).custom((v) => {
+    if (v === '' || v === null) return true;
+    const n = Number(v);
+    return Number.isInteger(n) && n >= 0 && n <= 1000000;
+  }).withMessage('Employee count must be a whole number between 0 and 1000000'),
   body('companySize').optional().isIn(['', '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+']),
   body('website').optional().trim().isLength({ max: 300 }),
   body('companyType').optional().isIn(['', 'Startup', 'SME', 'Enterprise', 'Nonprofit', 'Agency', 'Government']),
   body('industry').optional().trim().isLength({ max: 120 }),
   body('location').optional().trim().isLength({ max: 160 }),
-  body('foundedYear').optional({ nullable: true }).toInt().isInt({ min: 1800, max: 2100 }),
+  body('foundedYear').optional({ nullable: true }).custom((v) => {
+    if (v === '' || v === null) return true;
+    const n = Number(v);
+    return Number.isInteger(n) && n >= 1800 && n <= 2100;
+  }).withMessage('Founded year must be a whole number between 1800 and 2100'),
   ...personRules('founder'),
   body('team').optional().isArray({ max: 50 }).withMessage('Team must be a list (max 50)'),
   body('culture.remotePolicy').optional().isIn(['', 'On-site', 'Hybrid', 'Remote-friendly', 'Remote-first']),
@@ -130,16 +141,44 @@ export const getMyCompany = asyncHandler(async (req, res) => {
   res.json({ ...mine, id: mine._id, jobsCount: jobs.length });
 });
 
+// Plain-text mirror of the rich overview (used by the text search index).
+export const overviewTextOf = (html) =>
+  String(html || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 5000);
+
+// Unique slug for an owner (same -2, -3, ... scheme as the model hook).
+const uniqueSlugForOwner = async (name, ownerId) => {
+  const base = slugify(name);
+  let slug = base;
+  let n = 1;
+  while (await Company.exists({ slug, owner: { $ne: ownerId } })) {
+    n += 1;
+    slug = `${base}-${n}`.slice(0, 100);
+  }
+  return slug;
+};
+
 // PUT /api/companies/me — employer create-or-update own profile
 export const upsertMyCompany = asyncHandler(async (req, res) => {
   check(req, res);
   const patch = pickCompanyFields(req.body);
-  if (!patch.name) {
-    const existing = await Company.findOne({ owner: req.user._id });
-    if (!existing) {
-      res.status(400);
-      throw new Error('Company name is required');
-    }
+  const existing = await Company.findOne({ owner: req.user._id }).select('slug name');
+  if (!patch.name && !existing) {
+    res.status(400);
+    throw new Error('Company name is required');
+  }
+  // findOneAndUpdate skips the pre('validate') document hook, so maintain
+  // the slug + plain-text overview mirror here (otherwise new profiles get
+  // no public URL and overview search never matches).
+  if (patch.overviewHtml !== undefined) {
+    patch.overviewText = overviewTextOf(patch.overviewHtml);
+  }
+  const effectiveName = patch.name || existing?.name;
+  if (effectiveName && !existing?.slug) {
+    patch.slug = await uniqueSlugForOwner(effectiveName, req.user._id);
   }
   const updated = await Company.findOneAndUpdate(
     { owner: req.user._id },
