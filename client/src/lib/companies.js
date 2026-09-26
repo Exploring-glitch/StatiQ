@@ -21,8 +21,11 @@ export function sanitizeHtml(html) {
     if (t === 'span') {
       const style = /style\s*=\s*("[^"]*"|'[^']*')/i.exec(attrs || '');
       if (style) {
+        // NOTE: filter needs a predicate function — passing the regex
+        // itself throws "TypeError: object is not a function".
+        const keepStyle = /^(font-size\s*:\s*[\d.]+(px|pt|em|rem|%)|text-align\s*:\s*(left|center|right))$/i;
         const picks = style[1].slice(1, -1).split(';').map((s) => s.trim())
-          .filter(/^(font-size\s*:\s*[\d.]+(px|pt|em|rem|%)|text-align\s*:\s*(left|center|right))$/i);
+          .filter((s) => keepStyle.test(s));
         return picks.length ? `<span style="${picks.join('; ')}">` : '<span>';
       }
       return '<span>';
