@@ -33,10 +33,13 @@ export function sanitizeCompanyHtml(html) {
       const style = /style\s*=\s*("[^"]*"|'[^']*')/i.exec(attrs || '');
       if (style) {
         const css = style[1].slice(1, -1);
+        // NOTE: filter needs a predicate function — passing the regex
+        // itself throws "TypeError: object is not a function".
+        const keepStyle = /^(font-size\s*:\s*[\d.]+(px|pt|em|rem|%)|text-align\s*:\s*(left|center|right))$/i;
         const picks = css
           .split(';')
           .map((s) => s.trim())
-          .filter(/^(font-size\s*:\s*[\d.]+(px|pt|em|rem|%)|text-align\s*:\s*(left|center|right))$/i);
+          .filter((s) => keepStyle.test(s));
         return picks.length ? `<span style="${picks.join('; ')}">` : '<span>';
       }
       return '<span>';
