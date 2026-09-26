@@ -27,7 +27,11 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Tell ca
 
   const cmd = (command, arg = null) => {
     ref.current?.focus();
-    document.execCommand('styleWithCSS', false, 'true');
+    // Semantic tags (<b>/<i>/<u>/<s>) — NOT styleWithCSS spans. Span styles
+    // like font-weight/font-style are stripped by the overview sanitizers
+    // (client + server allowlist), so CSS-mode bold would silently go
+    // "normal" again on blur/save. Tags survive blur, save and re-render.
+    document.execCommand('styleWithCSS', false, 'false');
     document.execCommand(command, false, arg);
     emit();
   };
