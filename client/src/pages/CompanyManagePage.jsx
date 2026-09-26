@@ -241,120 +241,145 @@ export default function CompanyManagePage() {
 
       {/* ── Basics: logo · name · bio · headcount ── */}
       <div className={`${card} mt-6`}>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">Basics</h2>
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-          {logo ? (
-            <img src={logo} alt="Company logo" className="h-20 w-20 rounded-2xl border border-white/10 object-cover" />
-          ) : (
-            <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/15 text-3xl font-extrabold text-accent">
-              {(form.name || '?').charAt(0).toUpperCase()}
-            </span>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              className="rounded-md bg-accent px-3 py-2 text-xs font-semibold text-white hover:bg-accentHover disabled:opacity-60"
-            >
-              {uploading ? 'Uploading…' : 'Upload logo'}
-            </button>
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onLogoFile} />
-            <input
-              value={form.logoUrl} onChange={(e) => set('logoUrl', e.target.value)}
-              placeholder="…or paste logo image URL" aria-label="Logo image URL"
-              className="min-w-56 flex-1 rounded-md border border-white/10 bg-panel2 px-3 py-2 text-xs text-white placeholder:text-neutral-500 outline-none focus:border-accent/60"
-            />
-          </div>
-        </div>
+        {head('basics', 'Basics', 'Logo, name, bio and company facts.', 'Save basics')}
+        {editing.basics ? (
+          <>
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+              {logo ? (
+                <img src={logo} alt="Company logo" className="h-20 w-20 rounded-2xl border border-white/10 object-cover" />
+              ) : (
+                <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/15 text-3xl font-extrabold text-accent">
+                  {(form.name || '?').charAt(0).toUpperCase()}
+                </span>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+                  className="rounded-md bg-accent px-3 py-2 text-xs font-semibold text-white hover:bg-accentHover disabled:opacity-60"
+                >
+                  {uploading ? 'Uploading…' : 'Upload logo'}
+                </button>
+                <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onLogoFile} />
+                <input
+                  value={form.logoUrl} onChange={(e) => set('logoUrl', e.target.value)}
+                  placeholder="…or paste logo image URL" aria-label="Logo image URL"
+                  className="min-w-56 flex-1 rounded-md border border-white/10 bg-panel2 px-3 py-2 text-xs text-white placeholder:text-neutral-500 outline-none focus:border-accent/60"
+                />
+              </div>
+            </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="c-name" className={label}>Company name *</label>
-            <input id="c-name" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Acme Inc." className={input} />
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="c-name" className={label}>Company name *</label>
+                <input id="c-name" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Acme Inc." className={input} />
+              </div>
+              <div>
+                <label htmlFor="c-tagline" className={label}>Tagline</label>
+                <input id="c-tagline" value={form.tagline} onChange={(e) => set('tagline', e.target.value)} placeholder="What you do, in one line" className={input} />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label htmlFor="c-bio" className={label}>Short bio (shows under the name)</label>
+              <textarea id="c-bio" value={form.bio} onChange={(e) => set('bio', e.target.value)} rows={2} maxLength={500} placeholder="One or two sentences about the company…" className={input} />
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <div>
+                <label htmlFor="c-count" className={label}>Employees (number)</label>
+                <input id="c-count" type="number" min={0} value={form.employeeCount} onChange={(e) => set('employeeCount', e.target.value)} placeholder="e.g. 120" className={input} />
+              </div>
+              <div>
+                <label htmlFor="c-size" className={label}>Company size</label>
+                <select id="c-size" value={form.companySize} onChange={(e) => set('companySize', e.target.value)} className={input}>
+                  <option value="">Select…</option>
+                  {['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'].map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="c-type" className={label}>Company type</label>
+                <select id="c-type" value={form.companyType} onChange={(e) => set('companyType', e.target.value)} className={input}>
+                  <option value="">Select…</option>
+                  {['Startup', 'SME', 'Enterprise', 'Nonprofit', 'Agency', 'Government'].map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="c-site" className={label}>Website</label>
+                <input id="c-site" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://…" className={input} />
+              </div>
+              <div>
+                <label htmlFor="c-industry" className={label}>Industry</label>
+                <input id="c-industry" value={form.industry} onChange={(e) => set('industry', e.target.value)} placeholder="e.g. AI / SaaS" className={input} />
+              </div>
+              <div>
+                <label htmlFor="c-loc" className={label}>Headquarters</label>
+                <input id="c-loc" value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="e.g. Bengaluru / Remote" className={input} />
+              </div>
+              <div>
+                <label htmlFor="c-year" className={label}>Founded year</label>
+                <input id="c-year" type="number" value={form.foundedYear} onChange={(e) => set('foundedYear', e.target.value)} placeholder="e.g. 2021" className={input} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mt-3">
+            <div className="mb-3 flex items-center gap-3">
+              {logo ? (
+                <img src={logo} alt="Company logo" className="h-12 w-12 rounded-xl border border-white/10 object-cover" />
+              ) : (
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/15 text-xl font-extrabold text-accent">
+                  {(form.name || '?').charAt(0).toUpperCase()}
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-white">{form.name || '—'}</p>
+                {form.tagline && <p className="truncate text-xs text-neutral-400">{form.tagline}</p>}
+              </div>
+            </div>
+            <Row k="Bio" v={form.bio} />
+            <Row k="Employees" v={form.employeeCount !== '' && form.employeeCount != null ? String(form.employeeCount) : ''} />
+            <Row k="Size" v={form.companySize} />
+            <Row k="Type" v={form.companyType} />
+            <Row k="Website" v={form.website} link={form.website} />
+            <Row k="Industry" v={form.industry} />
+            <Row k="Location" v={form.location} />
+            <Row k="Founded" v={form.foundedYear !== '' && form.foundedYear != null ? String(form.foundedYear) : ''} />
           </div>
-          <div>
-            <label htmlFor="c-tagline" className={label}>Tagline</label>
-            <input id="c-tagline" value={form.tagline} onChange={(e) => set('tagline', e.target.value)} placeholder="What you do, in one line" className={input} />
-          </div>
-        </div>
-        <div className="mt-4">
-          <label htmlFor="c-bio" className={label}>Short bio (shows under the name)</label>
-          <textarea id="c-bio" value={form.bio} onChange={(e) => set('bio', e.target.value)} rows={2} maxLength={500} placeholder="One or two sentences about the company…" className={input} />
-        </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <div>
-            <label htmlFor="c-count" className={label}>Employees (number)</label>
-            <input id="c-count" type="number" min={0} value={form.employeeCount} onChange={(e) => set('employeeCount', e.target.value)} placeholder="e.g. 120" className={input} />
-          </div>
-          <div>
-            <label htmlFor="c-size" className={label}>Company size</label>
-            <select id="c-size" value={form.companySize} onChange={(e) => set('companySize', e.target.value)} className={input}>
-              <option value="">Select…</option>
-              {['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'].map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="c-type" className={label}>Company type</label>
-            <select id="c-type" value={form.companyType} onChange={(e) => set('companyType', e.target.value)} className={input}>
-              <option value="">Select…</option>
-              {['Startup', 'SME', 'Enterprise', 'Nonprofit', 'Agency', 'Government'].map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="c-site" className={label}>Website</label>
-            <input id="c-site" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://…" className={input} />
-          </div>
-          <div>
-            <label htmlFor="c-industry" className={label}>Industry</label>
-            <input id="c-industry" value={form.industry} onChange={(e) => set('industry', e.target.value)} placeholder="e.g. AI / SaaS" className={input} />
-          </div>
-          <div>
-            <label htmlFor="c-loc" className={label}>Headquarters</label>
-            <input id="c-loc" value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="e.g. Bengaluru / Remote" className={input} />
-          </div>
-          <div>
-            <label htmlFor="c-year" className={label}>Founded year</label>
-            <input id="c-year" type="number" value={form.foundedYear} onChange={(e) => set('foundedYear', e.target.value)} placeholder="e.g. 2021" className={input} />
-          </div>
-        </div>
-
-        <button
-          type="button" onClick={() => save()} disabled={saving || !form.name.trim()}
-          className="mt-5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accentHover disabled:opacity-60"
-        >
-          {saving ? 'Saving…' : 'Save basics'}
-        </button>
+        )}
       </div>
 
       {/* ── People: founder ── */}
       <div className={`${card} mt-4`}>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">People · Founder</h2>
-        <p className="mt-1 text-xs text-neutral-500">Shown under “Meet the people” — photo, name, title and bio.</p>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="f-name" className={label}>Founder name</label>
-            <input id="f-name" value={form.founder.name} onChange={(e) => set('founder', { ...form.founder, name: e.target.value })} placeholder="e.g. Jane Doe" className={input} />
+        {head('founder', 'People · Founder', 'Shown under “Meet the people” — photo, name, title and bio.', 'Save founder')}
+        {editing.founder ? (
+          <>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="f-name" className={label}>Founder name</label>
+                <input id="f-name" value={form.founder.name} onChange={(e) => set('founder', { ...form.founder, name: e.target.value })} placeholder="e.g. Jane Doe" className={input} />
+              </div>
+              <div>
+                <label htmlFor="f-title" className={label}>Founder title</label>
+                <input id="f-title" value={form.founder.title} onChange={(e) => set('founder', { ...form.founder, title: e.target.value })} placeholder="e.g. Co-founder & CEO" className={input} />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label htmlFor="f-photo" className={label}>Founder photo URL</label>
+              <input id="f-photo" value={form.founder.photoUrl} onChange={(e) => set('founder', { ...form.founder, photoUrl: e.target.value })} placeholder="https://… or /uploads/…" className={input} />
+            </div>
+            <div className="mt-4">
+              <label htmlFor="f-bio" className={label}>Founder bio</label>
+              <textarea id="f-bio" value={form.founder.bio} onChange={(e) => set('founder', { ...form.founder, bio: e.target.value })} rows={3} placeholder="Background, mission, what they lead…" className={input} />
+            </div>
+          </>
+        ) : (
+          <div className="mt-3">
+            <Row k="Name" v={form.founder.name} />
+            <Row k="Title" v={form.founder.title} />
+            <Row k="Photo" v={form.founder.photoUrl} link={form.founder.photoUrl} />
+            <Row k="Bio" v={form.founder.bio} />
           </div>
-          <div>
-            <label htmlFor="f-title" className={label}>Founder title</label>
-            <input id="f-title" value={form.founder.title} onChange={(e) => set('founder', { ...form.founder, title: e.target.value })} placeholder="e.g. Co-founder & CEO" className={input} />
-          </div>
-        </div>
-        <div className="mt-4">
-          <label htmlFor="f-photo" className={label}>Founder photo URL</label>
-          <input id="f-photo" value={form.founder.photoUrl} onChange={(e) => set('founder', { ...form.founder, photoUrl: e.target.value })} placeholder="https://… or /uploads/…" className={input} />
-        </div>
-        <div className="mt-4">
-          <label htmlFor="f-bio" className={label}>Founder bio</label>
-          <textarea id="f-bio" value={form.founder.bio} onChange={(e) => set('founder', { ...form.founder, bio: e.target.value })} rows={3} placeholder="Background, mission, what they lead…" className={input} />
-        </div>
-        <button
-          type="button" onClick={() => save()} disabled={saving}
-          className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
-        >
-          {saving ? 'Saving…' : 'Save founder'}
-        </button>
+        )}
       </div>
 
       {/* ── People: team (founder auto-included on public page) ── */}
