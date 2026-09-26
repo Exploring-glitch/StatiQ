@@ -18,6 +18,80 @@ const blank = {
   newValue: '', newBenefit: '',
 };
 
+// Sections with data start in view mode (Edit button visible).
+// Empty sections start in edit mode so first-time setup stays guided.
+const buildEditing = (c) => {
+  if (!c) return { basics: true, founder: true, team: true, overview: true, culture: true };
+  return {
+    basics: !(c.name || c.tagline || c.bio || c.website || c.location),
+    founder: !(c.founder?.name || c.founder?.title || c.founder?.bio),
+    team: !((c.team || []).length),
+    overview: !(c.overviewHtml),
+    culture: !(
+      c.culture?.remotePolicy || c.culture?.description ||
+      (c.culture?.values || []).length || (c.culture?.benefits || []).length
+    ),
+  };
+};
+
+const snapshotForm = (c) => ({
+  name: c?.name || '', logoUrl: c?.logoUrl || '', tagline: c?.tagline || '', bio: c?.bio || '',
+  overviewHtml: c?.overviewHtml || '', employeeCount: c?.employeeCount ?? '', companySize: c?.companySize || '',
+  website: c?.website || '', companyType: c?.companyType || '', industry: c?.industry || '',
+  location: c?.location || '', foundedYear: c?.foundedYear ?? '',
+  founder: { ...blankPerson, ...(c?.founder || {}) },
+  team: Array.isArray(c?.team) ? c.team.map((m) => ({ ...blankPerson, ...m })) : [],
+  culture: {
+    remotePolicy: c?.culture?.remotePolicy || '',
+    values: Array.isArray(c?.culture?.values) ? [...c.culture.values] : [],
+    benefits: Array.isArray(c?.culture?.benefits) ? [...c.culture.benefits] : [],
+    description: c?.culture?.description || '',
+  },
+});
+
+// Card header with per-section Edit / Cancel + Save.
+function SecHead({ title, sub, isEditing, busy, onEdit, onCancel, onSave, saveLabel }) {
+  return (
+    <div>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-400">{title}</h2>
+          {sub && <p className="mt-1 text-xs text-neutral-500">{sub}</p>}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {isEditing ? (
+            <>
+              <button type="button" onClick={onCancel} className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-neutral-300 hover:border-accent">
+                Cancel
+              </button>
+              <button type="button" onClick={onSave} disabled={busy} className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accentHover disabled:opacity-60">
+                {busy ? 'Saving…' : (saveLabel || 'Save')}
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={onEdit} className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-white hover:border-accent">
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Read-only label/value row for view mode.
+function Row({ k, v, link }) {
+  const body = link && v
+    ? <a href={link} target="_blank" rel="noreferrer" className="break-all text-accent hover:underline">{v}</a>
+    : (v || <span className="text-neutral-600">—</span>);
+  return (
+    <div className="flex gap-2 border-b border-white/5 py-1.5 text-sm last:border-0">
+      <span className="w-28 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{k}</span>
+      <span className="min-w-0 flex-1 break-words text-neutral-200">{body}</span>
+    </div>
+  );
+}
+
 export default function CompanyManagePage() {
   const { user } = useAuth();
   const toast = useToast();
@@ -25,8 +99,14 @@ export default function CompanyManagePage() {
   const [form, setForm] = useState(blank);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [secBusy, setSecBusy] = useState('');
   const [uploading, setUploading] = useState(false);
   const [slug, setSlug] = useState('');
+  // Per-section edit mode. Sections with data start in view mode (Edit
+  // button visible); empty sections start editable for first-time setup.
+  const [editing, setEditing] = useState(() => buildEditing(null));
+  // Last-saved server snapshot — Cancel restores this per section.
+  const snapshot = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -34,20 +114,10 @@ export default function CompanyManagePage() {
       .then((c) => {
         if (!alive || !c) return;
         setSlug(c.slug || '');
-        setForm({
-          name: c.name || '', logoUrl: c.logoUrl || '', tagline: c.tagline || '', bio: c.bio || '',
-          overviewHtml: c.overviewHtml || '', employeeCount: c.employeeCount ?? '', companySize: c.companySize || '',
-          website: c.website || '', companyType: c.companyType || '', industry: c.industry || '',
-          location: c.location || '', foundedYear: c.foundedYear ?? '',
-          founder: { ...blankPerson, ...(c.founder || {}) },
-          team: Array.isArray(c.team) ? c.team.map((m) => ({ ...blankPerson, ...m })) : [],
-          culture: {
-            remotePolicy: c.culture?.remotePolicy || '',
-            values: Array.isArray(c.culture?.values) ? c.culture.values : [],
-            benefits: Array.isArray(c.culture?.benefits) ? c.culture.benefits : [],
-            description: c.culture?.description || '',
-          },
-        });
+        const next = { ...snapshotForm(c), newValue: '', newBenefit: '' };
+        snapshot.current = next;
+        setForm(next);
+        setEditing(buildEditing(c));
       })
       .catch(() => {})
       .finally(() => { if (alive) setLoading(false); });
@@ -56,16 +126,23 @@ export default function CompanyManagePage() {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  const buildPayload = (patch) => {
+    const payload = { ...form, ...patch };
+    delete payload.newValue;
+    delete payload.newBenefit;
+    if (payload.employeeCount === '' || payload.employeeCount == null) payload.employeeCount = null;
+    else payload.employeeCount = Number(payload.employeeCount);
+    if (payload.foundedYear === '' || payload.foundedYear == null) payload.foundedYear = null;
+    else payload.foundedYear = Number(payload.foundedYear);
+    return payload;
+  };
+
   const save = async (patch) => {
     setSaving(true);
     try {
-      const payload = { ...form, ...patch };
-      if (payload.employeeCount === '' || payload.employeeCount == null) payload.employeeCount = null;
-      else payload.employeeCount = Number(payload.employeeCount);
-      if (payload.foundedYear === '' || payload.foundedYear == null) payload.foundedYear = null;
-      else payload.foundedYear = Number(payload.foundedYear);
-      const saved = await api.saveCompany(payload);
+      const saved = await api.saveCompany(buildPayload(patch));
       setSlug(saved.slug || slug);
+      snapshot.current = { ...form, ...(patch || {}), newValue: '', newBenefit: '' };
       toast?.notify('Company profile saved', 'success');
     } catch (e) {
       toast?.notify(e.message, 'error');
@@ -73,6 +150,59 @@ export default function CompanyManagePage() {
       setSaving(false);
     }
   };
+
+  // Per-section save: click Save → persist → collapse back to view mode
+  // so the Edit button shows again.
+  const saveSection = async (key) => {
+    setSecBusy(key);
+    try {
+      const saved = await api.saveCompany(buildPayload());
+      setSlug(saved.slug || slug);
+      snapshot.current = { ...form, newValue: '', newBenefit: '' };
+      setEditing((e) => ({ ...e, [key]: false }));
+      toast?.notify('Company profile saved', 'success');
+    } catch (e) {
+      toast?.notify(e.message, 'error');
+    } finally {
+      setSecBusy('');
+    }
+  };
+
+  const startEdit = (key) => setEditing((e) => ({ ...e, [key]: true }));
+  const cancelEdit = (key) => {
+    if (snapshot.current) {
+      const s = snapshot.current;
+      if (key === 'basics') {
+        setForm((f) => ({
+          ...f, name: s.name, logoUrl: s.logoUrl, tagline: s.tagline, bio: s.bio,
+          employeeCount: s.employeeCount, companySize: s.companySize, companyType: s.companyType,
+          website: s.website, industry: s.industry, location: s.location, foundedYear: s.foundedYear,
+        }));
+      } else if (key === 'founder') {
+        setForm((f) => ({ ...f, founder: { ...s.founder } }));
+      } else if (key === 'team') {
+        setForm((f) => ({ ...f, team: s.team.map((m) => ({ ...m })) }));
+      } else if (key === 'overview') {
+        setForm((f) => ({ ...f, overviewHtml: s.overviewHtml }));
+      } else if (key === 'culture') {
+        setForm((f) => ({ ...f, culture: { ...s.culture, values: [...s.culture.values], benefits: [...s.culture.benefits] }, newValue: '', newBenefit: '' }));
+      }
+    }
+    setEditing((e) => ({ ...e, [key]: false }));
+  };
+
+  const head = (key, title, sub, saveLabel) => (
+    <SecHead
+      title={title}
+      sub={sub}
+      isEditing={editing[key]}
+      busy={secBusy === key || saving}
+      onEdit={() => startEdit(key)}
+      onCancel={() => cancelEdit(key)}
+      onSave={() => saveSection(key)}
+      saveLabel={saveLabel}
+    />
+  );
 
   const onLogoFile = async (e) => {
     const file = e.target.files?.[0];
