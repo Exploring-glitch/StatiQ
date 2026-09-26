@@ -20,22 +20,23 @@ export function sanitizeCompanyHtml(html) {
   out = out.replace(/(href|src)\s*=\s*("|')\s*javascript:[^"']*\2/gi, '$1=$2#$2');
   // Allowlist tags; everything else is unwrapped (children kept).
   const allowed = new Set([
-    'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'span',
+    'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'span',
     'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'hr', 'a', 'div',
   ]);
+  // Span styles that survive: sizes, alignment AND bold/italic/underline.
+  // (WYSIWYG/pasted markup leans on these; anything else is dropped.)
+  const keepStyle = /^(font-size\s*:\s*[\d.]+(px|pt|em|rem|%)|text-align\s*:\s*(left|center|right)|font-weight\s*:\s*(bold|bolder|[1-9]00)|font-style\s*:\s*(italic|oblique)|text-decoration(-line)?\s*:\s*(underline|line-through)(\s+(underline|line-through))?)$/i;
   out = out.replace(/<\/?([a-z0-9]+)(\s[^<>]*)?\/?>/gi, (m, tag, attrs = '') => {
     const t = String(tag).toLowerCase();
     const closing = m.startsWith('</');
     if (!allowed.has(t)) return '';
     if (closing) return `</${t}>`;
     if (t === 'span') {
-      // Only allow font-size / text-align inline styles on spans.
       const style = /style\s*=\s*("[^"]*"|'[^']*')/i.exec(attrs || '');
       if (style) {
         const css = style[1].slice(1, -1);
         // NOTE: filter needs a predicate function — passing the regex
         // itself throws "TypeError: object is not a function".
-        const keepStyle = /^(font-size\s*:\s*[\d.]+(px|pt|em|rem|%)|text-align\s*:\s*(left|center|right))$/i;
         const picks = css
           .split(';')
           .map((s) => s.trim())
