@@ -27,6 +27,12 @@ export const companyWriteRules = [
   body('logoUrl').optional().trim().isLength({ max: 500 }),
   body('tagline').optional().trim().isLength({ max: 160 }),
   body('bio').optional().trim().isLength({ max: 500 }),
+  body('mission').optional().trim().isLength({ max: 2000 }),
+  body('socials.linkedin').optional().trim().isLength({ max: 300 }),
+  body('socials.twitter').optional().trim().isLength({ max: 300 }),
+  body('socials.github').optional().trim().isLength({ max: 300 }),
+  body('socials.facebook').optional().trim().isLength({ max: 300 }),
+  body('socials.instagram').optional().trim().isLength({ max: 300 }),
   body('overviewHtml').optional().isString().isLength({ max: 50000 }).withMessage('Overview too long'),
   // Raw form posts send '' for untouched number inputs — accept those as
   // empty (pickCompanyFields normalizes them to null) instead of 400ing
@@ -70,8 +76,14 @@ const cleanTeam = (v) => {
 
 const pickCompanyFields = (src = {}) => {
   const out = {};
-  for (const k of ['name', 'logoUrl', 'tagline', 'bio', 'companySize', 'website', 'companyType', 'industry', 'location']) {
+  for (const k of ['name', 'logoUrl', 'tagline', 'bio', 'mission', 'companySize', 'website', 'companyType', 'industry', 'location']) {
     if (src[k] !== undefined) out[k] = typeof src[k] === 'string' ? src[k].trim() : src[k];
+  }
+  if (src.socials !== undefined && src.socials && typeof src.socials === 'object') {
+    out.socials = {};
+    for (const k of ['linkedin', 'twitter', 'github', 'facebook', 'instagram']) {
+      if (src.socials[k] !== undefined) out.socials[k] = String(src.socials[k] ?? '').trim().slice(0, 300);
+    }
   }
   if (src.overviewHtml !== undefined) out.overviewHtml = sanitizeCompanyHtml(src.overviewHtml);
   for (const k of ['employeeCount', 'foundedYear']) {
