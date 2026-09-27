@@ -156,6 +156,12 @@ export default function CompanyProfilePage() {
                 {company.bio || 'This company hasn’t written a detailed overview yet.'}
               </p>
             )}
+            {company.mission && (
+              <div className="mt-6 rounded-xl border border-accent/25 bg-accent/5 p-4">
+                <h3 className="text-sm font-bold uppercase tracking-wide text-neutral-400">Our mission</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-200">{company.mission}</p>
+              </div>
+            )}
           </div>
           <aside className="h-fit space-y-3 rounded-xl border border-white/10 bg-panel p-6">
             <h3 className="text-sm font-bold text-white">Company facts</h3>
@@ -178,6 +184,26 @@ export default function CompanyProfilePage() {
                 </div>
               ))}
             </dl>
+            {company.socials && Object.entries(company.socials).some(([, v]) => v) && (
+              <div className="border-t border-white/5 pt-3">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-neutral-500">Find us</h4>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {Object.entries(company.socials)
+                    .filter(([, v]) => v)
+                    .map(([k, v]) => (
+                      <a
+                        key={k}
+                        href={v}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-full border border-white/15 px-3 py-1 text-xs capitalize text-neutral-200 hover:border-accent hover:text-white"
+                      >
+                        {k === 'twitter' ? 'X / Twitter' : k} ↗
+                      </a>
+                    ))}
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       )}
