@@ -19,21 +19,11 @@ const blank = {
   newValue: '', newBenefit: '',
 };
 
-// Sections with data start in view mode (Edit button visible).
-// Empty sections start in edit mode so first-time setup stays guided.
-const buildEditing = (c) => {
-  if (!c) return { basics: true, founder: true, team: true, overview: true, culture: true };
-  return {
-    basics: !(c.name || c.tagline || c.bio || c.website || c.location),
-    founder: !(c.founder?.name || c.founder?.title || c.founder?.bio),
-    team: !((c.team || []).length),
-    overview: !(c.overviewHtml),
-    culture: !(
-      c.culture?.remotePolicy || c.culture?.description ||
-      (c.culture?.values || []).length || (c.culture?.benefits || []).length
-    ),
-  };
-};
+// Sections always start in view mode so a logged-in employer sees an
+// Edit button per card; clicking Edit makes that section's fields editable.
+const buildEditing = () => ({
+  basics: false, founder: false, team: false, overview: false, culture: false,
+});
 
 const snapshotForm = (c) => ({
   name: c?.name || '', logoUrl: c?.logoUrl || '', tagline: c?.tagline || '', bio: c?.bio || '',
@@ -102,9 +92,9 @@ export default function CompanyManagePage() {
   const [secBusy, setSecBusy] = useState('');
   const [uploading, setUploading] = useState(false);
   const [slug, setSlug] = useState('');
-  // Per-section edit mode. Sections with data start in view mode (Edit
-  // button visible); empty sections start editable for first-time setup.
-  const [editing, setEditing] = useState(() => buildEditing(null));
+  // Per-section edit mode. Every card starts collapsed in view mode with
+  // an Edit button; clicking Edit makes that card's fields editable.
+  const [editing, setEditing] = useState(() => buildEditing());
   // Last-saved server snapshot — Cancel restores this per section.
   const snapshot = useRef(null);
 
@@ -112,12 +102,19 @@ export default function CompanyManagePage() {
     let alive = true;
     api.myCompany()
       .then((c) => {
-        if (!alive || !c) return;
+        if (!alive) return;
+        // New employers have no company doc yet (null) — keep the blank
+        // form but stay in view mode so Edit is what unlocks the fields.
+        if (!c) {
+          snapshot.current = { ...snapshotForm(null), newValue: '', newBenefit: '' };
+          setEditing(buildEditing());
+          return;
+        }
         setSlug(c.slug || '');
         const next = { ...snapshotForm(c), newValue: '', newBenefit: '' };
         snapshot.current = next;
         setForm(next);
-        setEditing(buildEditing(c));
+        setEditing(buildEditing());
       })
       .catch(() => {})
       .finally(() => { if (alive) setLoading(false); });
