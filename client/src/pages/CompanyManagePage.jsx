@@ -160,6 +160,25 @@ export default function CompanyManagePage() {
   const startEdit = (key) => setEditing((e) => ({ ...e, [key]: true }));
   // Global Edit — one click makes every card's fields editable.
   const editAll = () => setEditing({ basics: true, founder: true, team: true, overview: true, culture: true });
+  // Blank section defaults used when there is no saved snapshot yet
+  // (brand-new company that has never been persisted).
+  const blankSection = (key) => {
+    if (key === 'basics') {
+      const b = snapshotForm(null);
+      return {
+        name: b.name, logoUrl: b.logoUrl, tagline: b.tagline, bio: b.bio,
+        employeeCount: b.employeeCount, companySize: b.companySize, companyType: b.companyType,
+        website: b.website, industry: b.industry, location: b.location, foundedYear: b.foundedYear,
+      };
+    }
+    if (key === 'founder') return { founder: { ...blankPerson } };
+    if (key === 'team') return { team: [] };
+    if (key === 'overview') return { overviewHtml: '' };
+    if (key === 'culture') {
+      return { culture: { remotePolicy: '', values: [], benefits: [], description: '' }, newValue: '', newBenefit: '' };
+    }
+    return {};
+  };
   const cancelEdit = (key) => {
     if (snapshot.current) {
       const s = snapshot.current;
@@ -178,6 +197,10 @@ export default function CompanyManagePage() {
       } else if (key === 'culture') {
         setForm((f) => ({ ...f, culture: { ...s.culture, values: [...s.culture.values], benefits: [...s.culture.benefits] }, newValue: '', newBenefit: '' }));
       }
+    } else {
+      // Never-saved company: Cancel clears the draft back to blank and
+      // collapses to view mode so Edit stays visible.
+      setForm((f) => ({ ...f, ...blankSection(key) }));
     }
     setEditing((e) => ({ ...e, [key]: false }));
   };
@@ -202,6 +225,9 @@ export default function CompanyManagePage() {
     try {
       const saved = await api.uploadCompanyLogo(file);
       setForm((f) => ({ ...f, logoUrl: saved.logoUrl || '' }));
+      // Logos upload immediately (even before Save) — mirror into the
+      // snapshot so Cancel basics doesn't revert the new logo.
+      if (snapshot.current) snapshot.current = { ...snapshot.current, logoUrl: saved.logoUrl || '' };
       toast?.notify('Logo uploaded', 'success');
     } catch (err) {
       toast?.notify(err.message, 'error');
