@@ -136,10 +136,10 @@ export default function JobDetailPage() {
   const toggleStatus = async () => {
     setManaging(true);
     try {
-      const next = job.status === 'Closed' ? 'open' : 'closed';
+      const next = job.status === 'Closed' ? 'open' : job.status === 'Draft' ? 'open' : 'closed';
       const updated = await api.updateJob(id, { status: next });
       setJob(normalizeJob(updated));
-      toast?.notify(next === 'closed' ? 'Role closed' : 'Role reopened', 'success');
+      toast?.notify(next === 'closed' ? 'Role closed' : next === 'open' && job.status === 'Draft' ? 'Role published' : 'Role reopened', 'success');
     } catch (err) {
       toast?.notify(err.message, 'error');
     } finally {
@@ -172,24 +172,30 @@ export default function JobDetailPage() {
     return <p className="mx-auto max-w-6xl px-4 py-16 text-center text-sm text-neutral-400">Loading role…</p>;
   }
   const isClosed = job.status === 'Closed';
+  const isDraft = job.status === 'Draft';
   const isExpired = job.deadline ? new Date(job.deadline).getTime() < now : false;
-  const isInactive = isClosed || isExpired;
+  // Drafts are never really "open" — seekers landing on the URL see the
+  // unpublished notice; employers see the hiring preview + manage actions.
+  const isInactive = isClosed || isExpired || (!isEmployer && isDraft);
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
-      <Link to={isEmployer ? '/dashboard' : '/jobs'} className="text-sm text-neutral-400 hover:text-white">
-        {isEmployer ? '← Back to dashboard' : '← All jobs'}
+      <Link to={isEmployer ? '/jobs/manage' : '/jobs'} className="text-sm text-neutral-400 hover:text-white">
+        {isEmployer ? '← All jobs (manage)' : '← All jobs'}
       </Link>
       {isEmployer && (
         <p className="mt-3 rounded-lg border border-accent/30 bg-accent/10 p-3 text-xs text-accent">
-          👁 Hiring-mode preview — seekers see an <strong>Apply now</strong> button here. You see applicant actions below.
+          {isDraft
+            ? '📝 Draft preview — only you can see this. Publish it from Jobs when ready.'
+            : '👁 Hiring-mode preview — seekers see an '}
+          {!isDraft && <><strong>Apply now</strong> button here. You see applicant actions below.</>}
         </p>
       )}
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <div className="rounded-xl border border-white/10 bg-panel p-6 lg:col-span-2">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-bold text-white">{job.role}</p>
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${job.status === 'Closed' ? 'bg-red-500/15 text-red-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${job.status === 'Closed' ? 'bg-red-500/15 text-red-400' : job.status === 'Draft' ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
               {job.status}
             </span>
           </div>
@@ -273,12 +279,18 @@ export default function JobDetailPage() {
               >
                 View applicants →
               </Link>
+              <Link
+                to={`/post-job?edit=${id}`}
+                className="block w-full rounded-md border border-white/15 px-4 py-2 text-center text-sm text-white hover:border-accent"
+              >
+                Edit role
+              </Link>
               <div className="flex gap-2">
                 <button
                   onClick={toggleStatus} disabled={managing}
                   className="flex-1 rounded-md border border-white/15 px-4 py-2 text-sm text-white hover:border-accent disabled:opacity-60"
                 >
-                  {managing ? 'Updating…' : job.status === 'Closed' ? 'Reopen role' : 'Close role'}
+                  {managing ? 'Updating…' : job.status === 'Closed' ? 'Reopen role' : job.status === 'Draft' ? 'Publish role' : 'Close role'}
                 </button>
                 <button
                   onClick={removeJob} disabled={managing}
@@ -288,10 +300,10 @@ export default function JobDetailPage() {
                 </button>
               </div>
               <Link
-                to="/dashboard"
+                to="/jobs/manage"
                 className="block w-full rounded-md border border-white/15 px-4 py-2 text-center text-sm text-white hover:border-accent"
               >
-                Back to dashboard
+                Back to Jobs
               </Link>
             </div>
           ) : applied ? (
@@ -304,10 +316,12 @@ export default function JobDetailPage() {
           ) : isInactive ? (
             <div className="mt-4 rounded-md border border-white/10 bg-panel2 p-3">
               <p className="text-sm font-semibold text-white">
-                {isClosed ? 'Applications closed' : 'Application deadline passed'}
+                {isClosed ? 'Applications closed' : isDraft ? 'Not published yet' : 'Application deadline passed'}
               </p>
               <p className="mt-1 text-xs text-neutral-400">
-                This role is no longer accepting applications, but you can save it or explore similar roles below.
+                {isDraft
+                  ? 'This role is still a draft — check back once the hiring team publishes it.'
+                  : 'This role is no longer accepting applications, but you can save it or explore similar roles below.'}
               </p>
               <div className="mt-3 flex gap-2">
                 <button

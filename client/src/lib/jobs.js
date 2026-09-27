@@ -47,7 +47,9 @@ export function normalizeJob(j) {
     ...j,
     id,
     logo: j.logo || (j.company || '?').charAt(0).toUpperCase(),
-    status: j.status === 'closed' ? 'Closed' : j.status || 'Actively hiring',
+    // Drafts are employer-only (never listed publicly); seekers opening a
+    // draft URL see it as unpublished, employers see manage actions.
+    status: j.status === 'closed' ? 'Closed' : j.status === 'draft' ? 'Draft' : j.status || 'Actively hiring',
     role: j.role || j.title,
     meta: j.meta || [j.location, j.salary, j.type].filter(Boolean).join(' · '),
     tagline: j.tagline || [j.type, j.remote ? 'Remote' : j.location].filter(Boolean).join(' · '),
