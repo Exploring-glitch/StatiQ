@@ -78,6 +78,16 @@ const companySchema = new mongoose.Schema(
     logoUrl: { type: String, trim: true, default: '', maxlength: 500 },
     tagline: { type: String, trim: true, default: '', maxlength: 160 },
     bio: { type: String, trim: true, default: '', maxlength: 500 },
+    // Mission statement — shown on the public profile under About.
+    mission: { type: String, trim: true, default: '', maxlength: 2000 },
+    // Public social links — shown on the public profile header/facts.
+    socials: {
+      linkedin: { type: String, trim: true, default: '', maxlength: 300 },
+      twitter: { type: String, trim: true, default: '', maxlength: 300 },
+      github: { type: String, trim: true, default: '', maxlength: 300 },
+      facebook: { type: String, trim: true, default: '', maxlength: 300 },
+      instagram: { type: String, trim: true, default: '', maxlength: 300 },
+    },
     // Rich overview: HTML (rendered as written, whitespace preserved via CSS)
     // plus a plain-text mirror for search.
     overviewHtml: { type: String, default: '' },
@@ -110,6 +120,10 @@ const companySchema = new mongoose.Schema(
       description: { type: String, trim: true, default: '', maxlength: 5000 },
     },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    // NOTE (multi-company roadmap): `owner` covers one company per employer
+    // today. When multi-company lands, replace direct owner checks with a
+    // CompanyMember { userId, companyId, role } collection — the
+    // User → Company → Jobs → Applications shape already supports it.
   },
   { timestamps: true }
 );
