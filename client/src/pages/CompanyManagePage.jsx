@@ -155,6 +155,8 @@ export default function CompanyManagePage() {
   };
 
   const startEdit = (key) => setEditing((e) => ({ ...e, [key]: true }));
+  // Global Edit — one click makes every card's fields editable.
+  const editAll = () => setEditing({ basics: true, founder: true, team: true, overview: true, culture: true });
   const cancelEdit = (key) => {
     if (snapshot.current) {
       const s = snapshot.current;
@@ -209,17 +211,28 @@ export default function CompanyManagePage() {
   if (loading) return <p className="mx-auto max-w-4xl px-4 py-16 text-center text-sm text-neutral-400">Loading company profile…</p>;
 
   const logo = form.logoUrl ? fileUrl(form.logoUrl) : '';
+  const allEditing = editing.basics && editing.founder && editing.team && editing.overview && editing.culture;
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Employer · Company profile</p>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-extrabold tracking-tight text-white">Manage company</h1>
-        {slug && (
-          <Link to={`/companies/${encodeURIComponent(slug)}`} className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
-            View public profile →
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {!allEditing && (
+            <button
+              type="button" onClick={editAll}
+              className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accentHover"
+            >
+              Edit
+            </button>
+          )}
+          {slug && (
+            <Link to={`/companies/${encodeURIComponent(slug)}`} className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent">
+              View public profile →
+            </Link>
+          )}
+        </div>
       </div>
       <p className="mt-1 text-sm text-neutral-400">
         Signed in as {user?.name} · this is what job seekers see when they open your company.
