@@ -153,7 +153,7 @@ export default function JobDetailPage() {
     try {
       await api.deleteJob(id);
       toast?.notify('Role deleted', 'success');
-      nav('/dashboard');
+      nav('/jobs/manage');
     } catch (err) {
       toast?.notify(err.message, 'error');
       setManaging(false);
