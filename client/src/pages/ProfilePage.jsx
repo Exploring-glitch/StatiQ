@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api, fileUrl } from '../lib/api';
 import ResumeLink from '../components/ResumeLink';
@@ -99,8 +100,10 @@ const buildFresh = (u) => ({
 const buildEditing = (u) => {
   const emp = u?.role === 'employer';
   return {
+    // Employer basics are the PERSON (name/role/bio) — never the company.
+    // Company data lives on /company/manage and must not mix in here.
     basics: emp
-      ? !(u?.name && u?.company && u?.bio)
+      ? !(u?.name && u?.title && u?.bio)
       : !(u?.title && u?.bio),
     identity: !(u?.pronouns || u?.gender || u?.ethnicity),
     experience: !(u?.experienceYears != null || u?.experienceLevel || (u?.workExperiences || []).length),
@@ -228,6 +231,17 @@ export default function ProfilePage() {
   }, [user?.id]);
   const [resumeName, setResumeName] = useState(user?.resumeName || '');
   const [uploadBusy, setUploadBusy] = useState(false);
+  // Employer's managed company (display-only link — company data is edited
+  // on /company/manage, never inside this personal profile).
+  const [managedCompany, setManagedCompany] = useState(null);
+  useEffect(() => {
+    if (!isEmployer) return;
+    let alive = true;
+    api.myCompany()
+      .then((c) => { if (alive) setManagedCompany(c || null); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [isEmployer]);
 
   // Per-section edit mode (sections with data start collapsed in view mode),
   // per-section save state. Each card saves only its own fields.
@@ -270,11 +284,11 @@ export default function ProfilePage() {
           name: form.name.trim(),
           title: form.title.trim(),
           location: form.location.trim(),
-          company: form.company.trim(),
           bio: form.bio.trim(),
           desiredRoles: form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean),
         };
         if (!isEmployer) {
+          p.company = form.company.trim();
           p.phone = form.phone.trim();
           p.desiredLocation = form.desiredLocation.trim();
         }
@@ -455,7 +469,6 @@ export default function ProfilePage() {
       const checks = [
         has(form.name),
         has(form.title),
-        has(form.company),
         has(form.location),
         has(form.bio),
         Boolean(user?.avatarUrl),
@@ -619,14 +632,36 @@ export default function ProfilePage() {
         <div className="space-y-4 lg:col-span-2">
           {/* Basics */}
           <div className={card}>
-            {head('basics', 'Basics', 'How you appear in search and applications.')}
+            {head('basics', isEmployer ? 'Personal profile' : 'Basics', isEmployer ? 'You — the person behind the hiring. Company details live on the company profile.' : 'How you appear in search and applications.')}
+            {isEmployer && !editing.basics && (managedCompany?.name || user?.company) && (
+              <Link
+                to="/company/manage"
+                className="mb-3 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-xs hover:border-accent"
+              >
+                <span className="text-neutral-400">
+                  Manages <span className="font-bold text-white">{managedCompany?.name || user?.company}</span>
+                </span>
+                <span className="font-semibold text-accent">Company profile →</span>
+              </Link>
+            )}
             {editing.basics ? (
               <>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div><span className={label}>Full name *</span><input value={form.name} onChange={set('name')} required placeholder="Full name" className={input} /></div>
               <div><span className={label}>{isEmployer ? 'Your title' : 'Headline *'}</span><input value={form.title} onChange={set('title')} placeholder={isEmployer ? 'Founder, Hiring Manager…' : 'Senior Backend Engineer'} className={input} /></div>
               <div><span className={label}>Location</span><input value={form.location} onChange={set('location')} placeholder="Bengaluru, India" className={input} /></div>
-              <div><span className={label}>{isEmployer ? 'Company *' : 'Current / last company'}</span><input value={form.company} onChange={set('company')} placeholder="Company" className={input} /></div>
+              {!isEmployer && (
+                <div><span className={label}>Current / last company</span><input value={form.company} onChange={set('company')} placeholder="Company" className={input} /></div>
+              )}
+              {isEmployer && (
+                <div className="rounded-md border border-white/10 bg-panel2 px-3 py-2 text-xs text-neutral-500">
+                  Company details aren&apos;t edited here —{' '}
+                  <Link to="/company/manage" className="font-semibold text-accent hover:underline">
+                    manage {(managedCompany?.name || user?.company || 'your company')}
+                  </Link>
+                  .
+                </div>
+              )}
               {!isEmployer && (
                 <div><span className={label}>Phone</span><input value={form.phone} onChange={set('phone')} placeholder="+91 …" className={input} /></div>
               )}
@@ -660,7 +695,7 @@ export default function ProfilePage() {
                 <Row k="Name" v={form.name} />
                 <Row k={isEmployer ? 'Title' : 'Headline'} v={form.title} />
                 <Row k="Location" v={form.location} />
-                <Row k="Company" v={form.company} />
+                {!isEmployer && <Row k="Company" v={form.company} />}
                 {!isEmployer && <Row k="Phone" v={form.phone} />}
                 {!isEmployer && <Row k="Wants" v={form.desiredLocation} />}
                 {!isEmployer && (
