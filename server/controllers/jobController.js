@@ -37,7 +37,7 @@ export const jobRules = [
       return true;
     }),
   body('type').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Internship']).withMessage('Invalid job type'),
-  body('status').optional().isIn(['open', 'closed']).withMessage('Invalid status'),
+  body('status').optional().isIn(['open', 'closed', 'draft']).withMessage('Invalid status'),
   body('tags').optional().isArray({ max: 20 }).withMessage('Tags must be an array'),
   body('description').optional().isString().isLength({ max: 10000 }).withMessage('Description too long'),
   body('responsibilities').optional().isArray({ max: 30 }).withMessage('Responsibilities must be an array'),
@@ -65,7 +65,7 @@ export const jobUpdateRules = [
       return true;
     }),
   body('type').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Internship']).withMessage('Invalid job type'),
-  body('status').optional().isIn(['open', 'closed']).withMessage('Invalid status'),
+  body('status').optional().isIn(['open', 'closed', 'draft']).withMessage('Invalid status'),
   body('tags').optional().isArray({ max: 20 }).withMessage('Tags must be an array'),
   body('description').optional().isString().isLength({ max: 10000 }).withMessage('Description too long'),
   body('responsibilities').optional().isArray({ max: 30 }).withMessage('Responsibilities must be an array'),
@@ -76,6 +76,30 @@ export const jobUpdateRules = [
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
 ];
+
+// Resolve which managed company a job belongs to (User → Company → Job).
+// Today an employer manages one company; this helper already accepts an
+// explicit companyId so multi-company forms work without API changes:
+// unknown/foreign ids are ignored and fall back to the owner's company.
+async function resolveCompanyId(userId, { companyId, company, companySlug }) {
+  const { default: Company } = await import('../models/Company.js');
+  if (companyId && isValidObjectId(String(companyId))) {
+    const owned = await Company.findOne({ _id: companyId, owner: userId }).select('_id name slug').lean();
+    if (owned) return owned;
+  }
+  const ors = [{ owner: userId }];
+  if (companySlug) ors.push({ slug: String(companySlug).toLowerCase() });
+  if (company) ors.push({ name: new RegExp(`^${escapeRegExp(String(company).trim())}$`, 'i') });
+  // Prefer the employer's own company row; fall back to a slug match so a
+  // renamed company still links correctly.
+  const mine = await Company.findOne({ owner: userId }).select('_id name slug').lean();
+  if (mine) return mine;
+  if (companySlug || company) {
+    const bySlug = await Company.findOne({ $or: ors.slice(1) }).select('_id name slug').lean();
+    if (bySlug) return bySlug;
+  }
+  return null;
+}
 
 // GET /api/jobs?q=&location=&remote=&type=&workMode=&experienceLevel=&minSalary=&sort=&page=&limit=
 // Query enums are allowlisted so sanitized-but-unexpected values never reach Mongo operators.
@@ -156,6 +180,20 @@ export const createJob = asyncHandler(async (req, res) => {
   if (body.company && !body.companySlug) {
     body.companySlug = String(body.company).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100);
   }
+  // Bind the job to the managed company (User → Company → Job) so the role
+  // publicly appears under the brand (e.g. Lupira), never the person.
+  // Accepts an explicit companyId for multi-company forms; it must belong
+  // to the poster or it is ignored.
+  try {
+    const managed = await resolveCompanyId(req.user._id, {
+      companyId: req.body?.companyId, company: body.company, companySlug: body.companySlug,
+    });
+    if (managed) {
+      body.companyId = managed._id;
+      body.company = body.company || managed.name;
+      body.companySlug = managed.slug || body.companySlug;
+    }
+  } catch { /* binding is best-effort; the job still saves */ }
   const job = await Job.create({ ...body, postedBy: req.user._id });
   // Instant job-alert fan-out: seekers with matching active alerts get a notification.
   try {
@@ -191,8 +229,16 @@ export const updateJob = asyncHandler(async (req, res) => {
   }
   const isOwner = job.postedBy?.toString() === req.user._id.toString();
   if (!isOwner && req.user.role !== 'admin') {
-    res.status(403);
-    throw new Error('Not your job to edit');
+    // Company-scoped fallback: a teammate managing the same company row
+    // (multi-company future) may edit its jobs even if someone else posted.
+    const { default: Company } = await import('../models/Company.js');
+    const mine = job.companyId
+      ? await Company.exists({ _id: job.companyId, owner: req.user._id })
+      : null;
+    if (!mine) {
+      res.status(403);
+      throw new Error('Not your job to edit');
+    }
   }
   const patch = pickJobFields(req.body);
   for (const k of ['requirements', 'benefits', 'responsibilities', 'tags']) {
@@ -200,6 +246,26 @@ export const updateJob = asyncHandler(async (req, res) => {
   }
   if (patch.openings === '') patch.openings = 1;
   if (patch.deadline === '') patch.deadline = null;
+  // Keep the company binding fresh when the brand is renamed or the
+  // multi-company selector moves the role to another managed company.
+  if (req.body?.companyId !== undefined || patch.company !== undefined || patch.companySlug !== undefined) {
+    try {
+      const managed = await resolveCompanyId(req.user._id, {
+        companyId: req.body?.companyId,
+        company: patch.company ?? job.company,
+        companySlug: patch.companySlug ?? job.companySlug,
+      });
+      if (managed) {
+        // Never steal a job into a company the editor doesn't manage.
+        const { default: Company } = await import('../models/Company.js');
+        const allowed = await Company.exists({ _id: managed._id, owner: req.user._id });
+        if (allowed || req.user.role === 'admin') {
+          patch.companyId = managed._id;
+          patch.companySlug = managed.slug || patch.companySlug;
+        }
+      }
+    } catch { /* keep the previous binding */ }
+  }
   Object.assign(job, patch);
   await job.save();
   res.json(job);
@@ -218,8 +284,14 @@ export const deleteJob = asyncHandler(async (req, res) => {
   }
   const isOwner = job.postedBy?.toString() === req.user._id.toString();
   if (!isOwner && req.user.role !== 'admin') {
-    res.status(403);
-    throw new Error('Not your job to delete');
+    const { default: Company } = await import('../models/Company.js');
+    const mine = job.companyId
+      ? await Company.exists({ _id: job.companyId, owner: req.user._id })
+      : null;
+    if (!mine) {
+      res.status(403);
+      throw new Error('Not your job to delete');
+    }
   }
   await job.deleteOne();
   res.json({ message: 'Job deleted' });
