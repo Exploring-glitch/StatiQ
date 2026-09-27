@@ -22,7 +22,10 @@ import JobAlertsPage from './pages/JobAlertsPage';
 import ProfilePage from './pages/ProfilePage';
 import LogoutPage from './pages/LogoutPage';
 import DashboardPage from './pages/DashboardPage';
+import JobsManagePage from './pages/JobsManagePage';
 import ApplicantsPage from './pages/ApplicantsPage';
+import ApplicantsOverviewPage from './pages/ApplicantsOverviewPage';
+import SettingsPage from './pages/SettingsPage';
 import ApplicantProfilePage from './pages/ApplicantProfilePage';
 import CompanyProfilePage from './pages/CompanyProfilePage';
 import CompaniesPage from './pages/CompaniesPage';
@@ -65,6 +68,9 @@ function App() {
         <Route path="/for-job-seekers" element={<ForSeekersPage />} />
         <Route path="/post-job" element={<ProtectedRoute roles={employer}><PostJobPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute roles={employer}><DashboardPage /></ProtectedRoute>} />
+        {/* Employer panel: Dashboard · Company Profile · Jobs · Applicants · My Profile · Settings */}
+        <Route path="/jobs/manage" element={<ProtectedRoute roles={employer}><JobsManagePage /></ProtectedRoute>} />
+        <Route path="/applicants" element={<ProtectedRoute roles={employer}><ApplicantsOverviewPage /></ProtectedRoute>} />
         <Route path="/jobs/:id/applicants" element={<ProtectedRoute roles={employer}><ApplicantsPage /></ProtectedRoute>} />
         <Route path="/jobs/:jobId/applicants/:appId" element={<ProtectedRoute roles={employer}><ApplicantProfilePage /></ProtectedRoute>} />
         <Route path="/my-applications" element={<ProtectedRoute roles={seeker}><MyApplicationsPage /></ProtectedRoute>} />
@@ -72,6 +78,7 @@ function App() {
         <Route path="/alerts" element={<ProtectedRoute roles={seeker}><JobAlertsPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute roles={[...seeker, ...employer]}><NotificationsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute roles={[...seeker, ...employer]}><ProfilePage /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute roles={[...seeker, ...employer]}><SettingsPage /></ProtectedRoute>} />
         <Route path="/logout" element={<ProtectedRoute roles={[...seeker, ...employer]}><LogoutPage /></ProtectedRoute>} />
       </Route>
     </Routes>
