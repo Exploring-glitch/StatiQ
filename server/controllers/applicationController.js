@@ -44,6 +44,74 @@ export const apply = asyncHandler(async (req, res) => {
   }
 });
 
+// GET /api/applications/received/overview (employer/admin)
+// One call powering the employer Dashboard + Applicants overview:
+// totals, per-job status buckets and the latest applications across every
+// job the employer manages (User → Company → Jobs → Applications).
+// "New" = status `applied` (untriaged), independent of age.
+export const receivedOverview = asyncHandler(async (req, res) => {
+  const { default: Job } = await import('../models/Job.js');
+  const { default: Company } = await import('../models/Company.js');
+  const myCompanies = await Company.find({ owner: req.user._id }).select('_id').lean();
+  const myCompanyIds = myCompanies.map((c) => c._id);
+  const jobs = await Job.find({
+    $or: [
+      { postedBy: req.user._id },
+      ...(myCompanyIds.length ? [{ companyId: { $in: myCompanyIds } }] : []),
+    ],
+  }).select('_id title company status createdAt').sort({ createdAt: -1 }).lean();
+  const jobIds = jobs.map((j) => j._id);
+  const byId = new Map(jobs.map((j) => [String(j._id), j]));
+  const buckets = jobs.map((j) => ({
+    jobId: j._id, title: j.title, company: j.company, status: j.status,
+    counts: { applied: 0, reviewing: 0, interview: 0, offer: 0, rejected: 0 },
+    total: 0,
+  }));
+  const bucketById = new Map(buckets.map((b) => [String(b.jobId), b]));
+  let recent = [];
+  if (jobIds.length) {
+    const [counts, latest] = await Promise.all([
+      Application.aggregate([
+        { $match: { job: { $in: jobIds } } },
+        { $group: { _id: { job: '$job', status: '$status' }, n: { $sum: 1 } } },
+      ]),
+      Application.find({ job: { $in: jobIds } })
+        .populate('applicant', 'name title')
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .lean(),
+    ]);
+    for (const c of counts) {
+      const b = bucketById.get(String(c._id.job));
+      if (b && b.counts[c._id.status] !== undefined) {
+        b.counts[c._id.status] = c.n;
+        b.total += c.n;
+      }
+    }
+    recent = latest.map((a) => ({
+      id: a._id,
+      jobId: a.job,
+      jobTitle: byId.get(String(a.job))?.title || 'Role',
+      applicantName: a.applicant?.name || 'Applicant',
+      applicantTitle: a.applicant?.title || '',
+      status: a.status,
+      createdAt: a.createdAt,
+    }));
+  }
+  const total = buckets.reduce((s, b) => s + b.total, 0);
+  const fresh = buckets.reduce((s, b) => s + b.counts.applied, 0);
+  res.json({
+    totals: {
+      jobs: jobs.length,
+      activeJobs: jobs.filter((j) => j.status === 'open').length,
+      total,
+      new: fresh,
+    },
+    perJob: buckets,
+    recent,
+  });
+});
+
 // GET /api/applications/mine (jobseeker)
 // The employer-internal mark is stripped — seekers never see their rating.
 export const myApplications = asyncHandler(async (req, res) => {
