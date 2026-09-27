@@ -153,6 +153,14 @@ export const getMyCompany = asyncHandler(async (req, res) => {
   res.json({ ...mine, id: mine._id, jobsCount: jobs.length });
 });
 
+// GET /api/companies/mine — every company this employer manages.
+// Single-company today (array of 0–1); multi-company tomorrow without
+// changing the client contract: job forms render a select over this list.
+export const listMyCompanies = asyncHandler(async (req, res) => {
+  const items = await Company.find({ owner: req.user._id }).sort({ updatedAt: -1 }).lean();
+  res.json({ items: items.map((c) => ({ ...c, id: c._id })) });
+});
+
 // Plain-text mirror of the rich overview (used by the text search index).
 export const overviewTextOf = (html) =>
   String(html || '')
