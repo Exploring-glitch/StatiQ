@@ -135,13 +135,16 @@ export default function CompanyManagePage() {
   };
 
   // Per-section save: click Save → persist → collapse back to view mode
-  // so the Edit button shows again.
+  // so the Edit button shows again. Form + snapshot re-sync from the
+  // server response so sanitized/trimmed values never drift from view mode.
   const saveSection = async (key) => {
     setSecBusy(key);
     try {
       const saved = await api.saveCompany(buildPayload());
       setSlug(saved?.slug || slug);
-      snapshot.current = { ...form, newValue: '', newBenefit: '' };
+      const next = { ...snapshotForm(saved), newValue: '', newBenefit: '' };
+      setForm(next);
+      snapshot.current = { ...snapshotForm(saved), newValue: '', newBenefit: '' };
       setEditing((e) => ({ ...e, [key]: false }));
       toast?.notify('Company profile saved', 'success');
     } catch (e) {
