@@ -1,116 +1,82 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { timeAgo, useNow } from '../lib/time';
+import { greetingFor, jobStatusBadge, jobStatusLabel } from '../lib/employer';
 import { Skeleton } from '../components/Skeleton';
 
+// Employer home: Good evening, Sreeja 👋 / Lupira + Active jobs,
+// Applications, New + Recent applications + quick Post a job / company access.
+// Role management lives under Jobs (/jobs/manage); per-job applicant detail
+// under Applicants (/jobs/:id/applicants).
 export default function DashboardPage() {
+  const { user } = useAuth();
   const now = useNow();
+  const [company, setCompany] = useState(null);
   const [jobs, setJobs] = useState([]);
-  const [counts, setCounts] = useState({});
+  const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
-  const [actingId, setActingId] = useState(null);
 
   useEffect(() => {
+    let alive = true;
     const load = async () => {
       setLoading(true);
       setError('');
       try {
-        const mine = await api.myPostedJobs();
-        const list = Array.isArray(mine) ? mine : mine.items || [];
-        setJobs(list);
-        // Counts arrive batched from the server. Only the jobs missing them
-        // (e.g. older servers) fall back to one request each.
-        const missing = list.filter((j) => typeof j.applicantCount !== 'number');
-        const base = Object.fromEntries(
-          list
-            .filter((j) => typeof j.applicantCount === 'number')
-            .map((j) => [j._id || j.id, j.applicantCount])
-        );
-        if (missing.length === 0) {
-          setCounts(base);
-        } else {
-          const entries = await Promise.all(
-            missing.map(async (j) => {
-              try {
-                const apps = await api.jobApplicants(j._id || j.id);
-                return [j._id || j.id, apps.length];
-              } catch {
-                return [j._id || j.id, 0];
-              }
-            })
-          );
-          setCounts({ ...base, ...Object.fromEntries(entries) });
-        }
+        const [mine, stats, posted] = await Promise.all([
+          api.myCompany().catch(() => null),
+          api.receivedOverview().catch(() => null),
+          api.myPostedJobs().catch(() => []),
+        ]);
+        if (!alive) return;
+        setCompany(mine || null);
+        setOverview(stats || null);
+        setJobs(Array.isArray(posted) ? posted : posted.items || []);
       } catch (err) {
-        setJobs([]);
-        setError(err?.message || 'Could not load your roles. Check your connection and try again.');
+        if (!alive) return;
+        setError(err?.message || 'Could not load your overview. Check your connection and try again.');
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
     load();
+    return () => { alive = false; };
   }, [attempt]);
 
-  const totalApps = Object.values(counts).reduce((a, b) => a + b, 0);
-
-  const toggleStatus = async (j) => {
-    const id = j._id || j.id;
-    setActingId(id);
-    try {
-      const updated = await api.updateJob(id, { status: j.status === 'closed' ? 'open' : 'closed' });
-      setJobs((prev) => prev.map((x) => ((x._id || x.id) === id ? { ...x, status: updated.status } : x)));
-    } catch {
-      setAttempt((a) => a + 1);
-    } finally {
-      setActingId(null);
-    }
-  };
-
-  const removeJob = async (j) => {
-    const id = j._id || j.id;
-    if (!window.confirm(`Delete “${j.title}” permanently?`)) return;
-    setActingId(id);
-    try {
-      await api.deleteJob(id);
-      setJobs((prev) => prev.filter((x) => (x._id || x.id) !== id));
-    } finally {
-      setActingId(null);
-    }
-  };
+  const firstName = (user?.name || '').split(' ')[0] || 'there';
+  const totals = overview?.totals || {};
+  const recent = overview?.recent || [];
+  // Fall back to local counts when the overview endpoint is unavailable.
+  const activeJobs = totals.activeJobs ?? jobs.filter((j) => j.status === 'open').length;
+  const totalApps = totals.total ?? jobs.reduce((s, j) => s + (j.applicantCount ?? 0), 0);
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Employer dashboard</p>
-      <h1 className="mt-2 text-3xl font-bold text-white">Hiring overview</h1>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-white/10 bg-panel p-5">
-          <p className="text-2xl font-extrabold text-white">{jobs.length}</p>
-          <p className="text-xs text-neutral-500">Open roles</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-panel p-5">
-          <p className="text-2xl font-extrabold text-white">{totalApps}</p>
-          <p className="text-xs text-neutral-500">Total applicants</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-panel p-5">
-          <Link to="/post-job" className="text-sm font-semibold text-accent">+ Post a new job →</Link>
-          <p className="mt-1 text-xs text-neutral-500">Free, takes a minute</p>
-          <Link to="/company/manage" className="mt-2 block text-sm font-semibold text-white hover:text-accent">Manage company profile →</Link>
-          <p className="mt-1 text-xs text-neutral-500">Logo, overview, people, culture</p>
-        </div>
-      </div>
-      <h2 className="mt-10 text-xl font-bold text-white">Your roles</h2>
+      <h1 className="mt-2 text-3xl font-bold text-white">
+        {greetingFor()}, {firstName} 👋
+      </h1>
+      {company?.name && (
+        <p className="mt-1 text-sm text-neutral-400">
+          <Link to="/company/manage" className="font-semibold text-white hover:text-accent">
+            {company.name}
+          </Link>
+          {company.location ? ` · ${company.location}` : ''}
+        </p>
+      )}
+
       {loading && (
-        <div className="mt-4 space-y-3" aria-label="Loading your roles">
-          <Skeleton className="h-16 w-full !rounded-xl" />
-          <Skeleton className="h-16 w-full !rounded-xl" />
-          <Skeleton className="h-16 w-full !rounded-xl" />
+        <div className="mt-6 grid gap-4 sm:grid-cols-3" aria-label="Loading overview">
+          <Skeleton className="h-24 w-full !rounded-xl" />
+          <Skeleton className="h-24 w-full !rounded-xl" />
+          <Skeleton className="h-24 w-full !rounded-xl" />
         </div>
       )}
       {!loading && error && (
-        <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+        <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
           <p>{error}</p>
           <button
             type="button"
@@ -121,52 +87,126 @@ export default function DashboardPage() {
           </button>
         </div>
       )}
-      {!loading && !error && jobs.length === 0 && (
-        <p className="mt-4 rounded-xl border border-white/10 bg-panel p-6 text-sm text-neutral-500">
-          No roles yet. <Link to="/post-job" className="text-accent">Post your first job →</Link>
-        </p>
-      )}
-      <div className="mt-4 space-y-3">
-        {jobs.map((j) => {
-          const id = j._id || j.id;
-          const closed = j.status === 'closed';
-          return (
-            <div key={id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-panel p-4">
-              <div>
-                <p className="flex items-center gap-2 text-sm font-bold text-white">
-                  {j.title}
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${closed ? 'bg-red-500/15 text-red-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
-                    {closed ? 'Closed' : 'Open'}
-                  </span>
-                </p>
-                <p className="text-xs text-neutral-500">
-                  {j.location} · {counts[id] ?? '…'} applicants
-                  {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted', now).toLowerCase()}` : ''}
-                  {j.deadline ? ` · apply by ${new Date(j.deadline).toLocaleDateString()}` : ''}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Link to={`/jobs/${id}`} className="rounded-md border border-white/15 px-3 py-1 text-xs text-white">View</Link>
-                <Link to={`/jobs/${id}/applicants`} className="rounded-md bg-[#f4f4f5] px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">
-                  Applicants →
-                </Link>
-                <button
-                  onClick={() => toggleStatus(j)} disabled={actingId === id}
-                  className="rounded-md border border-white/15 px-3 py-1 text-xs text-white hover:border-accent disabled:opacity-60"
-                >
-                  {actingId === id ? '…' : closed ? 'Reopen' : 'Close'}
-                </button>
-                <button
-                  onClick={() => removeJob(j)} disabled={actingId === id}
-                  className="rounded-md border border-red-500/30 px-3 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:opacity-60"
-                >
-                  Delete
-                </button>
-              </div>
+
+      {!loading && !error && (
+        <>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-panel p-5">
+              <p className="text-2xl font-extrabold text-white">{activeJobs}</p>
+              <p className="text-xs text-neutral-500">Active jobs</p>
+              <Link to="/jobs/manage" className="mt-2 block text-xs font-semibold text-accent hover:underline">
+                Manage jobs →
+              </Link>
             </div>
-          );
-        })}
-      </div>
+            <div className="rounded-xl border border-white/10 bg-panel p-5">
+              <p className="text-2xl font-extrabold text-white">{totalApps}</p>
+              <p className="text-xs text-neutral-500">Total applications</p>
+              <Link to="/applicants" className="mt-2 block text-xs font-semibold text-accent hover:underline">
+                View applicants →
+              </Link>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-panel p-5">
+              <p className="text-2xl font-extrabold text-white">{totals.new ?? 0}</p>
+              <p className="text-xs text-neutral-500">New applications</p>
+              <p className="mt-2 text-xs text-neutral-500">Untriaged · status “applied”</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-panel p-5 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-white">Recent applications</h2>
+                <Link to="/applicants" className="text-xs font-semibold text-accent hover:underline">
+                  All applicants →
+                </Link>
+              </div>
+              {recent.length === 0 ? (
+                <p className="mt-3 text-sm text-neutral-500">
+                  No applications yet. <Link to="/post-job" className="text-accent">Post a job →</Link>
+                </p>
+              ) : (
+                <ul className="mt-3 divide-y divide-white/5">
+                  {recent.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">
+                          {r.applicantName}
+                          <span className="font-normal text-neutral-500"> — {r.jobTitle}</span>
+                        </p>
+                        <p className="text-[11px] text-neutral-500">
+                          {r.status}{r.createdAt ? ` · ${timeAgo(r.createdAt, 'Applied', now).toLowerCase()}` : ''}
+                        </p>
+                      </div>
+                      <Link
+                        to={`/jobs/${r.jobId}/applicants`}
+                        className="shrink-0 rounded-md border border-white/15 px-2.5 py-1 text-xs text-white hover:border-accent"
+                      >
+                        Review →
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="h-fit space-y-3 rounded-xl border border-white/10 bg-panel p-5">
+              <h2 className="text-sm font-bold text-white">Quick actions</h2>
+              <Link
+                to="/post-job"
+                className="block rounded-lg bg-[#f4f4f5] px-3 py-2 text-center text-sm font-semibold text-black hover:bg-neutral-300"
+              >
+                + Post a new job
+              </Link>
+              <Link
+                to="/company/manage"
+                className="block rounded-lg border border-white/15 px-3 py-2 text-center text-sm font-semibold text-white hover:border-accent"
+              >
+                Company profile →
+              </Link>
+              <p className="text-xs text-neutral-500">Logo, overview, people, culture — what seekers see.</p>
+            </div>
+          </div>
+
+          <div className="mt-8 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">Your roles</h2>
+            <Link to="/jobs/manage" className="text-xs font-semibold text-accent hover:underline">
+              Manage all →
+            </Link>
+          </div>
+          {jobs.length === 0 ? (
+            <p className="mt-4 rounded-xl border border-white/10 bg-panel p-6 text-sm text-neutral-500">
+              No roles yet. <Link to="/post-job" className="text-accent">Post your first job →</Link>
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {jobs.slice(0, 5).map((j) => {
+                const id = j._id || j.id;
+                return (
+                  <div key={id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-panel p-4">
+                    <div className="min-w-0">
+                      <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-white">
+                        <span className="truncate">{j.title}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${jobStatusBadge(j.status)}`}>
+                          {jobStatusLabel(j.status)}
+                        </span>
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        {j.location} · {j.applicantCount ?? '…'} applicants
+                        {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted', now).toLowerCase()}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <Link to={`/jobs/${id}`} className="rounded-md border border-white/15 px-3 py-1 text-xs text-white">View</Link>
+                      <Link to={`/jobs/${id}/applicants`} className="rounded-md bg-[#f4f4f5] px-3 py-1 text-xs font-semibold text-black hover:bg-neutral-300">
+                        Applicants →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
     </section>
   );
 }
