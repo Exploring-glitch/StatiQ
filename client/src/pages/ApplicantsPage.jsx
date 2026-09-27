@@ -87,7 +87,7 @@ export default function ApplicantsPage() {
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-10">
-      <Link to="/dashboard" className="text-sm text-neutral-400 hover:text-white">← Dashboard</Link>
+      <Link to="/applicants" className="text-sm text-neutral-400 hover:text-white">← All applicants</Link>
       <h1 className="mt-2 text-2xl font-bold text-white">Applicants{title ? ` — ${title}` : ''}</h1>
       {!loading && !error && apps.length > 0 && (
         <p className="mt-1 text-xs text-neutral-500" aria-live="polite">
