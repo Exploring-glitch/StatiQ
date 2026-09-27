@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
@@ -15,7 +15,15 @@ const empty = {
 export default function PostJobPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const [params] = useSearchParams();
+  // Edit mode: /post-job?edit=<jobId> loads the role for in-place updates.
+  const editId = params.get('edit') || '';
   const [form, setForm] = useState({ ...empty, company: user?.company || '' });
+  const [editLoaded, setEditLoaded] = useState(!editId);
+  // Companies this employer manages — one today, many tomorrow. A single
+  // company is auto-selected; several render a selector on the form.
+  const [companies, setCompanies] = useState([]);
+  const [companyId, setCompanyId] = useState('');
   // Auth loads async: backfill the employer company once it arrives, but
   // never overwrite what the user already typed.
   const companySeeded = useRef(false);
@@ -25,6 +33,46 @@ export default function PostJobPage() {
       setForm((f) => ({ ...f, company: f.company || user.company }));
     }
   }, [user?.company]);
+  useEffect(() => {
+    let alive = true;
+    api.myCompanies()
+      .then((d) => {
+        if (!alive) return;
+        const list = Array.isArray(d) ? d : d.items || [];
+        setCompanies(list);
+        if (list.length === 1) {
+          setCompanyId(list[0]._id || list[0].id || '');
+          setForm((f) => ({ ...f, company: f.company || list[0].name || '' }));
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  // Edit mode: fetch the role and pre-fill every field.
+  useEffect(() => {
+    if (!editId) return;
+    let alive = true;
+    api.job(editId)
+      .then((j) => {
+        if (!alive || !j) return;
+        const num = (v) => (v === null || v === undefined ? '' : String(v));
+        const lines = (v) => (Array.isArray(v) ? v.join('\n') : '');
+        setForm({
+          title: j.title || '', company: j.company || '', location: j.location || '',
+          salary: j.salary || '', salaryMin: num(j.salaryMin), salaryMax: num(j.salaryMax),
+          type: j.type || 'Full-time', workMode: j.workMode || 'On-site',
+          experienceLevel: j.experienceLevel || '', tags: (j.tags || []).join(', '),
+          description: j.description || '', responsibilities: lines(j.responsibilities),
+          requirements: lines(j.requirements), benefits: lines(j.benefits),
+          openings: num(j.openings ?? 1),
+          deadline: j.deadline ? String(j.deadline).slice(0, 10) : '',
+        });
+        if (j.companyId) setCompanyId(String(j.companyId));
+        setEditLoaded(true);
+      })
+      .catch(() => { if (alive) setEditLoaded(true); });
+    return () => { alive = false; };
+  }, [editId]);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [mine, setMine] = useState([]);
@@ -45,8 +93,13 @@ export default function PostJobPage() {
     setMsg('');
     setBusy(true);
     try {
+      const selected = companies.find((c) => String(c._id || c.id) === String(companyId));
       const payload = {
         ...form,
+        // The role publicly appears under the company brand (e.g. Lupira),
+        // never under the poster's name — the server re-binds + verifies.
+        company: selected?.name || form.company,
+        companyId: selected ? String(selected._id || selected.id) : undefined,
         salaryMin: form.salaryMin === '' ? null : Number(form.salaryMin),
         salaryMax: form.salaryMax === '' ? null : Number(form.salaryMax),
         openings: form.openings === '' ? 1 : Math.max(1, Number(form.openings) || 1),
@@ -57,10 +110,12 @@ export default function PostJobPage() {
         requirements: form.requirements.split('\n').map((r) => r.trim()).filter(Boolean),
         benefits: form.benefits.split('\n').map((r) => r.trim()).filter(Boolean),
       };
-      const created = await api.createJob(payload);
-      setMsg(`Posted “${created.title}” successfully.`);
-      toast?.notify(`Posted “${created.title}”`, 'success');
-      setForm({ ...empty, company: user?.company || '' });
+      const created = editId
+        ? await api.updateJob(editId, payload)
+        : await api.createJob(payload);
+      setMsg(editId ? `Saved “${created.title}”.` : `Posted “${created.title}” successfully.`);
+      toast?.notify(editId ? `Saved “${created.title}”` : `Posted “${created.title}”`, 'success');
+      if (!editId) setForm({ ...empty, company: user?.company || '' });
       refreshMine();
     } catch (err) {
       setMsg(err.message);
@@ -76,12 +131,37 @@ export default function PostJobPage() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Employer studio</p>
-      <h1 className="mt-2 text-3xl font-bold text-white">Post a job — free.</h1>
-      <p className="mt-2 text-sm text-neutral-400">Rich details (salary range, level, work mode) get far more applicants — and make your role filterable.</p>
+      <h1 className="mt-2 text-3xl font-bold text-white">{editId ? 'Edit job' : 'Post a job — free.'}</h1>
+      <p className="mt-2 text-sm text-neutral-400">
+        {editId
+          ? 'Update the role — changes go live immediately.'
+          : 'Rich details (salary range, level, work mode) get far more applicants — and make your role filterable.'}
+      </p>
+      {(form.company || user?.name) && (
+        <p className="mt-1 text-xs text-neutral-500">
+          Posting as <span className="font-semibold text-neutral-200">{companies.find((c) => String(c._id || c.id) === String(companyId))?.name || form.company || 'your company'}</span>
+          {user?.name ? <> · by {user.name}</> : null}
+        </p>
+      )}
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <form onSubmit={submit} className="space-y-3 rounded-xl border border-white/10 bg-panel p-6">
           <input value={form.title} onChange={set('title')} required placeholder="Job title *" className={input} />
-          <input value={form.company} onChange={set('company')} required placeholder="Company *" className={input} />
+          {companies.length > 1 ? (
+            <div>
+              <span className={label}>Company *</span>
+              <select value={companyId} onChange={(e) => {
+                const next = companies.find((c) => String(c._id || c.id) === e.target.value);
+                setCompanyId(e.target.value);
+                if (next) setForm((f) => ({ ...f, company: next.name || '' }));
+              }} className={input} aria-label="Company the job belongs to">
+                {companies.map((c) => (
+                  <option key={c._id || c.id} value={c._id || c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <input value={form.company} onChange={set('company')} required placeholder="Company *" className={input} />
+          )}
           <div className="grid grid-cols-2 gap-3">
             <input value={form.location} onChange={set('location')} required placeholder="Location *" className={input} />
             <input value={form.salary} onChange={set('salary')} placeholder="Salary label (e.g. $150K – $190K)" className={input} />
@@ -131,9 +211,18 @@ export default function PostJobPage() {
             </div>
           </div>
           {msg && <p className="rounded-md border border-accent/30 bg-accent/10 p-2 text-xs text-accent">{msg}</p>}
-          <button type="submit" disabled={busy} className="w-full rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300 disabled:opacity-60">
-            {busy ? 'Posting…' : 'Post job →'}
-          </button>
+          {!editLoaded ? (
+            <p className="text-xs text-neutral-500">Loading role…</p>
+          ) : (
+            <button type="submit" disabled={busy} className="w-full rounded-md bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-300 disabled:opacity-60">
+              {busy ? (editId ? 'Saving…' : 'Posting…') : (editId ? 'Save changes →' : 'Post job →')}
+            </button>
+          )}
+          {editId && (
+            <Link to="/jobs/manage" className="block text-center text-xs text-neutral-400 hover:text-white">
+              ← Back to Jobs
+            </Link>
+          )}
         </form>
         <div className="h-fit rounded-xl border border-white/10 bg-panel p-6">
           <h2 className="text-sm font-bold text-white">Your posted jobs</h2>
