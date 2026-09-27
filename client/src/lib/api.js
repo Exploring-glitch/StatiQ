@@ -34,6 +34,7 @@ export const api = {
   login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
   me: () => request('/auth/me'),
   updateProfile: (payload) => request('/auth/me', { method: 'PUT', body: payload }),
+  changePassword: (payload) => request('/auth/me/password', { method: 'PUT', body: payload }),
   uploadResume: async (file) => {
     const fd = new FormData();
     fd.append('resume', file);
@@ -110,6 +111,9 @@ export const api = {
   },
   company: (slug) => request(`/companies/${encodeURIComponent(slug)}`),
   myCompany: () => request('/companies/me'),
+  // Every company the employer manages — single today, many tomorrow.
+  // Job forms render a select over this list (auto-selected when length 1).
+  myCompanies: () => request('/companies/mine'),
   saveCompany: (payload) => request('/companies/me', { method: 'PUT', body: payload }),
   uploadCompanyLogo: async (file) => {
     const fd = new FormData();
@@ -125,6 +129,8 @@ export const api = {
   },
   myPostedJobs: () => request('/jobs/mine/posted'),
   jobApplicants: (jobId) => request(`/applications/job/${jobId}`),
+  // Employer-wide pipeline: totals, per-job status buckets, recent items.
+  receivedOverview: () => request('/applications/received/overview'),
   setApplicantStatus: (appId, status) => request(`/applications/${appId}`, { method: 'PATCH', body: { status } }),
   setApplicantMark: (appId, mark) => request(`/applications/${appId}`, { method: 'PATCH', body: { mark } }),
   listNotifications: (params = {}) => {
