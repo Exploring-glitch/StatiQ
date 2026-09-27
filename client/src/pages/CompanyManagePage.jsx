@@ -11,9 +11,11 @@ const label = 'mb-1.5 block text-xs font-semibold text-neutral-300';
 const card = 'rounded-xl border border-white/10 bg-panel p-5 sm:p-6';
 
 const blankPerson = { name: '', title: '', bio: '', photoUrl: '' };
+const blankSocials = { linkedin: '', twitter: '', github: '', facebook: '', instagram: '' };
 const blank = {
-  name: '', logoUrl: '', tagline: '', bio: '', overviewHtml: '',
+  name: '', logoUrl: '', tagline: '', bio: '', mission: '', overviewHtml: '',
   employeeCount: '', companySize: '', website: '', companyType: '', industry: '', location: '', foundedYear: '',
+  socials: { ...blankSocials },
   founder: { ...blankPerson }, team: [],
   culture: { remotePolicy: '', values: [], benefits: [], description: '' },
   newValue: '', newBenefit: '',
@@ -22,11 +24,13 @@ const blank = {
 // Sections always start in view mode so a logged-in employer sees an
 // Edit button per card; clicking Edit makes that section's fields editable.
 const buildEditing = () => ({
-  basics: false, founder: false, team: false, overview: false, culture: false,
+  basics: false, presence: false, founder: false, team: false, overview: false, culture: false,
 });
 
 const snapshotForm = (c) => ({
   name: c?.name || '', logoUrl: c?.logoUrl || '', tagline: c?.tagline || '', bio: c?.bio || '',
+  mission: c?.mission || '',
+  socials: { ...blankSocials, ...(c?.socials || {}) },
   overviewHtml: c?.overviewHtml || '', employeeCount: c?.employeeCount ?? '', companySize: c?.companySize || '',
   website: c?.website || '', companyType: c?.companyType || '', industry: c?.industry || '',
   location: c?.location || '', foundedYear: c?.foundedYear ?? '',
@@ -159,7 +163,7 @@ export default function CompanyManagePage() {
 
   const startEdit = (key) => setEditing((e) => ({ ...e, [key]: true }));
   // Global Edit — one click makes every card's fields editable.
-  const editAll = () => setEditing({ basics: true, founder: true, team: true, overview: true, culture: true });
+  const editAll = () => setEditing({ basics: true, presence: true, founder: true, team: true, overview: true, culture: true });
   // Blank section defaults used when there is no saved snapshot yet
   // (brand-new company that has never been persisted).
   const blankSection = (key) => {
@@ -171,6 +175,7 @@ export default function CompanyManagePage() {
         website: b.website, industry: b.industry, location: b.location, foundedYear: b.foundedYear,
       };
     }
+    if (key === 'presence') return { mission: '', socials: { ...blankSocials } };
     if (key === 'founder') return { founder: { ...blankPerson } };
     if (key === 'team') return { team: [] };
     if (key === 'overview') return { overviewHtml: '' };
@@ -190,6 +195,8 @@ export default function CompanyManagePage() {
         }));
       } else if (key === 'founder') {
         setForm((f) => ({ ...f, founder: { ...s.founder } }));
+      } else if (key === 'presence') {
+        setForm((f) => ({ ...f, mission: s.mission, socials: { ...s.socials } }));
       } else if (key === 'team') {
         setForm((f) => ({ ...f, team: s.team.map((m) => ({ ...m })) }));
       } else if (key === 'overview') {
@@ -240,7 +247,7 @@ export default function CompanyManagePage() {
   if (loading) return <p className="mx-auto max-w-4xl px-4 py-16 text-center text-sm text-neutral-400">Loading company profile…</p>;
 
   const logo = form.logoUrl ? fileUrl(form.logoUrl) : '';
-  const allEditing = editing.basics && editing.founder && editing.team && editing.overview && editing.culture;
+  const allEditing = editing.basics && editing.presence && editing.founder && editing.team && editing.overview && editing.culture;
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-10">
@@ -372,6 +379,46 @@ export default function CompanyManagePage() {
             <Row k="Industry" v={form.industry} />
             <Row k="Location" v={form.location} />
             <Row k="Founded" v={form.foundedYear !== '' && form.foundedYear != null ? String(form.foundedYear) : ''} />
+          </div>
+        )}
+      </div>
+
+      {/* ── Mission & socials: why the company exists + where to find it ── */}
+      <div className={`${card} mt-4`}>
+        {head('presence', 'Mission & Socials', 'Purpose statement and public links seekers see.', 'Save mission')}
+        {editing.presence ? (
+          <>
+            <div className="mt-3">
+              <label htmlFor="c-mission" className={label}>Mission</label>
+              <textarea id="c-mission" value={form.mission} onChange={(e) => set('mission', e.target.value)} rows={3} maxLength={2000} placeholder="Why the company exists — one or two sentences…" className={input} />
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {[
+                ['linkedin', 'LinkedIn URL'],
+                ['twitter', 'X / Twitter URL'],
+                ['github', 'GitHub URL'],
+                ['facebook', 'Facebook URL'],
+                ['instagram', 'Instagram URL'],
+              ].map(([k, ph]) => (
+                <div key={k}>
+                  <label htmlFor={`c-soc-${k}`} className={label}>{ph}</label>
+                  <input
+                    id={`c-soc-${k}`} value={form.socials[k] || ''}
+                    onChange={(e) => set('socials', { ...form.socials, [k]: e.target.value })}
+                    placeholder="https://…" className={input}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="mt-3">
+            <Row k="Mission" v={form.mission} />
+            <Row k="LinkedIn" v={form.socials.linkedin} link={form.socials.linkedin} />
+            <Row k="X/Twitter" v={form.socials.twitter} link={form.socials.twitter} />
+            <Row k="GitHub" v={form.socials.github} link={form.socials.github} />
+            <Row k="Facebook" v={form.socials.facebook} link={form.socials.facebook} />
+            <Row k="Instagram" v={form.socials.instagram} link={form.socials.instagram} />
           </div>
         )}
       </div>
