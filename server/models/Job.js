@@ -45,8 +45,13 @@ const jobSchema = new mongoose.Schema(
     benefits: { type: [String], default: [] },
     openings: { type: Number, min: 1, default: 1 },
     deadline: { type: Date, default: null },
-    status: { type: String, enum: ['open', 'closed'], default: 'open' },
+    // Drafts are employer-visible only; the public board lists `open` jobs.
+    // `closed` keeps history without deleting. Multi-company ready: a job
+    // belongs to a Company (companyId) and is posted by a User (postedBy),
+    // so User → Company → Jobs → Applications (never User → Jobs directly).
+    status: { type: String, enum: ['open', 'closed', 'draft'], default: 'open' },
     companySlug: { type: String, trim: true, lowercase: true, default: '', maxlength: 100 },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', default: null },
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
@@ -73,5 +78,7 @@ jobSchema.pre('save', function (next) {
 
 jobSchema.index({ title: 'text', company: 'text', location: 'text', tags: 'text' });
 jobSchema.index({ salaryMax: 1, createdAt: -1 });
+jobSchema.index({ companyId: 1, status: 1 });
+jobSchema.index({ postedBy: 1, createdAt: -1 });
 
 export default mongoose.model('Job', jobSchema);
