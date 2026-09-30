@@ -106,7 +106,7 @@ const dbGate = (req, res, next) => {
 };
 
 app.get('/api/health', (req, res) =>
-  res.json({ ok: true, service: 'StatiQ API', db: !!Job.db?.readyState })
+  res.json({ ok: true, service: 'StatiQ API', db: mongoose.connection.readyState === 1 })
 );
 
 // Demo fallback so the homepage works before MONGODB_URI is set
@@ -121,7 +121,7 @@ app.get('/api/demo-jobs', (req, res) => res.json(demoJobs));
 app.use('/api/auth', dbGate, authRoutes);
 app.use('/api/jobs', publicLimiter, async (req, res, next) => {
   // Graceful fallback: no DB yet → serve demo data for public GETs
-  if (req.method === 'GET' && !Job.db?.readyState) {
+  if (req.method === 'GET' && mongoose.connection.readyState !== 1) {
     if (req.path === '/' || req.path === '') return res.json({ items: demoJobs, total: demoJobs.length, page: 1, pages: 1 });
     const id = req.path.split('/').filter(Boolean)[0]; // e.g. /2 → '2'
     const one = demoJobs.find((j) => j._id === id);
@@ -137,7 +137,7 @@ app.use('/api/notifications', dbGate, notificationRoutes);
 app.use('/api/alerts', dbGate, alertRoutes);
 app.use('/api/companies', publicLimiter, async (req, res, next) => {
   // Public GETs work even before Mongo is configured (empty list fallback).
-  if (req.method === 'GET' && !Job.db?.readyState) {
+  if (req.method === 'GET' && mongoose.connection.readyState !== 1) {
     if (req.path === '/' || req.path === '') return res.json({ items: [], total: 0, page: 1, pages: 1 });
     return next();
   }
