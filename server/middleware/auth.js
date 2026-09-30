@@ -46,6 +46,22 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
+// Best-effort auth for public routes: attaches req.user when a valid
+// Bearer token is present, otherwise continues as anonymous.
+export const optionalAuth = asyncHandler(async (req, _res, next) => {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return next();
+  try {
+    const decoded = jwt.verify(token, getJwtSecret());
+    const user = await User.findById(decoded.id).select('-password');
+    if (user) req.user = user;
+  } catch {
+    // Invalid/expired token on a public route → treat as anonymous.
+  }
+  next();
+});
+
 // Requires one of the given roles (use after protect)
 export const authorize =
   (...roles) =>
