@@ -3,6 +3,7 @@ import Application from '../models/Application.js';
 import Job from '../models/Job.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { isValidObjectId } from '../lib/validate.js';
+import { canManageJob } from '../lib/canManageJob.js';
 
 export const applyRules = [
   body('jobId').isMongoId().withMessage('Invalid job id'),
@@ -122,7 +123,7 @@ export const myApplications = asyncHandler(async (req, res) => {
   res.json(items);
 });
 
-// GET /api/applications/job/:jobId (job owner or admin sees applicants)
+// GET /api/applications/job/:jobId (job owner, company manager, or admin)
 export const jobApplicants = asyncHandler(async (req, res) => {
   if (!isValidObjectId(req.params.jobId)) {
     res.status(404);
@@ -133,8 +134,7 @@ export const jobApplicants = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Job not found');
   }
-  const isOwner = job.postedBy?.toString() === req.user._id.toString();
-  if (!isOwner && req.user.role !== 'admin') {
+  if (!(await canManageJob(req.user, job))) {
     res.status(403);
     throw new Error('Not your job');
   }
@@ -157,8 +157,7 @@ export const setStatus = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Application not found');
   }
-  const isOwner = app.job.postedBy?.toString() === req.user._id.toString();
-  if (!isOwner && req.user.role !== 'admin') {
+  if (!app.job || !(await canManageJob(req.user, app.job))) {
     res.status(403);
     throw new Error('Not your job');
   }
