@@ -14,6 +14,11 @@ export const fileUrl = (p) => {
 const getToken = () => localStorage.getItem('statiq_token');
 export const setToken = (t) => (t ? localStorage.setItem('statiq_token', t) : localStorage.removeItem('statiq_token'));
 
+// Global 401 signal: AuthProvider listens and logs out + redirects to /login.
+const notifyUnauthorized = () => {
+  window.dispatchEvent(new CustomEvent('statiq:unauthorized'));
+};
+
 async function request(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${BASE}${path}`, {
     method,
@@ -24,6 +29,7 @@ async function request(path, { method = 'GET', body } = {}) {
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && getToken()) notifyUnauthorized();
   if (!res.ok) throw new Error(data.message || `Request failed (${res.status})`);
   return data;
 }
