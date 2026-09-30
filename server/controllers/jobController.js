@@ -150,7 +150,8 @@ export const listJobs = asyncHandler(async (req, res) => {
   res.json({ items, total, page: Number(page), pages: Math.ceil(total / lim) || 1 });
 });
 
-// GET /api/jobs/:id — public; only non-sensitive poster info is exposed.
+// GET /api/jobs/:id — public for open roles; drafts/closed need owner/admin.
+// Non-open jobs return 404 for strangers to avoid enumerating private roles.
 export const getJob = asyncHandler(async (req, res) => {
   if (!isValidObjectId(req.params.id)) {
     res.status(404);
@@ -160,6 +161,18 @@ export const getJob = asyncHandler(async (req, res) => {
   if (!job) {
     res.status(404);
     throw new Error('Job not found');
+  }
+  if (job.status !== 'open') {
+    const user = req.user;
+    let allowed = user?.role === 'admin' || job.postedBy?._id?.toString() === user?._id?.toString() || job.postedBy?.toString() === user?._id?.toString();
+    if (!allowed && user && job.companyId) {
+      const { default: Company } = await import('../models/Company.js');
+      allowed = !!(await Company.exists({ _id: job.companyId, owner: user._id }));
+    }
+    if (!allowed) {
+      res.status(404);
+      throw new Error('Job not found');
+    }
   }
   res.json(job);
 });
