@@ -19,20 +19,20 @@ const personRules = (prefix) => [
   body(`${prefix}.name`).optional().trim().isLength({ max: 80 }),
   body(`${prefix}.title`).optional().trim().isLength({ max: 120 }),
   body(`${prefix}.bio`).optional().trim().isLength({ max: 2000 }),
-  body(`${prefix}.photoUrl`).optional().trim().isLength({ max: 500 }),
+  body(`${prefix}.photoUrl`).optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Photo must be a valid https:// URL'),
 ];
 
 export const companyWriteRules = [
   body('name').optional().trim().notEmpty().withMessage('Company name cannot be empty').isLength({ max: 120 }),
-  body('logoUrl').optional().trim().isLength({ max: 500 }),
+  body('logoUrl').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Logo must be a valid https:// URL'),
   body('tagline').optional().trim().isLength({ max: 160 }),
   body('bio').optional().trim().isLength({ max: 500 }),
   body('mission').optional().trim().isLength({ max: 2000 }),
-  body('socials.linkedin').optional().trim().isLength({ max: 300 }),
-  body('socials.twitter').optional().trim().isLength({ max: 300 }),
-  body('socials.github').optional().trim().isLength({ max: 300 }),
-  body('socials.facebook').optional().trim().isLength({ max: 300 }),
-  body('socials.instagram').optional().trim().isLength({ max: 300 }),
+  body('socials.linkedin').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('LinkedIn must be a valid https:// URL'),
+  body('socials.twitter').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Twitter must be a valid https:// URL'),
+  body('socials.github').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('GitHub must be a valid https:// URL'),
+  body('socials.facebook').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Facebook must be a valid https:// URL'),
+  body('socials.instagram').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Instagram must be a valid https:// URL'),
   body('overviewHtml').optional().isString().isLength({ max: 50000 }).withMessage('Overview too long'),
   // Raw form posts send '' for untouched number inputs — accept those as
   // empty (pickCompanyFields normalizes them to null) instead of 400ing
@@ -43,7 +43,7 @@ export const companyWriteRules = [
     return Number.isInteger(n) && n >= 0 && n <= 1000000;
   }).withMessage('Employee count must be a whole number between 0 and 1000000'),
   body('companySize').optional().isIn(['', '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+']),
-  body('website').optional().trim().isLength({ max: 300 }),
+  body('website').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Website must be a valid https:// URL'),
   body('companyType').optional().isIn(['', 'Startup', 'SME', 'Enterprise', 'Nonprofit', 'Agency', 'Government']),
   body('industry').optional().trim().isLength({ max: 120 }),
   body('location').optional().trim().isLength({ max: 160 }),
