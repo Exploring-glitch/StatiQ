@@ -36,7 +36,9 @@ export const notifyStatusChanged = async ({ applicantId, job, status, applicatio
 
 export const fanoutNewJobMatches = async (job) => {
   try {
-    const alerts = await JobAlert.find({ isActive: true, frequency: 'instant' }).limit(500);
+    // No daily cron yet — deliver daily alerts inline (same as instant) so
+    // they are not orphaned. Split into a batched job when a scheduler lands.
+    const alerts = await JobAlert.find({ isActive: true, frequency: { $in: ['instant', 'daily'] } }).limit(500);
     const docs = [];
     for (const a of alerts) {
       const filter = buildAlertFilter(a.query || {});
