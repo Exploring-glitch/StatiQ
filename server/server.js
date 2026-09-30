@@ -110,13 +110,12 @@ app.get('/api/health', (req, res) =>
 );
 
 // Demo fallback so the homepage works before MONGODB_URI is set
+// (served via GET /api/jobs degraded mode above — no separate endpoint).
 const demoJobs = [
   { _id: '1', title: 'Senior Software Engineer, Autonomy', company: 'Zipline', location: 'South San Francisco', salary: '$180K – $240K' },
   { _id: '2', title: 'Founding Product Designer', company: 'Lovable', location: 'Remote', salary: '$150K – $190K' },
   { _id: '3', title: 'Senior Backend Engineer', company: 'Chime', location: 'New York', salary: '$180K – $240K' },
 ];
-
-app.get('/api/demo-jobs', (req, res) => res.json(demoJobs));
 
 app.use('/api/auth', dbGate, authRoutes);
 app.use('/api/jobs', publicLimiter, async (req, res, next) => {
