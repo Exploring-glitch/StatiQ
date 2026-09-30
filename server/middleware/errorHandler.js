@@ -6,8 +6,10 @@ export function notFound(req, res, next) {
 
 // Central error formatter (must be last middleware)
 export function errorHandler(err, req, res, _next) {
-  // Multer upload failures (too big, wrong type) → 400, not 500.
-  if (err?.name === 'MulterError' || /only (pdf|doc|docx|jpg|jpeg|png|webp)|no file received/i.test(err?.message || '')) {
+  // CORS rejections carry statusCode on the error itself.
+  if (err?.statusCode === 403 && /cors blocked/i.test(err?.message || '')) {
+    res.status(403);
+  } else if (err?.name === 'MulterError' || /only (pdf|doc|docx|jpg|jpeg|png|webp)|no file received/i.test(err?.message || '')) {
     res.status(400);
   } else if (err?.name === 'ValidationError' || err?.name === 'CastError') {
     // Mongoose schema / cast failures are client errors, not crashes.

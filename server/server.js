@@ -27,7 +27,9 @@ const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173').split
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error('CORS blocked'), false);
+    const err = new Error('CORS blocked');
+    err.statusCode = 403;
+    return cb(err, false);
   },
 }));
 app.use(express.json({ limit: '1mb' }));
