@@ -3,6 +3,7 @@ import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { escapeRegExp, isValidObjectId } from '../lib/validate.js';
+import { canManageJob } from '../lib/canManageJob.js';
 
 const check = (req, res) => {
   const errors = validationResult(req);
@@ -228,7 +229,7 @@ export const createJob = asyncHandler(async (req, res) => {
   res.status(201).json(job);
 });
 
-// PUT /api/jobs/:id (owner or admin)
+// PUT /api/jobs/:id (owner, company manager, or admin)
 export const updateJob = asyncHandler(async (req, res) => {
   check(req, res);
   if (!isValidObjectId(req.params.id)) {
@@ -240,18 +241,9 @@ export const updateJob = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Job not found');
   }
-  const isOwner = job.postedBy?.toString() === req.user._id.toString();
-  if (!isOwner && req.user.role !== 'admin') {
-    // Company-scoped fallback: a teammate managing the same company row
-    // (multi-company future) may edit its jobs even if someone else posted.
-    const { default: Company } = await import('../models/Company.js');
-    const mine = job.companyId
-      ? await Company.exists({ _id: job.companyId, owner: req.user._id })
-      : null;
-    if (!mine) {
-      res.status(403);
-      throw new Error('Not your job to edit');
-    }
+  if (!(await canManageJob(req.user, job))) {
+    res.status(403);
+    throw new Error('Not your job to edit');
   }
   const patch = pickJobFields(req.body);
   for (const k of ['requirements', 'benefits', 'responsibilities', 'tags']) {
@@ -284,7 +276,7 @@ export const updateJob = asyncHandler(async (req, res) => {
   res.json(job);
 });
 
-// DELETE /api/jobs/:id (owner or admin)
+// DELETE /api/jobs/:id (owner, company manager, or admin)
 export const deleteJob = asyncHandler(async (req, res) => {
   if (!isValidObjectId(req.params.id)) {
     res.status(404);
@@ -295,16 +287,9 @@ export const deleteJob = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Job not found');
   }
-  const isOwner = job.postedBy?.toString() === req.user._id.toString();
-  if (!isOwner && req.user.role !== 'admin') {
-    const { default: Company } = await import('../models/Company.js');
-    const mine = job.companyId
-      ? await Company.exists({ _id: job.companyId, owner: req.user._id })
-      : null;
-    if (!mine) {
-      res.status(403);
-      throw new Error('Not your job to delete');
-    }
+  if (!(await canManageJob(req.user, job))) {
+    res.status(403);
+    throw new Error('Not your job to delete');
   }
   await job.deleteOne();
   res.json({ message: 'Job deleted' });
