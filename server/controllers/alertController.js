@@ -23,6 +23,14 @@ export const alertRules = [
   body('frequency').optional().isIn(['instant', 'daily']).withMessage('Invalid frequency'),
 ];
 
+export const alertUpdateRules = [
+  body('name').optional().trim().notEmpty().withMessage('Alert name cannot be empty').isLength({ max: 80 }).withMessage('Name too long'),
+  body('query.q').optional().isString().isLength({ max: 120 }).withMessage('Search too long'),
+  body('query.location').optional().isString().isLength({ max: 120 }).withMessage('Location too long'),
+  body('frequency').optional().isIn(['instant', 'daily']).withMessage('Invalid frequency'),
+  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
+];
+
 const cleanQuery = (q = {}) => ({
   q: String(q.q ?? '').slice(0, 120),
   location: String(q.location ?? '').slice(0, 120),
@@ -95,6 +103,7 @@ export const createAlert = asyncHandler(async (req, res) => {
 
 // PUT /api/alerts/:id { name?, query?, frequency?, isActive? }
 export const updateAlert = asyncHandler(async (req, res) => {
+  check(req, res);
   if (!isValidObjectId(req.params.id)) {
     res.status(404);
     throw new Error('Alert not found');
