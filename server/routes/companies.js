@@ -12,7 +12,7 @@ r.get('/', listCompanies);
 r.get('/mine', protect, authorize('employer', 'admin'), listMyCompanies);
 r.get('/me', protect, authorize('employer', 'admin'), getMyCompany);
 r.put('/me', protect, authorize('employer', 'admin'), writeLimiter, companyWriteRules, upsertMyCompany);
-r.post('/me/logo', protect, authorize('employer', 'admin'), logoUpload.single('logo'), uploadLogo);
+r.post('/me/logo', protect, authorize('employer', 'admin'), writeLimiter, logoUpload.single('logo'), uploadLogo);
 r.get('/:slug', getCompany);
 
 export default r;

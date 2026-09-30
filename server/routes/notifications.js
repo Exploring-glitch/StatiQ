@@ -6,12 +6,13 @@ import {
   markAllRead,
   removeNotification,
 } from '../controllers/notificationController.js';
+import { writeLimiter } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
 router.get('/', protect, listNotifications);
-router.patch('/read-all', protect, markAllRead);
-router.patch('/:id/read', protect, markRead);
-router.delete('/:id', protect, removeNotification);
+router.patch('/read-all', protect, writeLimiter, markAllRead);
+router.patch('/:id/read', protect, writeLimiter, markRead);
+router.delete('/:id', protect, writeLimiter, removeNotification);
 
 export default router;
