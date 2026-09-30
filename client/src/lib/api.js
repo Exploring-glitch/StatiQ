@@ -50,6 +50,7 @@ export const api = {
       body: fd,
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && getToken()) notifyUnauthorized();
     if (!res.ok) throw new Error(data.message || `Upload failed (${res.status})`);
     return data;
   },
@@ -59,6 +60,7 @@ export const api = {
       headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && getToken()) notifyUnauthorized();
     if (!res.ok) throw new Error(data.message || `Delete failed (${res.status})`);
     return data;
   },
@@ -71,6 +73,7 @@ export const api = {
       body: fd,
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && getToken()) notifyUnauthorized();
     if (!res.ok) throw new Error(data.message || `Upload failed (${res.status})`);
     return data;
   },
@@ -80,6 +83,7 @@ export const api = {
       headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && getToken()) notifyUnauthorized();
     if (!res.ok) throw new Error(data.message || `Delete failed (${res.status})`);
     return data;
   },
@@ -93,11 +97,15 @@ export const api = {
       headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
     });
     if (!res.ok) {
+      if (res.status === 401 && getToken()) notifyUnauthorized();
       const data = await res.json().catch(() => ({}));
       throw new Error(data.message || `Download failed (${res.status})`);
     }
     const blob = await res.blob();
-    return { blobUrl: URL.createObjectURL(blob), filename: name };
+    const blobUrl = URL.createObjectURL(blob);
+    // Revoke after 5 min so long-lived pages don't leak object URLs.
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000);
+    return { blobUrl, filename: name };
   },
   jobs: (params = {}) => {
     const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
@@ -130,6 +138,7 @@ export const api = {
       body: fd,
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && getToken()) notifyUnauthorized();
     if (!res.ok) throw new Error(data.message || `Upload failed (${res.status})`);
     return data;
   },
