@@ -8,6 +8,11 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+  }, []);
+
   useEffect(() => {
     if (!localStorage.getItem('statiq_token')) {
       setLoading(false);
@@ -21,6 +26,15 @@ export function AuthProvider({ children }) {
       .catch(() => setToken(null))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const onUnauthorized = () => {
+      logout();
+      if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
+    };
+    window.addEventListener('statiq:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('statiq:unauthorized', onUnauthorized);
+  }, [logout]);
 
   const login = useCallback(async (payload) => {
     const data = await api.login(payload);
@@ -36,11 +50,6 @@ export function AuthProvider({ children }) {
     setUser(data.user);
     mergeSavedOnAuth().catch(() => {});
     return data.user;
-  }, []);
-
-  const logout = useCallback(() => {
-    setToken(null);
-    setUser(null);
   }, []);
 
   const updateProfile = useCallback(async (payload) => {
