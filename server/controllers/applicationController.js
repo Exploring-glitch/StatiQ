@@ -10,6 +10,11 @@ export const applyRules = [
   body('coverNote').trim().isLength({ min: 50, max: 2000 }).withMessage('Tell the company why you want to join (50–2000 characters)'),
 ];
 
+export const updateApplicationRules = [
+  body('status').optional().isIn(['applied', 'reviewing', 'interview', 'offer', 'rejected']).withMessage('Invalid status'),
+  body('mark').optional().isIn(['', 'best', 'good', 'maybe', 'not-good']).withMessage('Invalid mark'),
+];
+
 // POST /api/applications { jobId, coverNote } (jobseeker)
 // coverNote is the required "Why our company?" answer (50–2000 chars).
 export const apply = asyncHandler(async (req, res) => {
@@ -144,10 +149,15 @@ export const jobApplicants = asyncHandler(async (req, res) => {
   res.json(items);
 });
 
-// PATCH /api/applications/:id { status?, mark? } (job owner or admin)
+// PATCH /api/applications/:id { status?, mark? } (job owner, company manager, or admin)
 // At least one of status/mark is required. mark is the employer-internal
 // rating and is never exposed to seekers (myApplications strips it below).
 export const setStatus = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400);
+    throw new Error(errors.array().map((e) => e.msg).join(', '));
+  }
   if (!isValidObjectId(req.params.id)) {
     res.status(404);
     throw new Error('Application not found');
@@ -166,16 +176,6 @@ export const setStatus = asyncHandler(async (req, res) => {
   if (!hasStatus && !hasMark) {
     res.status(400);
     throw new Error('Nothing to update — send status and/or mark');
-  }
-  const allowed = ['applied', 'reviewing', 'interview', 'offer', 'rejected'];
-  if (hasStatus && !allowed.includes(req.body.status)) {
-    res.status(400);
-    throw new Error('Invalid status');
-  }
-  const allowedMarks = ['', 'best', 'good', 'maybe', 'not-good'];
-  if (hasMark && !allowedMarks.includes(req.body.mark)) {
-    res.status(400);
-    throw new Error('Invalid mark');
   }
   if (hasStatus) app.status = req.body.status;
   if (hasMark) app.mark = req.body.mark;
