@@ -53,6 +53,9 @@ export const registerRules = [
   body('graduationYear').optional({ nullable: true }).toInt().isInt({ min: 1950, max: 2100 }).withMessage('Graduation year looks off'),
   body('openToWork').optional().toBoolean().isBoolean().withMessage('openToWork must be true/false'),
   body('bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio must be under 1000 characters'),
+  body('portfolioUrl').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('Portfolio must be a valid https:// URL'),
+  body('linkedinUrl').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('LinkedIn must be a valid https:// URL'),
+  body('githubUrl').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('GitHub must be a valid https:// URL'),
 ];
 
 export const loginRules = [
@@ -224,9 +227,9 @@ export const updateMeRules = [
   body('skills').optional().isArray().withMessage('Skills must be an array'),
   body('bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio must be under 1000 characters'),
   body('phone').optional().trim(),
-  body('portfolioUrl').optional().trim(),
-  body('linkedinUrl').optional().trim(),
-  body('githubUrl').optional().trim(),
+  body('portfolioUrl').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('Portfolio must be a valid https:// URL'),
+  body('linkedinUrl').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('LinkedIn must be a valid https:// URL'),
+  body('githubUrl').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('GitHub must be a valid https:// URL'),
   body('experienceYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Experience must be 0–50 years'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
   body('workExperiences').optional().isArray({ max: 10 }).withMessage('Work experience must be a list (max 10)'),
