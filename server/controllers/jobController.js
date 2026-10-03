@@ -296,10 +296,19 @@ export const deleteJob = asyncHandler(async (req, res) => {
 });
 
 // GET /api/jobs/mine/posted (employer/admin)
-// Includes applicantCount per job (single aggregate) so the dashboard
-// doesn't need one request per job (N+1).
+// Managed jobs = posted by me OR bound to a company I own (same scope as
+// GET /api/applications/received/overview). Includes applicantCount per job
+// (single aggregate) so the dashboard doesn't need one request per job (N+1).
 export const myPostedJobs = asyncHandler(async (req, res) => {
-  const items = await Job.find({ postedBy: req.user._id }).sort({ createdAt: -1 }).lean();
+  const { default: Company } = await import('../models/Company.js');
+  const myCompanies = await Company.find({ owner: req.user._id }).select('_id').lean();
+  const myCompanyIds = myCompanies.map((c) => c._id);
+  const items = await Job.find({
+    $or: [
+      { postedBy: req.user._id },
+      ...(myCompanyIds.length ? [{ companyId: { $in: myCompanyIds } }] : []),
+    ],
+  }).sort({ createdAt: -1 }).lean();
   const ids = items.map((j) => j._id);
   const agg = ids.length
     ? await Application.aggregate([
