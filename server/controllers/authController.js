@@ -40,6 +40,19 @@ export const registerRules = [
   body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
   body('password').isLength({ min: 8 }).withMessage('Password needs 8+ characters'),
   body('role').optional().isIn(['jobseeker', 'employer']).withMessage('Invalid role'),
+  // Optional rich-profile fields accepted at signup — same enums as
+  // updateMeRules so typos fail with 400 instead of a Mongoose 500.
+  body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
+  body('pronouns').optional().isIn(['', 'she-her', 'he-him', 'they-them', 'she-they', 'he-they', 'xe-xem', 'prefer-not-to-say']).withMessage('Invalid pronouns'),
+  body('gender').optional().isIn(['', 'woman', 'man', 'non-binary', 'transgender', 'genderfluid', 'agender', 'prefer-not-to-say']).withMessage('Invalid gender'),
+  body('ethnicity').optional().isIn(['', 'asian', 'black', 'hispanic', 'middle-eastern', 'native', 'pacific-islander', 'white', 'mixed', 'prefer-not-to-say']).withMessage('Invalid ethnicity'),
+  body('availability').optional().isIn(['', 'immediate', '2-weeks', '1-month', '2-months', 'open']).withMessage('Invalid availability'),
+  body('experienceYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Experience must be 0–50 years'),
+  body('expectedSalaryMin').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Min salary must be positive'),
+  body('expectedSalaryMax').optional({ nullable: true }).toFloat().isFloat({ min: 0 }).withMessage('Max salary must be positive'),
+  body('graduationYear').optional({ nullable: true }).toInt().isInt({ min: 1950, max: 2100 }).withMessage('Graduation year looks off'),
+  body('openToWork').optional().toBoolean().isBoolean().withMessage('openToWork must be true/false'),
+  body('bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio must be under 1000 characters'),
 ];
 
 export const loginRules = [
