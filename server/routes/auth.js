@@ -11,7 +11,7 @@ r.post('/login', authLimiter, loginAccountGate, loginRules, login);
 r.get('/me', protect, publicLimiter, me);
 r.put('/me', protect, writeLimiter, updateMeRules, updateMe);
 r.put('/me/password', protect, writeLimiter, changePasswordRules, changePassword);
-r.get('/me/saved', protect, getSavedJobs);
+r.get('/me/saved', protect, publicLimiter, getSavedJobs);
 r.put('/me/saved', protect, writeLimiter, putSavedJobs);
 r.post('/resume', protect, writeLimiter, resumeUpload.single('resume'), uploadResume);
 r.delete('/resume', protect, writeLimiter, deleteResume);
