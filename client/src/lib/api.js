@@ -15,6 +15,10 @@ const getToken = () => localStorage.getItem('statiq_token');
 export const setToken = (t) => (t ? localStorage.setItem('statiq_token', t) : localStorage.removeItem('statiq_token'));
 
 // Global 401 signal: AuthProvider listens and logs out + redirects to /login.
+// NOTE: public browse (GET /jobs, /companies, /jobs/:id via optionalAuth)
+// returns 200 anonymously even with an expired token, so a stale token lingers
+// until the next protected call. Intentional — avoids an extra me() probe on
+// every public page; AuthProvider validates once on mount.
 const notifyUnauthorized = () => {
   window.dispatchEvent(new CustomEvent('statiq:unauthorized'));
 };
