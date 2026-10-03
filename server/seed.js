@@ -55,9 +55,13 @@ const companies = [
 try {
   if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI missing in server/.env');
   await mongoose.connect(process.env.MONGODB_URI);
-  const existing = await Job.countDocuments();
+  const existingJobs = await Job.countDocuments();
+  const existingCompanies = await Company.countDocuments();
+  const existing = existingJobs + existingCompanies;
   if (existing > 0 && !process.argv.includes('--confirm')) {
-    console.log(`Seed skipped: ${existing} jobs already exist. Re-run with "-- --confirm" to replace.`);
+    console.log(
+      `Seed skipped: ${existingJobs} jobs + ${existingCompanies} companies already exist. Re-run with "-- --confirm" to replace.`
+    );
   } else {
     if (existing > 0) {
       await Job.deleteMany({});
