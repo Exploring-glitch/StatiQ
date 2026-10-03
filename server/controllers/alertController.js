@@ -1,4 +1,4 @@
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import Job from '../models/Job.js';
 import JobAlert from '../models/JobAlert.js';
 import { asyncHandler } from '../middleware/auth.js';
@@ -16,10 +16,30 @@ const check = (req, res) => {
   }
 };
 
+// Strict enum checks (mirrors jobRules isIn style) so typos fail with 400
+// instead of being silently dropped by cleanQuery. cleanQuery +
+// buildAlertFilter stay as defense-in-depth allowlists.
+const csvIn = (allowed) => (v) => {
+  if (v === undefined || v === null || v === '') return true;
+  const parts = String(v).split(',').map((s) => s.trim()).filter(Boolean);
+  return parts.length > 0 && parts.every((p) => allowed.includes(p));
+};
+
+const numericString = (v) => {
+  if (v === undefined || v === null || v === '') return true;
+  return !Number.isNaN(Number(v)) && Number(v) >= 0;
+};
+
 export const alertRules = [
   body('name').trim().notEmpty().withMessage('Alert name is required').isLength({ max: 80 }).withMessage('Name too long'),
   body('query.q').optional().isString().isLength({ max: 120 }).withMessage('Search too long'),
   body('query.location').optional().isString().isLength({ max: 120 }).withMessage('Location too long'),
+  body('query.type').optional().custom(csvIn(ALLOWED_JOB_TYPES)).withMessage('Invalid job type'),
+  body('query.workMode').optional().custom(csvIn(ALLOWED_WORK_MODES)).withMessage('Invalid work mode'),
+  body('query.experienceLevel').optional().isIn(ALLOWED_LEVELS).withMessage('Invalid experience level'),
+  body('query.minSalary').optional().custom(numericString).withMessage('Min salary must be positive'),
+  body('query.min').optional().custom(numericString).withMessage('Min salary must be positive'),
+  body('query.sort').optional().isIn(['', 'newest', 'salary']).withMessage('Invalid sort'),
   body('frequency').optional().isIn(['instant', 'daily']).withMessage('Invalid frequency'),
 ];
 
@@ -27,6 +47,12 @@ export const alertUpdateRules = [
   body('name').optional().trim().notEmpty().withMessage('Alert name cannot be empty').isLength({ max: 80 }).withMessage('Name too long'),
   body('query.q').optional().isString().isLength({ max: 120 }).withMessage('Search too long'),
   body('query.location').optional().isString().isLength({ max: 120 }).withMessage('Location too long'),
+  body('query.type').optional().custom(csvIn(ALLOWED_JOB_TYPES)).withMessage('Invalid job type'),
+  body('query.workMode').optional().custom(csvIn(ALLOWED_WORK_MODES)).withMessage('Invalid work mode'),
+  body('query.experienceLevel').optional().isIn(ALLOWED_LEVELS).withMessage('Invalid experience level'),
+  body('query.minSalary').optional().custom(numericString).withMessage('Min salary must be positive'),
+  body('query.min').optional().custom(numericString).withMessage('Min salary must be positive'),
+  body('query.sort').optional().isIn(['', 'newest', 'salary']).withMessage('Invalid sort'),
   body('frequency').optional().isIn(['instant', 'daily']).withMessage('Invalid frequency'),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
 ];
