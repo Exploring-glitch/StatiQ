@@ -15,7 +15,7 @@ r.get('/me/saved', protect, getSavedJobs);
 r.put('/me/saved', protect, writeLimiter, putSavedJobs);
 r.post('/resume', protect, writeLimiter, resumeUpload.single('resume'), uploadResume);
 r.delete('/resume', protect, writeLimiter, deleteResume);
-r.get('/files/resumes/:name', protect, downloadResumeFile);
+r.get('/files/resumes/:name', protect, writeLimiter, downloadResumeFile);
 r.post('/avatar', protect, writeLimiter, avatarUpload.single('avatar'), uploadAvatar);
 r.delete('/avatar', protect, writeLimiter, deleteAvatar);
 
