@@ -1,4 +1,4 @@
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import { asyncHandler } from '../middleware/auth.js';
@@ -103,11 +103,35 @@ async function resolveCompanyId(userId, { companyId, company, companySlug }) {
 }
 
 // GET /api/jobs?q=&location=&remote=&type=&workMode=&experienceLevel=&minSalary=&sort=&page=&limit=
-// Query enums are allowlisted so sanitized-but-unexpected values never reach Mongo operators.
+// Strict query validators so typos fail with 400 (same contract as
+// GET /api/alerts/preview). Runtime allowlists below stay as defense-in-depth.
+const csvIn = (allowed) => (v) => {
+  if (v === undefined || v === null || v === '') return true;
+  const parts = String(v).split(',').map((s) => s.trim()).filter(Boolean);
+  return parts.length > 0 && parts.every((p) => allowed.includes(p));
+};
+const numericString = (v) => {
+  if (v === undefined || v === null || v === '') return true;
+  return !Number.isNaN(Number(v)) && Number(v) >= 0;
+};
 const ALLOWED_JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
 const ALLOWED_WORK_MODES = ['Remote', 'Hybrid', 'On-site'];
 const ALLOWED_LEVELS = ['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive'];
+export const listJobsRules = [
+  query('q').optional().isString().isLength({ max: 120 }).withMessage('Search too long'),
+  query('location').optional().isString().isLength({ max: 120 }).withMessage('Location too long'),
+  query('remote').optional().isIn(['', 'true', 'false']).withMessage('Invalid remote flag'),
+  query('type').optional().custom(csvIn(ALLOWED_JOB_TYPES)).withMessage('Invalid job type'),
+  query('workMode').optional().custom(csvIn(ALLOWED_WORK_MODES)).withMessage('Invalid work mode'),
+  query('experienceLevel').optional().isIn(ALLOWED_LEVELS).withMessage('Invalid experience level'),
+  query('minSalary').optional().custom(numericString).withMessage('Min salary must be positive'),
+  query('sort').optional().isIn(['', 'newest', 'salary']).withMessage('Invalid sort'),
+  query('page').optional().isInt({ min: 1, max: 1000 }).withMessage('Invalid page'),
+  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Invalid limit'),
+];
+// Query enums are allowlisted so sanitized-but-unexpected values never reach Mongo operators.
 export const listJobs = asyncHandler(async (req, res) => {
+  check(req, res);
   const {
     q = '', location = '', remote, type = '', workMode = '',
     experienceLevel = '', minSalary = '', sort = 'newest',

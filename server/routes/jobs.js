@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import {
-  listJobs, getJob, createJob, updateJob, deleteJob, myPostedJobs, jobRules, jobUpdateRules,
+  listJobs, getJob, createJob, updateJob, deleteJob, myPostedJobs, jobRules, jobUpdateRules, listJobsRules,
 } from '../controllers/jobController.js';
 import { protect, authorize, optionalAuth } from '../middleware/auth.js';
 import { writeLimiter } from '../middleware/rateLimit.js';
 
 const r = Router();
 
-r.get('/', listJobs);
+r.get('/', listJobsRules, listJobs);
 r.get('/mine/posted', protect, authorize('employer', 'admin'), myPostedJobs);
 r.get('/:id', optionalAuth, getJob);
 r.post('/', protect, authorize('employer', 'admin'), writeLimiter, jobRules, createJob);
