@@ -162,7 +162,24 @@ export const deleteAlert = asyncHandler(async (req, res) => {
 });
 
 // GET /api/alerts/preview?q=&location=&type=&workMode=&experienceLevel=&minSalary=
+// Strict query validators (incl. legacy aliases mode/level/min) so preview
+// typos also fail with 400 instead of silently returning unfiltered counts.
+export const previewRules = [
+  query('q').optional().isString().isLength({ max: 120 }).withMessage('Search too long'),
+  query('location').optional().isString().isLength({ max: 120 }).withMessage('Location too long'),
+  query('type').optional().custom(csvIn(ALLOWED_JOB_TYPES)).withMessage('Invalid job type'),
+  query('workMode').optional().custom(csvIn(ALLOWED_WORK_MODES)).withMessage('Invalid work mode'),
+  query('mode').optional().custom(csvIn(ALLOWED_WORK_MODES)).withMessage('Invalid work mode'),
+  query('experienceLevel').optional().isIn(ALLOWED_LEVELS).withMessage('Invalid experience level'),
+  query('level').optional().isIn(ALLOWED_LEVELS).withMessage('Invalid experience level'),
+  query('minSalary').optional().custom(numericString).withMessage('Min salary must be positive'),
+  query('min').optional().custom(numericString).withMessage('Min salary must be positive'),
+  query('sort').optional().isIn(['', 'newest', 'salary']).withMessage('Invalid sort'),
+];
+
+// GET /api/alerts/preview?q=&location=&type=&workMode=&experienceLevel=&minSalary=
 export const previewAlert = asyncHandler(async (req, res) => {
+  check(req, res);
   const query = cleanQuery({
     q: req.query.q, location: req.query.location, type: req.query.type,
     workMode: req.query.workMode || req.query.mode, experienceLevel: req.query.level || req.query.experienceLevel,
