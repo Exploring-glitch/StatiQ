@@ -7,6 +7,7 @@ import { asyncHandler, signToken } from '../middleware/auth.js';
 import { uploadsDir, avatarsDir, resumesDir, verifyUploadMagic } from '../middleware/upload.js';
 import { recordLoginFailure, clearLoginFailures } from '../middleware/rateLimit.js';
 import { isValidObjectId } from '../lib/validate.js';
+import { canManageJob } from '../lib/canManageJob.js';
 
 // Resolve an /uploads/... URL to an on-disk path. Supports the new
 // /uploads/avatars|resumes/<file> layout and legacy flat /uploads/<file>.
@@ -298,8 +299,9 @@ export const changePassword = asyncHandler(async (req, res) => {
 });
 
 // GET /api/auth/files/resumes/:name (protected) — private résumé download.
-// Allowed: the owner, an admin, or an employer holding an application
-// from that candidate (hiring teams can review, the public cannot).
+// Allowed: the owner, an admin, or a manager of any job the candidate
+// applied to (poster, company manager, or admin via canManageJob —
+// consistent with GET /api/applications/job/:jobId).
 export const downloadResumeFile = asyncHandler(async (req, res) => {
   const name = path.basename(String(req.params.name || ''));
   if (!name) {
@@ -318,11 +320,16 @@ export const downloadResumeFile = asyncHandler(async (req, res) => {
   let allowed = isOwner || me.role === 'admin';
   if (!allowed && me.role === 'employer') {
     const apps = await Application.find({ applicant: owner._id }).select('job').lean();
-    const jobIds = apps.map((a) => a.job);
+    const jobIds = apps.map((a) => a.job).filter(Boolean);
     if (jobIds.length) {
       const { default: Job } = await import('../models/Job.js');
-      const mine = await Job.exists({ _id: { $in: jobIds }, postedBy: me._id });
-      allowed = !!mine;
+      const jobs = await Job.find({ _id: { $in: jobIds } }).select('postedBy companyId').lean();
+      for (const job of jobs) {
+        if (await canManageJob(me, job)) {
+          allowed = true;
+          break;
+        }
+      }
     }
   }
   if (!allowed) {
