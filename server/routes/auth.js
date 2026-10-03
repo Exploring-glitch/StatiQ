@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { register, login, me, updateMe, uploadResume, deleteResume, uploadAvatar, deleteAvatar, getSavedJobs, putSavedJobs, downloadResumeFile, changePassword, registerRules, loginRules, updateMeRules, changePasswordRules } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
-import { authLimiter, loginAccountGate, writeLimiter } from '../middleware/rateLimit.js';
+import { authLimiter, loginAccountGate, publicLimiter, writeLimiter } from '../middleware/rateLimit.js';
 import { resumeUpload, avatarUpload } from '../middleware/upload.js';
 
 const r = Router();
 
 r.post('/register', authLimiter, registerRules, register);
 r.post('/login', authLimiter, loginAccountGate, loginRules, login);
-r.get('/me', protect, me);
+r.get('/me', protect, publicLimiter, me);
 r.put('/me', protect, writeLimiter, updateMeRules, updateMe);
 r.put('/me/password', protect, writeLimiter, changePasswordRules, changePassword);
 r.get('/me/saved', protect, getSavedJobs);
