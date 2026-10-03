@@ -10,12 +10,12 @@ import {
   alertUpdateRules,
   previewRules,
 } from '../controllers/alertController.js';
-import { writeLimiter } from '../middleware/rateLimit.js';
+import { publicLimiter, writeLimiter } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
-router.get('/preview', protect, authorize('jobseeker', 'admin'), previewRules, previewAlert);
-router.get('/mine', protect, authorize('jobseeker', 'admin'), myAlerts);
+router.get('/preview', protect, authorize('jobseeker', 'admin'), publicLimiter, previewRules, previewAlert);
+router.get('/mine', protect, authorize('jobseeker', 'admin'), publicLimiter, myAlerts);
 router.post('/', protect, authorize('jobseeker', 'admin'), writeLimiter, alertRules, createAlert);
 router.put('/:id', protect, authorize('jobseeker', 'admin'), writeLimiter, alertUpdateRules, updateAlert);
 router.delete('/:id', protect, authorize('jobseeker', 'admin'), writeLimiter, deleteAlert);
