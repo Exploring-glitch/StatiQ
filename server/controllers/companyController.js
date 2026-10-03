@@ -230,6 +230,9 @@ export const uploadLogo = asyncHandler(async (req, res) => {
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
   );
   // Clean up any previous logo file so disk doesn't fill with orphans.
+  // NOTE: scoped by userId — correct while one owner manages one company
+  // (GET /mine returns 0-1). If multi-company ownership ever lands, scope
+  // this by companyId (logo-<companyId>-*) so sibling-company logos survive.
   try {
     for (const f of fs.readdirSync(logosDir)) {
       const full = path.join(logosDir, f);
