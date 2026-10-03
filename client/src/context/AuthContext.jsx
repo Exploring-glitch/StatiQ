@@ -30,7 +30,10 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const onUnauthorized = () => {
       logout();
-      if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
+      const p = window.location.pathname;
+      // Don't wipe guest auth forms — a stale token firing mid-signup/login
+      // should stay put so the user doesn't lose what they typed.
+      if (!p.startsWith('/login') && !p.startsWith('/signup')) window.location.href = '/login';
     };
     window.addEventListener('statiq:unauthorized', onUnauthorized);
     return () => window.removeEventListener('statiq:unauthorized', onUnauthorized);
