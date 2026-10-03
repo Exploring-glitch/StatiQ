@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
 
 export default function JobCard({ job }) {
-  const [saved, setSaved] = useState(() => isSaved(job.id));
   const { user } = useAuth();
   const isEmployer = user?.role === 'employer';
-  // Re-check after login/logout or cross-device sync merges new ids.
-  useEffect(() => {
-    setSaved(isSaved(job.id));
-  }, [user, job.id]);
+  // Derived during render (not synced in an effect) so login/logout or
+  // cross-tab saved-id changes reflect on the next render with no cascade.
+  // `tick` forces a re-render after toggle since isSaved() reads localStorage.
+  const [tick, setTick] = useState(0);
+  void tick;
+  const saved = isSaved(job.id);
   return (
     <article className="rounded-xl border border-white/10 bg-panel p-5 transition hover:border-accent/50">
       <div className="flex items-center gap-3">
@@ -44,7 +45,7 @@ export default function JobCard({ job }) {
         <div className="flex gap-2">
           {!isEmployer && (
             <button
-              onClick={() => setSaved(toggleSaved(job.id))}
+              onClick={() => { toggleSaved(job.id); setTick((t) => t + 1); }}
               className={`rounded-md border px-3 py-1 text-xs ${saved ? 'border-accent bg-accent/15 text-accent' : 'border-white/15 text-white hover:border-accent'}`}
             >
               {saved ? 'Saved ✓' : 'Save'}
