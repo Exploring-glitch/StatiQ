@@ -1,12 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-// Role landing page after login. Each role gets its own home:
-// jobseeker/admin → job board, employer → hiring dashboard.
-export function roleHome(user) {
-  if (user?.role === 'employer') return '/dashboard';
-  return '/jobs'; // jobseeker + admin
-}
+import { roleHome } from '../lib/roleHome';
 
 export default function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();

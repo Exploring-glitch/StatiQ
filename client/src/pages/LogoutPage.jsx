@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { roleHome } from '../components/ProtectedRoute';
+import { roleHome } from '../lib/roleHome';
 import { fileUrl } from '../lib/api';
 
 // Dedicated logout confirmation page — always centered in the viewport,
