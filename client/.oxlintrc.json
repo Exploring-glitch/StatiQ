@@ -3,6 +3,13 @@
   "plugins": ["react", "oxc"],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    // Co-located hooks (useAuth in AuthContext, useToast in Toast) are
+    // intentional for this size of codebase — roleHome already extracted to
+    // lib/roleHome.js. Keep as warn so new non-component exports still show.
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    // Fetch-on-mount effects with alive-flag cleanup are the standard data
+    // pattern here (see JobDetailPage, ApplicantsOverviewPage). Warn only —
+    // JobCard already derives saved state during render instead.
+    "react/set-state-in-effect": "warn"
   }
 }
