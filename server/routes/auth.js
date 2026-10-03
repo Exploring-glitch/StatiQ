@@ -10,7 +10,7 @@ r.post('/register', authLimiter, registerRules, register);
 r.post('/login', authLimiter, loginAccountGate, loginRules, login);
 r.get('/me', protect, me);
 r.put('/me', protect, writeLimiter, updateMeRules, updateMe);
-r.put('/me/password', protect, changePasswordRules, changePassword);
+r.put('/me/password', protect, writeLimiter, changePasswordRules, changePassword);
 r.get('/me/saved', protect, getSavedJobs);
 r.put('/me/saved', protect, writeLimiter, putSavedJobs);
 r.post('/resume', protect, writeLimiter, resumeUpload.single('resume'), uploadResume);
