@@ -35,8 +35,9 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 
 // Strip NoSQL-injection keys ($..., ....) from body/query/params.
-// Lightweight alternative to express-mongo-sanitize (Express 5 frozen-query
-// safe: builds cleaned copies instead of mutating req.query).
+// Lightweight alternative to express-mongo-sanitize (Express 4 here — see
+// package.json; written upgrade-safe for Express 5 frozen-query: builds
+// cleaned copies instead of mutating req.query).
 const sanitizeObject = (obj) => {
   if (Array.isArray(obj)) return obj.map(sanitizeObject);
   if (obj && typeof obj === 'object') {
@@ -54,7 +55,8 @@ app.use((req, _res, next) => {
   if (req.params && typeof req.params === 'object') {
     for (const [k, v] of Object.entries(sanitizeObject(req.params))) req.params[k] = v;
   }
-  // Express 5 exposes req.query via a getter — never reassign it, clean keys in place.
+  // Express 4 allows req.query reassignment, but Express 5 exposes it via a
+  // getter — never reassign it, clean keys in place (upgrade-safe).
   if (req.query && typeof req.query === 'object') {
     try {
       for (const k of Object.keys(req.query)) {
