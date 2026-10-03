@@ -138,8 +138,9 @@ export const listJobs = asyncHandler(async (req, res) => {
     page = 1, limit = 12,
   } = req.query;
   const and = [{ status: 'open' }];
-  if (q) and.push({ $text: { $search: q } });
-  if (location) and.push({ location: new RegExp(escapeRegExp(location), 'i') });
+  const cappedQ = String(q || '').slice(0, 120);
+  if (cappedQ) and.push({ $text: { $search: cappedQ } });
+  if (location) and.push({ location: new RegExp(escapeRegExp(String(location).slice(0, 120)), 'i') });
   // workMode accepts CSV (e.g. Remote,Hybrid); legacy `remote=true` maps to Remote.
   const modes = String(workMode || '')
     .split(',')

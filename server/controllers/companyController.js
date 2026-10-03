@@ -1,4 +1,4 @@
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import fs from 'fs';
 import path from 'path';
 import Company, { sanitizeCompanyHtml, slugify } from '../models/Company.js';
@@ -123,9 +123,17 @@ async function companyJobs(company) {
 }
 
 // GET /api/companies?q=&page=&limit= — public search for seekers
+export const listCompaniesRules = [
+  query('q').optional().isString().isLength({ max: 120 }).withMessage('Search too long'),
+  query('page').optional().isInt({ min: 1, max: 1000 }).withMessage('Invalid page'),
+  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Invalid limit'),
+];
+// GET /api/companies?q=&page=&limit= — public search for seekers
 export const listCompanies = asyncHandler(async (req, res) => {
+  check(req, res);
   const { q = '', page = 1, limit = 12 } = req.query;
-  const filter = q ? { $text: { $search: String(q) } } : {};
+  const cappedQ = String(q || '').slice(0, 120);
+  const filter = cappedQ ? { $text: { $search: cappedQ } } : {};
   const lim = Math.min(50, Math.max(1, Number(limit) || 12));
   const skip = (Math.max(1, Number(page)) - 1) * lim;
   const [items, total] = await Promise.all([
