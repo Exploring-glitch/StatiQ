@@ -71,7 +71,13 @@ try {
       ...j,
       companySlug: String(j.company).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     })));
-    await Company.insertMany(companies);
+    // Upsert by slug so a partial state (jobs wiped, companies left behind)
+    // never hits a duplicate-key error on the unique slug index.
+    await Company.bulkWrite(
+      companies.map((c) => ({
+        updateOne: { filter: { slug: c.slug }, update: { $set: c }, upsert: true },
+      }))
+    );
     console.log(`Seeded ${inserted.length} jobs + ${companies.length} companies`);
   }
 } catch (err) {
