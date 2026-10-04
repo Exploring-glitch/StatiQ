@@ -116,3 +116,29 @@ Base: `/api` · Health: `GET /api/health`
 | `GET` / `PUT` | `/companies/me`, `/companies/mine` | Employer | Manage own company profile(s) |
 | `POST` | `/companies/me/logo` | Employer | Upload company logo |
 | `GET` | `/notifications`, `/alerts` | User | Notifications, saved-search job alerts |
+
+---
+
+## 📁 Project Structure
+
+```
+StatiQ/
+├── client/                 # React + Vite frontend
+│   ├── src/
+│   │   ├── pages/          # HomePage, JobsPage, DashboardPage, Company*Page, …
+│   │   ├── components/     # Navbar, JobCard, ApplyModal, RichTextEditor, …
+│   │   ├── context/        # AuthContext
+│   │   ├── lib/            # api.js, jobs.js, companies.js, employer.js
+│   │   └── data/mock.js    # Homepage fallback content
+│   └── vite.config.js
+├── server/                 # Express API
+│   ├── routes/             # auth, jobs, applications, companies, notifications, alerts
+│   ├── models/             # User, Company, Job, Application, JobAlert, Notification
+│   ├── middleware/         # auth, upload, rateLimit, errorHandler
+│   ├── config/db.js
+│   ├── seed.js
+│   └── server.js
+└── README.md
+```
+
+**Key domain relationship:** `User (employer)` → `Company (brand)` → `Jobs` → `Applications`
