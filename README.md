@@ -4,6 +4,8 @@ A Wellfound-style hiring marketplace connecting **job seekers** with **startups*
 
 **Stack:** React 19 · React Router 7 · Tailwind CSS 3 · Vite · Express 4 · MongoDB (Mongoose 8) · JWT
 
+**Live demo:** https://stati-q.vercel.app
+
 ---
 
 ## ✨ Features
