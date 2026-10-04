@@ -28,3 +28,15 @@ A Wellfound-style hiring marketplace connecting **job seekers** with **startups*
 - JWT auth with seeker/employer roles, protected routes, degraded-mode browsing when MongoDB is unreachable
 - Security: Helmet, CORS allowlist, rate limiting, NoSQL-injection sanitization, `express-validator` input validation, private résumé serving (auth-only, no public static leaks)
 - Seed script for demo companies, jobs, and users
+
+---
+
+## 🏗️ Tech Stack
+
+| Layer    | Technology |
+|----------|------------|
+| Frontend | React 19, React Router 7, Tailwind CSS 3.4, Vite 8 |
+| Backend  | Node.js, Express 4, Mongoose 8, JWT, bcryptjs, Multer |
+| Security | Helmet, CORS, express-rate-limit, express-validator |
+| Database | MongoDB (Atlas or local) |
+| Tooling  | oxlint, PostCSS, Autoprefixer, Nodemon |
