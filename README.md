@@ -142,3 +142,17 @@ StatiQ/
 ```
 
 **Key domain relationship:** `User (employer)` → `Company (brand)` → `Jobs` → `Applications`
+
+---
+
+## 🧑‍💻 Scripts
+
+| Location | Command | Purpose |
+|----------|---------|---------|
+| `server` | `npm start` | Start API |
+| `server` | `npm run dev` | Start API with nodemon |
+| `server` | `npm run seed -- --confirm` | Seed demo data |
+| `client` | `npm run dev` | Start Vite dev server |
+| `client` | `npm run build` | Production build |
+| `client` | `npm run lint` | Lint with oxlint |
+| `client` | `npm run preview` | Preview production build |
