@@ -92,3 +92,27 @@ App → `http://localhost:5173`
 | Variable       | Required | Description              |
 |----------------|----------|--------------------------|
 | `VITE_API_URL` | Yes      | Backend base URL, e.g. `http://localhost:5000/api` |
+
+---
+
+## 📡 API Reference
+
+Base: `/api` · Health: `GET /api/health`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/auth/signup`, `/auth/login` | Public | Register / login (seeker, employer) |
+| `GET` / `PUT` | `/auth/me` | User | Get / update profile |
+| `PUT` | `/auth/me/password` | User | Rotate password |
+| `GET` | `/auth/files/resumes/:name` | User | Private résumé download |
+| `GET` | `/jobs`, `/jobs/:id` | Public | Browse / job detail (demo fallback without DB) |
+| `POST` | `/jobs` | Employer | Post a job (bound to managed company) |
+| `PUT` / `DELETE` | `/jobs/:id` | Employer (owner) | Edit / delete job |
+| `PATCH` | `/jobs/:id/status` | Employer (owner) | Publish / close / reopen |
+| `GET` / `POST` | `/applications/mine`, `/applications` | Seeker | List / submit application (résumé upload) |
+| `GET` | `/applications/received/overview` | Employer | Applicant pipeline grouped by job |
+| `PATCH` | `/applications/:id/status` | Employer | Move applicant through pipeline |
+| `GET` | `/companies`, `/companies/:slug` | Public | Browse / company profile |
+| `GET` / `PUT` | `/companies/me`, `/companies/mine` | Employer | Manage own company profile(s) |
+| `POST` | `/companies/me/logo` | Employer | Upload company logo |
+| `GET` | `/notifications`, `/alerts` | User | Notifications, saved-search job alerts |
