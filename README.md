@@ -73,3 +73,22 @@ npm install
 npm run dev
 ```
 App → `http://localhost:5173`
+
+---
+
+## ⚙️ Environment Variables
+
+**`server/.env`**
+| Variable      | Required | Description                                    |
+|---------------|----------|------------------------------------------------|
+| `MONGODB_URI` | Yes      | MongoDB connection string                      |
+| `JWT_SECRET`  | Yes      | Secret for signing JWTs                          |
+| `JWT_EXPIRES_IN` | No    | Token lifetime (default set in code)             |
+| `CLIENT_URL`  | No       | Comma-separated CORS allowlist (default `http://localhost:5173`) |
+| `PORT`        | No       | API port (default `5000`)                        |
+| `NODE_ENV`    | No       | `development` / `production`                     |
+
+**`client/.env`**
+| Variable       | Required | Description              |
+|----------------|----------|--------------------------|
+| `VITE_API_URL` | Yes      | Backend base URL, e.g. `http://localhost:5000/api` |
