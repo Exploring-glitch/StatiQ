@@ -156,3 +156,37 @@ StatiQ/
 | `client` | `npm run build` | Production build |
 | `client` | `npm run lint` | Lint with oxlint |
 | `client` | `npm run preview` | Preview production build |
+
+---
+
+## 🔒 Security Notes
+
+- Résumés are **never** served statically — only via authenticated `GET /api/auth/files/resumes/:name`; legacy `/uploads/resume-*` paths return `403`.
+- Request bodies/queries are sanitized against NoSQL-injection keys (`$...`, `...`) in an Express 4/5-safe way.
+- Auth, application, and file routes sit behind rate limiters; browse endpoints use a lighter public limiter.
+- The API stays up in **degraded mode** (browsing works, mutations return `503`) if MongoDB is unreachable.
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Employer analytics (views, conversion funnel)
+- [ ] Messaging between seekers and employers
+- [ ] OAuth (Google/LinkedIn) login
+- [ ] Full-text + vector job search
+- [ ] S3/cloud storage for uploads
+- [ ] CI + Docker Compose for one-command setup
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo and create a feature branch (`git checkout -b feat/my-change`).
+2. Keep client and server changes scoped; run `npm run lint` (client) before pushing.
+3. Open a PR with a clear description and screenshots for UI changes.
+
+---
+
+## 📄 License
+
+No license file yet — all rights reserved by default. Add a `LICENSE` (e.g. MIT) if you want this to be open source.
