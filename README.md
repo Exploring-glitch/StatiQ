@@ -40,3 +40,36 @@ A Wellfound-style hiring marketplace connecting **job seekers** with **startups*
 | Security | Helmet, CORS, express-rate-limit, express-validator |
 | Database | MongoDB (Atlas or local) |
 | Tooling  | oxlint, PostCSS, Autoprefixer, Nodemon |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ (20 LTS recommended)
+- MongoDB connection string (Atlas or local `mongodb://127.0.0.1:27017/statiq`)
+
+### 1. Clone
+```bash
+git clone https://github.com/Exploring-glitch/StatiQ.git
+cd StatiQ
+```
+
+### 2. Backend
+```bash
+cd server
+cp .env.example .env   # then fill in MONGODB_URI + JWT_SECRET
+npm install
+npm run seed -- --confirm   # optional demo data
+npm start                   # or: npm run dev (nodemon)
+```
+API → `http://localhost:5000/api/health`
+
+### 3. Frontend
+```bash
+cd client
+cp .env.example .env   # VITE_API_URL=http://localhost:5000/api
+npm install
+npm run dev
+```
+App → `http://localhost:5173`
