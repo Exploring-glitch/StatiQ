@@ -202,7 +202,8 @@ export const getJob = asyncHandler(async (req, res) => {
       throw new Error('Job not found');
     }
   }
-  res.json(job);
+  const withLogo = await attachCompanyLogos(job);
+  res.json(withLogo);
 });
 
 // POST /api/jobs (employer/admin)
