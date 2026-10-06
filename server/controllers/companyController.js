@@ -130,7 +130,10 @@ async function companyJobs(company) {
   if (company.slug) ors.push({ companySlug: company.slug });
   if (company.name) ors.push({ company: new RegExp(`^${escapeRegExp(company.name)}$`, 'i') });
   if (!ors.length) return [];
-  return Job.find({ status: 'open', $or: ors }).sort({ createdAt: -1 }).limit(100).lean();
+  const found = await Job.find({ status: 'open', $or: ors }).sort({ createdAt: -1 }).limit(100).lean();
+  // Every role under the brand carries the uploaded logo into JobCards.
+  const withLogos = await attachCompanyLogos(found.map((j) => ({ ...j, logoUrl: j.logoUrl || company.logoUrl })));
+  return withLogos;
 }
 
 // GET /api/companies?q=&page=&limit= — public search for seekers
