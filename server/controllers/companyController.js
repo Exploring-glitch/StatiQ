@@ -19,7 +19,15 @@ const personRules = (prefix) => [
   body(`${prefix}.name`).optional().trim().isLength({ max: 80 }),
   body(`${prefix}.title`).optional().trim().isLength({ max: 120 }),
   body(`${prefix}.bio`).optional().trim().isLength({ max: 2000 }),
-  body(`${prefix}.photoUrl`).optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Photo must be a valid https:// URL'),
+  // Photo is upload-first (see POST /me/people-photo) but a pasted https://
+  // URL or a previously uploaded /uploads/people/… path stays valid so old
+  // profiles never 400 on save.
+  body(`${prefix}.photoUrl`).optional({ values: 'falsy' }).trim().isLength({ max: 500 }).withMessage('Photo too long').custom((v) => {
+    const s = String(v ?? '').trim();
+    if (!s) return true;
+    if (s.startsWith('/uploads/')) return true;
+    return /^https?:\/\/.+/i.test(s);
+  }).withMessage('Photo must be a valid https:// URL or an uploaded image'),
 ];
 
 export const companyWriteRules = [
