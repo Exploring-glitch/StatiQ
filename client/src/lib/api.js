@@ -146,6 +146,21 @@ export const api = {
     if (!res.ok) throw new Error(data.message || `Upload failed (${res.status})`);
     return data;
   },
+  // Founder / team headshots — upload-first replacement for pasting Photo URLs.
+  uploadPersonPhoto: async (file) => {
+    const fd = new FormData();
+    fd.append('photo', file);
+    const res = await fetch(`${BASE}/companies/me/people-photo`, {
+      method: 'POST',
+      headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+      body: fd,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && getToken()) notifyUnauthorized();
+    if (!res.ok) throw new Error(data.message || `Upload failed (${res.status})`);
+    return data;
+  },
+  deletePersonPhoto: (photoUrl) => request('/companies/me/people-photo', { method: 'DELETE', body: { photoUrl } }),
   myPostedJobs: () => request('/jobs/mine/posted'),
   jobApplicants: (jobId) => request(`/applications/job/${jobId}`),
   // Employer-wide pipeline: totals, per-job status buckets, recent items.
