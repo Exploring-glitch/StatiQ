@@ -73,6 +73,10 @@ const tokenResponse = (user) => ({ token: signToken(user._id), user: user.toSafe
 export const register = asyncHandler(async (req, res) => {
   check(req, res);
   const { name, email, password, role = 'jobseeker', title = '', location = '', company = '' } = req.body;
+  // Country / State / City are stored separately for employers; compose the
+  // searchable `location` string as "City, State, Country" when provided.
+  const { country = '', state = '', city = '' } = req.body;
+  const composedLocation = formatLocation({ city, state, country, location });
   if (await User.findOne({ email })) {
     res.status(400);
     throw new Error('Email already registered');
@@ -91,7 +95,7 @@ export const register = asyncHandler(async (req, res) => {
   ]) {
     if (req.body[k] !== undefined) extra[k] = req.body[k];
   }
-  const user = await User.create({ name, email, password, role, title, location, company, ...extra });
+  const user = await User.create({ name, email, password, role, title, location: composedLocation, country, state, city, company, ...extra });
   res.status(201).json(tokenResponse(user));
 });
 
