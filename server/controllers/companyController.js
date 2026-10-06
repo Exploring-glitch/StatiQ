@@ -269,6 +269,14 @@ export const uploadLogo = asyncHandler(async (req, res) => {
       if (full !== req.file.path && f.startsWith(`logo-${req.user._id}-`)) fs.unlink(full, () => {});
     }
   } catch { /* best-effort cleanup */ }
+  // Bind the owner's roles to this company so listings resolve the fresh
+  // logo via companyId immediately after upload.
+  try {
+    await Job.updateMany(
+      { $or: [{ companyId: updated._id }, { postedBy: req.user._id }] },
+      { $set: { companyId: updated._id } }
+    );
+  } catch { /* brand sync is best-effort */ }
   const obj = updated.toObject();
   res.status(201).json({ ...obj, id: obj._id, logoUrl: url });
 });
