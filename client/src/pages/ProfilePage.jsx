@@ -737,7 +737,16 @@ export default function ProfilePage() {
               <div className="mt-3">
                 <Row k="Name" v={form.name} />
                 <Row k={isEmployer ? 'Title' : 'Headline'} v={form.title} />
-                <Row k="Location" v={form.location} />
+                {isEmployer ? (
+                  <>
+                    <Row k="Country" v={form.country} />
+                    <Row k="State" v={form.state} />
+                    <Row k="City" v={form.city} />
+                    <Row k="Location" v={locationText} />
+                  </>
+                ) : (
+                  <Row k="Location" v={form.location} />
+                )}
                 {!isEmployer && <Row k="Company" v={form.company} />}
                 {!isEmployer && <Row k="Phone" v={form.phone} />}
                 {!isEmployer && <Row k="Wants" v={form.desiredLocation} />}
