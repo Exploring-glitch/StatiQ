@@ -108,7 +108,7 @@ userSchema.methods.comparePassword = function (candidate) {
 
 userSchema.methods.toSafeJSON = function () {
   const {
-    _id, name, email, role, title, location, skills, company, createdAt,
+    _id, name, email, role, title, location, country, state, city, skills, company, createdAt,
     avatarUrl, bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, workExperiences, openToWork,
     pronouns, gender, ethnicity,
@@ -118,7 +118,7 @@ userSchema.methods.toSafeJSON = function () {
     savedJobs,
   } = this;
   return {
-    id: _id, name, email, role, title, location, skills, company, createdAt,
+    id: _id, name, email, role, title, location, country, state, city, skills, company, createdAt,
     avatarUrl, bio, phone, resumeUrl, resumeName, portfolioUrl, linkedinUrl, githubUrl,
     experienceYears, experienceLevel, workExperiences, openToWork,
     pronouns, gender, ethnicity,
