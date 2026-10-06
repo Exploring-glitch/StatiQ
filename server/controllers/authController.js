@@ -265,7 +265,7 @@ export const updateMeRules = [
 export const updateMe = asyncHandler(async (req, res) => {
   check(req, res);
   const allowed = [
-    'name', 'title', 'location', 'company', 'skills',
+    'name', 'title', 'location', 'country', 'state', 'city', 'company', 'skills',
     'bio', 'phone', 'portfolioUrl', 'linkedinUrl', 'githubUrl',
     'experienceYears', 'experienceLevel', 'workExperiences', 'openToWork',
     'pronouns', 'gender', 'ethnicity',
@@ -301,6 +301,17 @@ export const updateMe = asyncHandler(async (req, res) => {
   }
   for (const k of ['experienceYears', 'expectedSalaryMin', 'expectedSalaryMax', 'graduationYear']) {
     if (updates[k] === '' || updates[k] === null) updates[k] = null;
+  }
+  // Keep the searchable `location` in sync when split fields change —
+  // "City, State, Country" so existing filters keep working.
+  if (updates.country !== undefined || updates.state !== undefined || updates.city !== undefined) {
+    const current = await User.findById(req.user._id).select('location country state city').lean();
+    updates.location = formatLocation({
+      city: updates.city ?? current?.city ?? '',
+      state: updates.state ?? current?.state ?? '',
+      country: updates.country ?? current?.country ?? '',
+      location: updates.location ?? current?.location ?? '',
+    });
   }
   const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
   res.json(user.toSafeJSON());
