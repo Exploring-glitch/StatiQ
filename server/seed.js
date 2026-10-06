@@ -19,6 +19,7 @@ const companies = [
     bio: 'Building the world’s fastest delivery network with autonomous drones.',
     overviewHtml: '<h2>We deliver where roads can’t</h2><p>Zipline designs, builds and operates autonomous drones that deliver medical supplies and goods in minutes.</p><p><br></p><p><b>Hybrid</b> teams across SF + remote · <i>mission-first</i> culture.</p>',
     employeeCount: 1200, companySize: '1000+', website: 'https://flyzipline.com', companyType: 'Startup', industry: 'Robotics', location: 'South San Francisco', foundedYear: 2014,
+    contactEmail: 'hiring@flyzipline.com', contactPhone: '+1-415-555-0132',
     founder: { name: 'Keller Rinaudo', title: 'Co-founder & CEO', bio: 'Founded Zipline to deliver medical supplies by drone.' },
     team: [
       { name: 'Keller Rinaudo', title: 'Co-founder & CEO', bio: 'Leads company vision and strategy.' },
@@ -31,6 +32,7 @@ const companies = [
     bio: 'Prompt-to-product platform turning ideas into full-stack apps.',
     overviewHtml: '<h2>Ship software by describing it</h2><p>Lovable is a <b>remote-first</b> team building the fastest way from idea to production app.</p>',
     employeeCount: 180, companySize: '51-200', website: 'https://lovable.dev', companyType: 'Startup', industry: 'AI / DevTools', location: 'Remote', foundedYear: 2023,
+    contactEmail: 'jobs@lovable.dev', contactPhone: '+1-415-555-0148',
     founder: { name: 'Anton Osika', title: 'Founder & CEO', bio: 'Previously built Lovable (GPT Engineer) open-source.' },
     team: [
       { name: 'Anton Osika', title: 'Founder & CEO', bio: 'Product + AI research.' },
@@ -43,6 +45,7 @@ const companies = [
     bio: 'Consumer fintech helping members get ahead financially.',
     overviewHtml: '<h2>Financial peace of mind</h2><p>Chime serves 20M+ members with fee-free banking, early payday and credit building.</p>',
     employeeCount: 1500, companySize: '1000+', website: 'https://chime.com', companyType: 'Enterprise', industry: 'Fintech', location: 'New York', foundedYear: 2013,
+    contactEmail: 'careers@chime.com', contactPhone: '+1-212-555-0176',
     founder: { name: 'Chris Britt', title: 'Co-founder & CEO', bio: 'Co-founded Chime to make banking fair.' },
     team: [
       { name: 'Chris Britt', title: 'Co-founder & CEO', bio: 'Leads Chime’s mission and growth.' },
