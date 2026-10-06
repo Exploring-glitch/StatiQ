@@ -301,11 +301,21 @@ export default function ProfilePage() {
         const p = {
           name: form.name.trim(),
           title: form.title.trim(),
-          location: form.location.trim(),
           bio: form.bio.trim(),
           desiredRoles: form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean),
         };
-        if (!isEmployer) {
+        if (isEmployer) {
+          // Employer location is Country / State / City separately; the
+          // composed string keeps search + legacy displays working.
+          const country = form.country.trim();
+          const state = form.state.trim();
+          const city = form.city.trim();
+          p.country = country;
+          p.state = state;
+          p.city = city;
+          p.location = formatLocation({ city, state, country, location: form.location });
+        } else {
+          p.location = form.location.trim();
           p.company = form.company.trim();
           p.phone = form.phone.trim();
           p.desiredLocation = form.desiredLocation.trim();
