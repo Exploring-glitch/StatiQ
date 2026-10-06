@@ -194,9 +194,18 @@ export default function DashboardPage() {
             <div className="mt-4 space-y-3">
               {jobs.slice(0, 5).map((j) => {
                 const id = j._id || j.id;
+                const jobLogo = j.logoUrl || company?.logoUrl;
                 return (
                   <div key={id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-panel p-4">
-                    <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-3">
+                      {jobLogo ? (
+                        <img src={fileUrl(jobLogo)} alt={`${j.company || company?.name || 'Company'} logo`} className="h-10 w-10 shrink-0 rounded-lg border border-white/10 object-cover" />
+                      ) : (
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 font-bold text-accent">
+                          {String(j.company || company?.name || '?').charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-white">
                         <span className="truncate">{j.title}</span>
                         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${jobStatusBadge(j.status)}`}>
@@ -207,6 +216,7 @@ export default function DashboardPage() {
                         {j.location} · {j.applicantCount ?? '…'} applicants
                         {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted', now).toLowerCase()}` : ''}
                       </p>
+                      </div>
                     </div>
                     <div className="flex shrink-0 gap-2">
                       <Link to={`/jobs/${id}`} className="rounded-md border border-white/15 px-3 py-1 text-xs text-white">View</Link>
