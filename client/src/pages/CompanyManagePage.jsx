@@ -591,6 +591,15 @@ export default function CompanyManagePage() {
           </>
         ) : (
           <div className="mt-3">
+            {form.founder.photoUrl ? (
+              <div className="mb-3 flex items-center gap-3">
+                <img src={fileUrl(form.founder.photoUrl)} alt={form.founder.name || 'Founder'} className="h-12 w-12 rounded-full border border-white/10 object-cover" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-white">{form.founder.name || '—'}</p>
+                  {form.founder.title && <p className="truncate text-xs text-neutral-400">{form.founder.title}</p>}
+                </div>
+              </div>
+            ) : null}
             <Row k="Name" v={form.founder.name} />
             <Row k="Title" v={form.founder.title} />
             <Row k="Photo" v={form.founder.photoUrl} link={form.founder.photoUrl} />
