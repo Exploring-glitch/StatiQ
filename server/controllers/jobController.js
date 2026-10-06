@@ -345,5 +345,6 @@ export const myPostedJobs = asyncHandler(async (req, res) => {
       ])
     : [];
   const counts = new Map(agg.map((a) => [String(a._id), a.count]));
-  res.json(items.map((j) => ({ ...j, applicantCount: counts.get(String(j._id)) ?? 0 })));
+  const withLogos = await attachCompanyLogos(items);
+  res.json(withLogos.map((j) => ({ ...j, applicantCount: counts.get(String(j._id)) ?? 0 })));
 });
