@@ -8,6 +8,7 @@ import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import ApplyModal from '../components/ApplyModal';
+import CompanyLogo from '../components/CompanyLogo';
 import JobCard from '../components/JobCard';
 
 export default function JobDetailPage() {
@@ -259,9 +260,7 @@ export default function JobDetailPage() {
           )}
         </div>
         <aside className="h-fit rounded-xl border border-white/10 bg-panel p-6">
-          <span className="flex h-12 w-12 items-center justify-center rounded-md bg-accent/15 text-xl font-bold text-accent">
-            {job.logo}
-          </span>
+          <CompanyLogo logoUrl={job.logoUrl} name={job.company} className="h-12 w-12 rounded-md text-xl" />
           <p className="mt-3 text-sm font-bold text-white">{job.company}</p>
           <p className="text-xs text-neutral-400">{job.tagline}</p>
           <p className="mt-2 text-xs text-neutral-500">{job.note}</p>
