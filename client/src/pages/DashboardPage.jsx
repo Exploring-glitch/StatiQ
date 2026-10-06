@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/api';
+import { api, fileUrl } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { timeAgo, useNow } from '../lib/time';
 import { greetingFor, jobStatusBadge, jobStatusLabel } from '../lib/employer';
@@ -43,7 +43,12 @@ export default function DashboardPage() {
       }
     };
     load();
-    return () => { alive = false; };
+    // Refresh the brand header the moment a new logo is uploaded elsewhere.
+    const onCompanyUpdate = () => {
+      api.myCompany().then((c) => { if (alive) setCompany(c || null); }).catch(() => {});
+    };
+    window.addEventListener('statiq:company-updated', onCompanyUpdate);
+    return () => { alive = false; window.removeEventListener('statiq:company-updated', onCompanyUpdate); };
   }, [attempt]);
 
   const firstName = (user?.name || '').split(' ')[0] || 'there';
@@ -60,12 +65,21 @@ export default function DashboardPage() {
         {greetingFor()}, {firstName} 👋
       </h1>
       {company?.name && (
-        <p className="mt-1 text-sm text-neutral-400">
-          <Link to="/company/manage" className="font-semibold text-white hover:text-accent">
-            {company.name}
-          </Link>
-          {company.location ? ` · ${company.location}` : ''}
-        </p>
+        <div className="mt-3 flex items-center gap-3">
+          {company.logoUrl ? (
+            <img src={fileUrl(company.logoUrl)} alt={`${company.name} logo`} className="h-11 w-11 rounded-xl border border-white/10 object-cover" />
+          ) : (
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/15 text-lg font-extrabold text-accent">
+              {(company.name || '?').charAt(0).toUpperCase()}
+            </span>
+          )}
+          <p className="text-sm text-neutral-400">
+            <Link to="/company/manage" className="font-semibold text-white hover:text-accent">
+              {company.name}
+            </Link>
+            {company.location ? ` · ${company.location}` : ''}
+          </p>
+        </div>
       )}
 
       {loading && (
