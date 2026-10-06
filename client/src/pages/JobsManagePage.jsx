@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/api';
+import { api, fileUrl } from '../lib/api';
 import { timeAgo, useNow } from '../lib/time';
 import { jobStatusBadge, jobStatusLabel } from '../lib/employer';
 import { useToast } from '../components/Toast';
@@ -24,6 +24,18 @@ export default function JobsManagePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actingId, setActingId] = useState(null);
+  // Brand logo for rows that predate the companyId binding or whose lookup
+  // missed — falls back to the letter avatar per row.
+  const [brandLogo, setBrandLogo] = useState('');
+  useEffect(() => {
+    let alive = true;
+    api.myCompany().then((c) => { if (alive) setBrandLogo(c?.logoUrl || ''); }).catch(() => {});
+    const onCompanyUpdate = () => {
+      api.myCompany().then((c) => { if (alive) setBrandLogo(c?.logoUrl || ''); }).catch(() => {});
+    };
+    window.addEventListener('statiq:company-updated', onCompanyUpdate);
+    return () => { alive = false; window.removeEventListener('statiq:company-updated', onCompanyUpdate); };
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -147,7 +159,15 @@ export default function JobsManagePage() {
           return (
             <div key={id} className="rounded-xl border border-white/10 bg-panel p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-3">
+                  {(j.logoUrl || brandLogo) ? (
+                    <img src={fileUrl(j.logoUrl || brandLogo)} alt={`${j.company || 'Company'} logo`} className="h-10 w-10 shrink-0 rounded-lg border border-white/10 object-cover" />
+                  ) : (
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 font-bold text-accent">
+                      {String(j.company || '?').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-white">
                     <span className="truncate">{j.title}</span>
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${jobStatusBadge(j.status)}`}>
@@ -159,6 +179,7 @@ export default function JobsManagePage() {
                     {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted', now).toLowerCase()}` : ''}
                     {j.deadline ? ` · apply by ${new Date(j.deadline).toLocaleDateString()}` : ''}
                   </p>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link to={`/jobs/${id}`} className="rounded-md border border-white/15 px-3 py-1 text-xs text-white">View</Link>
