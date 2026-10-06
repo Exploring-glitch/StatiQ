@@ -346,6 +346,14 @@ export default function CompanyManagePage() {
                 <input id="c-site" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://…" className={input} />
               </div>
               <div>
+                <label htmlFor="c-contact-email" className={label}>Contact email</label>
+                <input id="c-contact-email" type="email" value={form.contactEmail} onChange={(e) => set('contactEmail', e.target.value)} placeholder="hiring@company.com" className={input} />
+              </div>
+              <div>
+                <label htmlFor="c-contact-phone" className={label}>Contact phone</label>
+                <input id="c-contact-phone" type="tel" value={form.contactPhone} onChange={(e) => set('contactPhone', e.target.value)} placeholder="+91-…" className={input} />
+              </div>
+              <div>
                 <label htmlFor="c-industry" className={label}>Industry</label>
                 <input id="c-industry" value={form.industry} onChange={(e) => set('industry', e.target.value)} placeholder="e.g. AI / SaaS" className={input} />
               </div>
