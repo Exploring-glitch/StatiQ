@@ -88,6 +88,75 @@ function Row({ k, v, link }) {
   );
 }
 
+// Upload-first headshot field replacing the old raw "Photo URL" text input.
+// Shows a preview thumbnail, Upload / Replace / Remove actions, and a
+// collapsed "paste a link instead" fallback for external https:// portraits.
+function PersonPhotoField({ id, value, onChange, uploading, onUpload, onRemove }) {
+  const inputRef = useRef(null);
+  const preview = value ? fileUrl(value) : '';
+  const isUpload = value?.startsWith('/uploads/');
+  return (
+    <div>
+      <span className={label}>Photo — upload image (JPG, PNG, WebP · max 2 MB)</span>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={(e) => { onUpload(e.target.files?.[0]); e.target.value = ''; }}
+      />
+      {value ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-white/10 bg-panel2 px-3 py-2">
+          {preview ? (
+            <img src={preview} alt="Person preview" className="h-11 w-11 rounded-full border border-white/10 object-cover" />
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white">{isUpload ? value.split('/').pop() : value}</p>
+            <p className="truncate text-[11px] text-neutral-500">{isUpload ? 'Uploaded image' : 'External link'}</p>
+          </div>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-white hover:border-accent disabled:opacity-60"
+          >
+            {uploading ? 'Uploading…' : 'Replace'}
+          </button>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={onRemove}
+            className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-neutral-400 hover:border-red-500 hover:text-red-400 disabled:opacity-60"
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+          className="w-full rounded-md border border-dashed border-white/20 bg-panel2 px-3 py-4 text-center text-sm text-neutral-300 hover:border-accent disabled:opacity-60"
+        >
+          {uploading ? 'Uploading…' : '📷 Click to upload a photo'}
+        </button>
+      )}
+      <details className="mt-2">
+        <summary className="cursor-pointer text-xs text-neutral-500 hover:text-white">
+          …or paste a photo link instead
+        </summary>
+        <input
+          id={id}
+          value={isUpload ? '' : value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://…/photo.jpg"
+          className={`${input} mt-2`}
+        />
+      </details>
+    </div>
+  );
+}
+
 export default function CompanyManagePage() {
   const { user } = useAuth();
   const toast = useToast();
