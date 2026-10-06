@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
     avatarUrl: { type: String, trim: true, default: '' }, // /uploads/avatar-…
     title: { type: String, trim: true, default: '' }, // e.g. "Senior Backend Engineer"
     location: { type: String, trim: true, default: '' },
+    // Split location for employers — stored separately in My Profile,
+    // composed into `location` as "City, State, Country" for search/display.
+    country: { type: String, trim: true, default: '', maxlength: 100 },
+    state: { type: String, trim: true, default: '', maxlength: 100 },
+    city: { type: String, trim: true, default: '', maxlength: 100 },
     skills: { type: [String], default: [] },
     company: { type: String, trim: true, default: '' }, // employer org name
 
