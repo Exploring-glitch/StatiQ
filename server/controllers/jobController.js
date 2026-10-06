@@ -3,6 +3,7 @@ import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { escapeRegExp, isValidObjectId } from '../lib/validate.js';
+import { attachCompanyLogos } from '../lib/companyLogo.js';
 import { canManageJob } from '../lib/canManageJob.js';
 
 const check = (req, res) => {
