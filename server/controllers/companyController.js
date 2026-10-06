@@ -261,6 +261,43 @@ export const uploadLogo = asyncHandler(async (req, res) => {
   res.status(201).json({ ...obj, id: obj._id, logoUrl: url });
 });
 
+// POST /api/companies/me/people-photo (employer, multipart field: "photo")
+// Upload-first replacement for the old "Photo URL" text field: returns a
+// public /uploads/people/… URL the client stores on founder/team photoUrl.
+export const uploadPersonPhoto = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error('No file received — attach it as the "photo" field');
+  }
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  const bad = verifyUploadMagic(req.file.path, ext);
+  if (bad) {
+    fs.unlink(req.file.path, () => {});
+    res.status(400);
+    throw new Error(bad);
+  }
+  const photoUrl = `/uploads/people/${req.file.filename}`;
+  res.status(201).json({ photoUrl });
+});
+
+// DELETE /api/companies/me/people-photo (employer) — remove an uploaded
+// people photo by URL. External https:// URLs are simply acknowledged;
+// only /uploads/people/… files are deleted from disk.
+export const deletePersonPhoto = asyncHandler(async (req, res) => {
+  const photoUrl = String(req.body?.photoUrl || '').trim();
+  if (!photoUrl) {
+    res.status(400);
+    throw new Error('photoUrl is required');
+  }
+  if (photoUrl.startsWith('/uploads/people/')) {
+    const name = path.basename(photoUrl);
+    if (name && !name.includes('..')) {
+      fs.unlink(path.join(peopleDir, name), () => {});
+    }
+  }
+  res.json({ ok: true });
+});
+
 // GET /api/companies/:slug — public profile + jobs for seekers
 export const getCompany = asyncHandler(async (req, res) => {
   const key = String(req.params.slug || '');
