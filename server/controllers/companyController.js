@@ -5,6 +5,7 @@ import Company, { sanitizeCompanyHtml, slugify } from '../models/Company.js';
 import Job from '../models/Job.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { escapeRegExp, isValidObjectId } from '../lib/validate.js';
+import { attachCompanyLogos } from '../lib/companyLogo.js';
 import { logosDir, peopleDir, verifyUploadMagic } from '../middleware/upload.js';
 
 const check = (req, res) => {
