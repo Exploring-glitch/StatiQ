@@ -7,6 +7,7 @@ import { asyncHandler, signToken } from '../middleware/auth.js';
 import { uploadsDir, avatarsDir, resumesDir, verifyUploadMagic } from '../middleware/upload.js';
 import { recordLoginFailure, clearLoginFailures } from '../middleware/rateLimit.js';
 import { isValidObjectId } from '../lib/validate.js';
+import { formatLocation } from '../lib/location.js';
 import { canManageJob } from '../lib/canManageJob.js';
 
 // Resolve an /uploads/... URL to an on-disk path. Supports the new
