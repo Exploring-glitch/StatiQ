@@ -78,6 +78,7 @@ app.use((req, _res, next) => {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use('/uploads/avatars', express.static(avatarsDir, { maxAge: '7d' }));
 app.use('/uploads/logos', express.static(path.join(__dirname, 'uploads', 'logos'), { maxAge: '7d' }));
+app.use('/uploads/people', express.static(path.join(__dirname, 'uploads', 'people'), { maxAge: '7d' }));
 app.use('/uploads/resumes', (_req, res) =>
   res.status(403).json({ message: 'Forbidden — résumés require authentication. Use GET /api/auth/files/resumes/:name.' })
 );
