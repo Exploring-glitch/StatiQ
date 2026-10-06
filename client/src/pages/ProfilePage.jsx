@@ -1124,7 +1124,7 @@ export default function ProfilePage() {
             </div>
             {form.bio && <p className="mt-3 line-clamp-4 text-xs leading-relaxed text-neutral-400">{form.bio}</p>}
             <div className="mt-3 space-y-1 text-xs text-neutral-400">
-              {form.location && <p>📍 {form.location}{form.desiredLocation ? ` · wants ${form.desiredLocation}` : ''}</p>}
+              {headerLocation && <p>📍 {headerLocation}{!isEmployer && form.desiredLocation ? ` · wants ${form.desiredLocation}` : ''}</p>}
               {latestExp && (
                 <p>🏢 {[latestExp.title, latestExp.company].filter(Boolean).join(' @ ')}
                   {(latestExp.startDate || latestExp.endDate || latestExp.current) && (
