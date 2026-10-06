@@ -47,6 +47,9 @@ export function normalizeJob(j) {
     ...j,
     id,
     logo: j.logo || (j.company || '?').charAt(0).toUpperCase(),
+    // Uploaded company logo (server attaches Company.logoUrl); JobCard and
+    // detail sidebars prefer this over the letter fallback.
+    logoUrl: j.logoUrl || '',
     // Drafts are employer-only (never listed publicly); seekers opening a
     // draft URL see it as unpublished, employers see manage actions.
     status: j.status === 'closed' ? 'Closed' : j.status === 'draft' ? 'Draft' : j.status || 'Actively hiring',
