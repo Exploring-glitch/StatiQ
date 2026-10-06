@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { isSaved, toggleSaved } from '../lib/saved';
 import { useAuth } from '../context/AuthContext';
+import CompanyLogo from './CompanyLogo';
 
 export default function JobCard({ job }) {
   const { user } = useAuth();
@@ -15,9 +16,7 @@ export default function JobCard({ job }) {
   return (
     <article className="rounded-xl border border-white/10 bg-panel p-5 transition hover:border-accent/50">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-accent/15 font-bold text-accent">
-          {job.logo}
-        </span>
+        <CompanyLogo logoUrl={job.logoUrl} name={job.company} className="h-10 w-10 rounded-md text-base" />
         <div>
           <p className="text-sm font-bold text-white">
             <Link
