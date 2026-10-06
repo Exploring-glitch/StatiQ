@@ -497,7 +497,9 @@ export default function ProfilePage() {
       const checks = [
         has(form.name),
         has(form.title),
-        has(form.location),
+        has(form.country),
+        has(form.state),
+        has(form.city),
         has(form.bio),
         Boolean(user?.avatarUrl),
       ];
