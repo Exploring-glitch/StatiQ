@@ -227,6 +227,14 @@ export const upsertMyCompany = asyncHandler(async (req, res) => {
     { $set: { ...patch, owner: req.user._id } },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
   );
+  // Keep every role bound to the brand so preview listings resolve the
+  // uploaded logo via companyId even after a rename.
+  try {
+    await Job.updateMany(
+      { $or: [{ companyId: updated._id }, { postedBy: req.user._id }] },
+      { $set: { company: updated.name, companySlug: updated.slug, companyId: updated._id } }
+    );
+  } catch { /* brand sync is best-effort */ }
   const jobs = await companyJobs(updated.toObject());
   const obj = updated.toObject();
   res.json({ ...obj, id: obj._id, jobsCount: jobs.length });
