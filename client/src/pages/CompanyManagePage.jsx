@@ -14,7 +14,7 @@ const blankPerson = { name: '', title: '', bio: '', photoUrl: '' };
 const blankSocials = { linkedin: '', twitter: '', github: '', facebook: '', instagram: '' };
 const blank = {
   name: '', logoUrl: '', tagline: '', bio: '', mission: '', overviewHtml: '',
-  employeeCount: '', companySize: '', website: '', companyType: '', industry: '', location: '', foundedYear: '',
+  employeeCount: '', companySize: '', website: '', contactEmail: '', contactPhone: '', companyType: '', industry: '', location: '', foundedYear: '',
   socials: { ...blankSocials },
   founder: { ...blankPerson }, team: [],
   culture: { remotePolicy: '', values: [], benefits: [], description: '' },
@@ -32,7 +32,8 @@ const snapshotForm = (c) => ({
   mission: c?.mission || '',
   socials: { ...blankSocials, ...(c?.socials || {}) },
   overviewHtml: c?.overviewHtml || '', employeeCount: c?.employeeCount ?? '', companySize: c?.companySize || '',
-  website: c?.website || '', companyType: c?.companyType || '', industry: c?.industry || '',
+  website: c?.website || '', contactEmail: c?.contactEmail || '', contactPhone: c?.contactPhone || '',
+  companyType: c?.companyType || '', industry: c?.industry || '',
   location: c?.location || '', foundedYear: c?.foundedYear ?? '',
   founder: { ...blankPerson, ...(c?.founder || {}) },
   team: Array.isArray(c?.team) ? c.team.map((m) => ({ ...blankPerson, ...m })) : [],
