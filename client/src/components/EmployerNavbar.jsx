@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api, fileUrl } from '../lib/api';
 import NotificationBell from './NotificationBell';
 
 const sideLink = ({ isActive }) =>
@@ -25,8 +26,23 @@ const sideLogoutLink = ({ isActive }) =>
 export default function EmployerNavbar() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  // Managed brand — logo + name refresh instantly after an upload via the
+  // `statiq:company-updated` event dispatched by CompanyManagePage.
+  const [company, setCompany] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const load = () => {
+      api.myCompany().then((c) => { if (alive) setCompany(c || null); }).catch(() => {});
+    };
+    load();
+    const onUpdate = () => load();
+    window.addEventListener('statiq:company-updated', onUpdate);
+    return () => { alive = false; window.removeEventListener('statiq:company-updated', onUpdate); };
+  }, []);
 
-  const initials = (user?.company || user?.name || '?')
+  const displayName = company?.name || user?.company || 'Your company';
+  const logoSrc = company?.logoUrl ? fileUrl(company.logoUrl) : '';
+  const initials = (displayName || user?.name || '?')
     .split(' ')
     .map((w) => w[0])
     .slice(0, 2)
@@ -48,11 +64,15 @@ export default function EmployerNavbar() {
 
         {/* Company card — employer identity, seekers never see this */}
         <div className="mx-3 mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-panel p-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-extrabold text-white">
-            {initials}
-          </span>
+          {logoSrc ? (
+            <img src={logoSrc} alt={`${displayName} logo`} className="h-10 w-10 shrink-0 rounded-lg border border-white/10 object-cover" />
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-extrabold text-white">
+              {initials}
+            </span>
+          )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-white">{user?.company || 'Your company'}</p>
+            <p className="truncate text-sm font-bold text-white">{displayName}</p>
             <p className="truncate text-xs text-neutral-500">{user?.name || ''} · Owner</p>
           </div>
         </div>
