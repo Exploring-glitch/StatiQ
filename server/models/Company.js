@@ -99,6 +99,10 @@ const companySchema = new mongoose.Schema(
       default: '',
     },
     website: { type: String, trim: true, default: '', maxlength: 300 },
+    // Public contact channels — shown on the public profile so candidates
+    // can reach the hiring team without going through a job application.
+    contactEmail: { type: String, trim: true, lowercase: true, default: '', maxlength: 160 },
+    contactPhone: { type: String, trim: true, default: '', maxlength: 40 },
     companyType: {
       type: String,
       enum: ['', 'Startup', 'SME', 'Enterprise', 'Nonprofit', 'Agency', 'Government'],
