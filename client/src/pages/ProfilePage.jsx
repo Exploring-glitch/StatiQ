@@ -542,6 +542,11 @@ export default function ProfilePage() {
 
   const skillsList = form.skills.split(',').map((s) => s.trim()).filter(Boolean);
   const desiredRolesList = form.desiredRoles.split(',').map((s) => s.trim()).filter(Boolean);
+  // Employer header/preview shows the composed "City, State, Country" string.
+  const locationText = isEmployer
+    ? formatLocation({ city: form.city, state: form.state, country: form.country, location: form.location })
+    : form.location;
+  const headerLocation = displayLocation({ ...form, location: locationText });
   const latestExp =
     form.workExperiences.find((w) => w.current && (w.title || w.company)) ||
     form.workExperiences.find((w) => w.title || w.company);
@@ -635,7 +640,7 @@ export default function ProfilePage() {
             )}
           </div>
           <p className="truncate text-sm text-neutral-400">
-            {user?.email} {form.title ? `· ${form.title}` : ''} {form.location ? `· ${form.location}` : ''}
+            {user?.email} {form.title ? `· ${form.title}` : ''} {headerLocation ? `· ${headerLocation}` : ''}
           </p>
         </div>
         <div className="w-full sm:w-64">
