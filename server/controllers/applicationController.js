@@ -144,7 +144,7 @@ export const jobApplicants = asyncHandler(async (req, res) => {
     throw new Error('Not your job');
   }
   const items = await Application.find({ job: job._id })
-    .populate('applicant', 'name email title location skills bio phone resumeUrl portfolioUrl linkedinUrl githubUrl experienceYears experienceLevel openToWork desiredRoles jobTypes workModes desiredLocation availability educationDegree educationInstitution graduationYear')
+    .populate('applicant', 'name email title location country state city skills bio phone resumeUrl portfolioUrl linkedinUrl githubUrl experienceYears experienceLevel openToWork desiredRoles jobTypes workModes desiredLocation availability educationDegree educationInstitution graduationYear')
     .sort({ createdAt: -1 });
   res.json(items);
 });
