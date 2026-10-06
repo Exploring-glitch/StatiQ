@@ -220,6 +220,9 @@ export default function CompanyManagePage() {
       setForm(next);
       snapshot.current = { ...snapshotForm(saved), newValue: '', newBenefit: '' };
       setEditing((e) => ({ ...e, [key]: false }));
+      // Sidebar, dashboard, and listings read their own copies — tell them
+      // to refetch so the fresh logo/name appears without a reload.
+      try { window.dispatchEvent(new CustomEvent('statiq:company-updated')); } catch { /* ignore */ }
       toast?.notify('Company profile saved', 'success');
     } catch (e) {
       // Log full context to the console so a failure is diagnosable from
@@ -307,6 +310,7 @@ export default function CompanyManagePage() {
       // Logos upload immediately (even before Save) — mirror into the
       // snapshot so Cancel basics doesn't revert the new logo.
       if (snapshot.current) snapshot.current = { ...snapshot.current, logoUrl: saved.logoUrl || '' };
+      try { window.dispatchEvent(new CustomEvent('statiq:company-updated')); } catch { /* ignore */ }
       toast?.notify('Logo uploaded', 'success');
     } catch (err) {
       toast?.notify(err.message, 'error');
