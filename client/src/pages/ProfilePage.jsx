@@ -117,11 +117,13 @@ const buildFresh = (u) => ({
 // Sections with data start collapsed in view mode.
 const buildEditing = (u) => {
   const emp = u?.role === 'employer';
+  const loc = resolveLocationParts(u);
+  const hasEmployerLocation = Boolean(u?.country || loc.country) && Boolean(u?.city || loc.city);
   return {
-    // Employer basics are the PERSON (name/role/bio) — never the company.
+    // Employer basics are the PERSON (name/role/bio + split location) — never the company.
     // Company data lives on /company/manage and must not mix in here.
     basics: emp
-      ? !(u?.name && u?.title && u?.bio)
+      ? !(u?.name && u?.title && u?.bio && hasEmployerLocation)
       : !(u?.title && u?.bio),
     identity: !(u?.pronouns || u?.gender || u?.ethnicity),
     experience: !(u?.experienceYears != null || u?.experienceLevel || (u?.workExperiences || []).length),
