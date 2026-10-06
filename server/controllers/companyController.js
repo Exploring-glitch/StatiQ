@@ -44,6 +44,8 @@ export const companyWriteRules = [
   }).withMessage('Employee count must be a whole number between 0 and 1000000'),
   body('companySize').optional().isIn(['', '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+']),
   body('website').optional({ values: 'falsy' }).trim().isURL({ require_protocol: true }).withMessage('Website must be a valid https:// URL'),
+  body('contactEmail').optional({ values: 'falsy' }).trim().isEmail().withMessage('Contact email must be valid').normalizeEmail().isLength({ max: 160 }).withMessage('Contact email too long'),
+  body('contactPhone').optional().trim().isLength({ max: 40 }).withMessage('Contact phone must be under 40 characters').matches(/^[+()\-.\s\d]*$/).withMessage('Contact phone contains invalid characters'),
   body('companyType').optional().isIn(['', 'Startup', 'SME', 'Enterprise', 'Nonprofit', 'Agency', 'Government']),
   body('industry').optional().trim().isLength({ max: 120 }),
   body('location').optional().trim().isLength({ max: 160 }),
