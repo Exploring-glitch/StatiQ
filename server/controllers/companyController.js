@@ -86,7 +86,7 @@ const cleanTeam = (v) => {
 
 const pickCompanyFields = (src = {}) => {
   const out = {};
-  for (const k of ['name', 'logoUrl', 'tagline', 'bio', 'mission', 'companySize', 'website', 'companyType', 'industry', 'location']) {
+  for (const k of ['name', 'logoUrl', 'tagline', 'bio', 'mission', 'companySize', 'website', 'contactEmail', 'contactPhone', 'companyType', 'industry', 'location']) {
     if (src[k] !== undefined) out[k] = typeof src[k] === 'string' ? src[k].trim() : src[k];
   }
   if (src.socials !== undefined && src.socials && typeof src.socials === 'object') {
