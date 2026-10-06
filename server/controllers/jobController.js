@@ -174,7 +174,8 @@ export const listJobs = asyncHandler(async (req, res) => {
     Job.find(filter).sort(sortBy).skip(skip).limit(lim).populate('postedBy', 'name company'),
     Job.countDocuments(filter),
   ]);
-  res.json({ items, total, page: Number(page), pages: Math.ceil(total / lim) || 1 });
+  const withLogos = await attachCompanyLogos(items);
+  res.json({ items: withLogos, total, page: Number(page), pages: Math.ceil(total / lim) || 1 });
 });
 
 // GET /api/jobs/:id — public for open roles; drafts/closed need owner/admin.
