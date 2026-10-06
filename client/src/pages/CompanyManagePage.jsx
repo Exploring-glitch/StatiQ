@@ -642,7 +642,16 @@ export default function CompanyManagePage() {
                       <input value={m.name} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} placeholder="Name" aria-label={`Team member ${i + 1} name`} className={input} />
                       <input value={m.title} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} placeholder="Title" aria-label={`Team member ${i + 1} title`} className={input} />
                     </div>
-                    <input value={m.photoUrl} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, photoUrl: e.target.value } : x)))} placeholder="Photo URL (optional)" aria-label={`Team member ${i + 1} photo`} className={`${input} mt-3`} />
+                    <div className="mt-3">
+                      <PersonPhotoField
+                        id={`team-photo-${i}`}
+                        value={m.photoUrl}
+                        uploading={photoBusy === `team:${i}`}
+                        onChange={(v) => set('team', form.team.map((x, j) => (j === i ? { ...x, photoUrl: v } : x)))}
+                        onUpload={(file) => uploadPersonFile(`team:${i}`, file)}
+                        onRemove={() => removePersonPhoto(`team:${i}`, m.photoUrl)}
+                      />
+                    </div>
                     <textarea value={m.bio} onChange={(e) => set('team', form.team.map((x, j) => (j === i ? { ...x, bio: e.target.value } : x)))} placeholder="Short bio (optional)" rows={2} aria-label={`Team member ${i + 1} bio`} className={`${input} mt-3`} />
                     <button
                       type="button" onClick={() => set('team', form.team.filter((_, j) => j !== i))}
