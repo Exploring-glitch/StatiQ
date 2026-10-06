@@ -684,7 +684,15 @@ export default function ProfilePage() {
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div><span className={label}>Full name *</span><input value={form.name} onChange={set('name')} required placeholder="Full name" className={input} /></div>
               <div><span className={label}>{isEmployer ? 'Your title' : 'Headline *'}</span><input value={form.title} onChange={set('title')} placeholder={isEmployer ? 'Founder, Hiring Manager…' : 'Senior Backend Engineer'} className={input} /></div>
-              <div><span className={label}>Location</span><input value={form.location} onChange={set('location')} placeholder="Bengaluru, India" className={input} /></div>
+              {isEmployer ? (
+                <>
+                  <div><span className={label}>Country *</span><input value={form.country} onChange={set('country')} placeholder="India" className={input} /></div>
+                  <div><span className={label}>State *</span><input value={form.state} onChange={set('state')} placeholder="Karnataka" className={input} /></div>
+                  <div><span className={label}>City *</span><input value={form.city} onChange={set('city')} placeholder="Bengaluru" className={input} /></div>
+                </>
+              ) : (
+                <div><span className={label}>Location</span><input value={form.location} onChange={set('location')} placeholder="Bengaluru, India" className={input} /></div>
+              )}
               {!isEmployer && (
                 <div><span className={label}>Current / last company</span><input value={form.company} onChange={set('company')} placeholder="Company" className={input} /></div>
               )}
