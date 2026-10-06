@@ -681,10 +681,22 @@ export default function CompanyManagePage() {
               <div className="space-y-2">
                 {form.team.map((m, i) => (
                   <div key={i} className="rounded-lg border border-white/10 bg-panel2 p-3">
-                    <p className="text-sm font-semibold text-white">
-                      {[m.name, m.title].filter(Boolean).join(' · ') || `Member ${i + 1}`}
-                    </p>
-                    {m.bio && <p className="mt-1 text-xs leading-relaxed text-neutral-400">{m.bio}</p>}
+                    <div className="flex items-center gap-3">
+                      {m.photoUrl ? (
+                        <img src={fileUrl(m.photoUrl)} alt={m.name || `Member ${i + 1}`} className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
+                      ) : (
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-bold text-accent">
+                          {(m.name || '?').charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">
+                          {[m.name, m.title].filter(Boolean).join(' · ') || `Member ${i + 1}`}
+                        </p>
+                        {m.photoUrl && <p className="truncate text-[11px] text-neutral-500">{m.photoUrl}</p>}
+                      </div>
+                    </div>
+                    {m.bio && <p className="mt-2 text-xs leading-relaxed text-neutral-400">{m.bio}</p>}
                   </div>
                 ))}
               </div>
