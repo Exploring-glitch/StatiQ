@@ -173,7 +173,8 @@ export default function CompanyManagePage() {
       return {
         name: b.name, logoUrl: b.logoUrl, tagline: b.tagline, bio: b.bio,
         employeeCount: b.employeeCount, companySize: b.companySize, companyType: b.companyType,
-        website: b.website, industry: b.industry, location: b.location, foundedYear: b.foundedYear,
+        website: b.website, contactEmail: b.contactEmail, contactPhone: b.contactPhone,
+        industry: b.industry, location: b.location, foundedYear: b.foundedYear,
       };
     }
     if (key === 'presence') return { mission: '', socials: { ...blankSocials } };
@@ -192,7 +193,8 @@ export default function CompanyManagePage() {
         setForm((f) => ({
           ...f, name: s.name, logoUrl: s.logoUrl, tagline: s.tagline, bio: s.bio,
           employeeCount: s.employeeCount, companySize: s.companySize, companyType: s.companyType,
-          website: s.website, industry: s.industry, location: s.location, foundedYear: s.foundedYear,
+          website: s.website, contactEmail: s.contactEmail, contactPhone: s.contactPhone,
+          industry: s.industry, location: s.location, foundedYear: s.foundedYear,
         }));
       } else if (key === 'founder') {
         setForm((f) => ({ ...f, founder: { ...s.founder } }));
