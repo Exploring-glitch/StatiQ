@@ -77,7 +77,24 @@ const normExp = (w) => ({
 });
 
 // Per-section server snapshots (used for init + Cancel) and option labels.
-const snapBasics = (u) => ({ name: u?.name || '', title: u?.title || '', location: u?.location || '', company: u?.company || '', bio: u?.bio || '', phone: u?.phone || '', desiredLocation: u?.desiredLocation || '', desiredRoles: arr(u?.desiredRoles).join(', ') });
+// Employers store Country / State / City separately; legacy `location`
+// strings hydrate the split fields so older accounts lose nothing.
+const snapBasics = (u) => {
+  const parts = resolveLocationParts(u);
+  return {
+    name: u?.name || '',
+    title: u?.title || '',
+    location: u?.location || '',
+    country: u?.country || parts.country || '',
+    state: u?.state || parts.state || '',
+    city: u?.city || parts.city || '',
+    company: u?.company || '',
+    bio: u?.bio || '',
+    phone: u?.phone || '',
+    desiredLocation: u?.desiredLocation || '',
+    desiredRoles: arr(u?.desiredRoles).join(', '),
+  };
+};
 const snapIdentity = (u) => ({ pronouns: u?.pronouns || '', gender: u?.gender || '', ethnicity: u?.ethnicity || '' });
 const snapExperience = (u) => ({ experienceYears: numOrEmpty(u?.experienceYears), experienceLevel: u?.experienceLevel || '', workExperiences: arr(u?.workExperiences).map(normExp) });
 const snapSkills = (u) => ({ skills: arr(u?.skills).join(', '), languages: arr(u?.languages).join(', ') });
