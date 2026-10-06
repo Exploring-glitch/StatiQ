@@ -575,8 +575,14 @@ export default function CompanyManagePage() {
               </div>
             </div>
             <div className="mt-4">
-              <label htmlFor="f-photo" className={label}>Founder photo URL</label>
-              <input id="f-photo" value={form.founder.photoUrl} onChange={(e) => set('founder', { ...form.founder, photoUrl: e.target.value })} placeholder="https://… or /uploads/…" className={input} />
+              <PersonPhotoField
+                id="f-photo"
+                value={form.founder.photoUrl}
+                uploading={photoBusy === 'founder'}
+                onChange={(v) => set('founder', { ...form.founder, photoUrl: v })}
+                onUpload={(file) => uploadPersonFile('founder', file)}
+                onRemove={() => removePersonPhoto('founder', form.founder.photoUrl)}
+              />
             </div>
             <div className="mt-4">
               <label htmlFor="f-bio" className={label}>Founder bio</label>
