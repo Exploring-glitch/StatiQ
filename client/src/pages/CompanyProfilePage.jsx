@@ -169,6 +169,8 @@ export default function CompanyProfilePage() {
               {[
                 ['Company size', company.companySize || (company.employeeCount != null ? `${company.employeeCount} employees` : '—')],
                 ['Website', company.website ? company.website.replace(/^https?:\/\//, '') : '—'],
+                ['Contact email', company.contactEmail || '—'],
+                ['Contact phone', company.contactPhone || '—'],
                 ['Company type', company.companyType || '—'],
                 ['Industry', company.industry || '—'],
                 ['Headquarters', company.location || '—'],
@@ -179,6 +181,10 @@ export default function CompanyProfilePage() {
                   <dd className="text-right text-xs font-medium text-neutral-200">
                     {k === 'Website' && company.website ? (
                       <a href={company.website} target="_blank" rel="noreferrer" className="text-accent hover:underline">{v}</a>
+                    ) : k === 'Contact email' && company.contactEmail ? (
+                      <a href={`mailto:${company.contactEmail}`} className="break-all text-accent hover:underline">{v}</a>
+                    ) : k === 'Contact phone' && company.contactPhone ? (
+                      <a href={`tel:${company.contactPhone.replace(/\s+/g, '')}`} className="text-accent hover:underline">{v}</a>
                     ) : v}
                   </dd>
                 </div>
