@@ -387,6 +387,8 @@ export default function CompanyManagePage() {
             <Row k="Size" v={form.companySize} />
             <Row k="Type" v={form.companyType} />
             <Row k="Website" v={form.website} link={form.website} />
+            <Row k="Contact email" v={form.contactEmail} />
+            <Row k="Contact phone" v={form.contactPhone} />
             <Row k="Industry" v={form.industry} />
             <Row k="Location" v={form.location} />
             <Row k="Founded" v={form.foundedYear !== '' && form.foundedYear != null ? String(form.foundedYear) : ''} />
