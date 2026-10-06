@@ -128,6 +128,19 @@ export default function EmployerNavbar() {
         </div>
         {open && (
           <div className="space-y-2 border-t border-white/10 px-4 py-4 text-sm">
+            <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-panel px-3 py-2">
+              {logoSrc ? (
+                <img src={logoSrc} alt={`${displayName} logo`} className="h-8 w-8 rounded-lg border border-white/10 object-cover" />
+              ) : (
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-xs font-extrabold text-white">
+                  {initials}
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-white">{displayName}</p>
+                <p className="truncate text-xs text-neutral-500">{user?.name || ''} · Owner</p>
+              </div>
+            </div>
             <NavLink to="/dashboard" end onClick={() => setOpen(false)} className="block text-neutral-200">📊 Dashboard</NavLink>
             <NavLink to="/jobs/manage" onClick={() => setOpen(false)} className="block text-neutral-200">💼 Jobs</NavLink>
             <NavLink to="/post-job" onClick={() => setOpen(false)} className="block text-neutral-200">＋ Post a job</NavLink>
