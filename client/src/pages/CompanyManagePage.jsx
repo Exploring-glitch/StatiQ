@@ -316,6 +316,60 @@ export default function CompanyManagePage() {
     }
   };
 
+  // People headshots upload immediately (like the logo) so the preview is
+  // real before Save; the URL is stored on the founder/team draft and only
+  // persisted to the server when its section is saved.
+  const [photoBusy, setPhotoBusy] = useState('');
+  const validPersonFile = (file) => {
+    if (!file) return false;
+    if (!/\.(jpe?g|png|webp)$/i.test(file.name)) {
+      toast?.notify('Only JPG, PNG or WebP images are allowed.', 'error');
+      return false;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast?.notify('Image is too big — max 2 MB.', 'error');
+      return false;
+    }
+    return true;
+  };
+  const uploadPersonFile = async (key, file) => {
+    if (!validPersonFile(file)) return;
+    setPhotoBusy(key);
+    try {
+      const { photoUrl } = await api.uploadPersonPhoto(file);
+      if (key === 'founder') {
+        setForm((f) => ({ ...f, founder: { ...f.founder, photoUrl } }));
+      } else {
+        const idx = Number(String(key).split(':')[1]);
+        setForm((f) => ({ ...f, team: f.team.map((m, j) => (j === idx ? { ...m, photoUrl } : m)) }));
+      }
+      toast?.notify('Photo uploaded', 'success');
+    } catch (err) {
+      toast?.notify(err?.message || 'Photo upload failed.', 'error');
+    } finally {
+      setPhotoBusy('');
+    }
+  };
+  const removePersonPhoto = async (key, currentUrl) => {
+    setPhotoBusy(key);
+    try {
+      if (currentUrl?.startsWith('/uploads/')) {
+        await api.deletePersonPhoto(currentUrl).catch(() => {});
+      }
+      if (key === 'founder') {
+        setForm((f) => ({ ...f, founder: { ...f.founder, photoUrl: '' } }));
+      } else {
+        const idx = Number(String(key).split(':')[1]);
+        setForm((f) => ({ ...f, team: f.team.map((m, j) => (j === idx ? { ...m, photoUrl: '' } : m)) }));
+      }
+      toast?.notify('Photo removed', 'success');
+    } catch (err) {
+      toast?.notify(err?.message || 'Remove failed.', 'error');
+    } finally {
+      setPhotoBusy('');
+    }
+  };
+
   if (loading) return <p className="mx-auto max-w-4xl px-4 py-16 text-center text-sm text-neutral-400">Loading company profile…</p>;
 
   const logo = form.logoUrl ? fileUrl(form.logoUrl) : '';
