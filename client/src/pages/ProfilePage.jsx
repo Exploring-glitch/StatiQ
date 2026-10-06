@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api, fileUrl } from '../lib/api';
+import { displayLocation, formatLocation, resolveLocationParts } from '../lib/location';
 import ResumeLink from '../components/ResumeLink';
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
