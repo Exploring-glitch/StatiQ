@@ -5,6 +5,7 @@ import { asyncHandler } from '../middleware/auth.js';
 import { escapeRegExp, isValidObjectId } from '../lib/validate.js';
 import { attachCompanyLogos } from '../lib/companyLogo.js';
 import { canManageJob } from '../lib/canManageJob.js';
+import { splitListItems } from '../lib/lists.js';
 
 const check = (req, res) => {
   const errors = validationResult(req);
@@ -256,8 +257,13 @@ export const createJob = asyncHandler(async (req, res) => {
   for (const k of ['salaryMin', 'salaryMax', 'experienceMinYears', 'experienceMaxYears']) {
     if (body[k] === '' || body[k] === undefined) body[k] = null;
   }
-  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags', 'niceToHaves']) {
+  for (const k of ['tags']) {
     if (Array.isArray(body[k])) body[k] = body[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  }
+  // Smart lists: gaps / numbers / bullets split into dot-bullets on view.
+  // Accepts raw strings too so direct API text posts normalize the same way.
+  for (const k of ['requirements', 'benefits', 'responsibilities', 'niceToHaves', 'interviewProcess']) {
+    if (body[k] !== undefined && body[k] !== null) body[k] = splitListItems(body[k]);
   }
   if (body.department !== undefined && body.department !== null) {
     body.department = String(body.department).trim().slice(0, 80);
@@ -320,8 +326,11 @@ export const updateJob = asyncHandler(async (req, res) => {
     throw new Error('Not your job to edit');
   }
   const patch = pickJobFields(req.body);
-  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags', 'niceToHaves']) {
+  for (const k of ['tags']) {
     if (Array.isArray(patch[k])) patch[k] = patch[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  }
+  for (const k of ['requirements', 'benefits', 'responsibilities', 'niceToHaves', 'interviewProcess']) {
+    if (patch[k] !== undefined && patch[k] !== null) patch[k] = splitListItems(patch[k]);
   }
   for (const k of ['experienceMinYears', 'experienceMaxYears']) {
     if (patch[k] === '') patch[k] = null;
