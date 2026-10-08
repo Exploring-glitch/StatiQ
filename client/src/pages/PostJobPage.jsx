@@ -102,6 +102,14 @@ export default function PostJobPage() {
   const submit = async (e) => {
     e.preventDefault();
     setMsg('');
+    // Client-side guard so min/max experience typos fail fast with a clear message.
+    if (form.experienceMinYears !== '' && form.experienceMaxYears !== ''
+      && Number(form.experienceMaxYears) < Number(form.experienceMinYears)) {
+      const err = 'Max experience must be >= min experience.';
+      setMsg(err);
+      toast?.notify(err, 'error');
+      return;
+    }
     setBusy(true);
     try {
       const selected = companies.find((c) => String(c._id || c.id) === String(companyId));
@@ -115,6 +123,7 @@ export default function PostJobPage() {
         salaryMax: form.salaryMax === '' ? null : Number(form.salaryMax),
         experienceMinYears: form.experienceMinYears === '' ? null : Number(form.experienceMinYears),
         experienceMaxYears: form.experienceMaxYears === '' ? null : Number(form.experienceMaxYears),
+        department: String(form.department || '').trim().slice(0, 80),
         openings: form.openings === '' ? 1 : Math.max(1, Number(form.openings) || 1),
         deadline: form.deadline === '' ? null : new Date(form.deadline).toISOString(),
         remote: form.workMode === 'Remote',
