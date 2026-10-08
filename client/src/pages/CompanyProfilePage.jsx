@@ -286,7 +286,7 @@ export default function CompanyProfilePage() {
               <h2 className="text-lg font-bold text-white">Culture & Benefits</h2>
               {company.culture?.remotePolicy && (
                 <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
-                  {company.culture.remotePolicy === 'Remote-first' ? '🌍 Remote-first' : company.culture.remotePolicy === 'Remote-friendly' ? '🌐 Remote-friendly' : company.culture.remotePolicy === 'Hybrid' ? '🏢🏠 Hybrid' : '🏢 On-site'}
+                  {company.culture.remotePolicy === 'Remote-first' ? 'Remote-first' : company.culture.remotePolicy === 'Remote-friendly' ? 'Remote-friendly' : company.culture.remotePolicy === 'Hybrid' ? 'Hybrid' : 'On-site'}
                 </span>
               )}
             </div>
