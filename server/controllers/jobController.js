@@ -22,10 +22,27 @@ const JOB_WRITE_FIELDS = [
   'experienceMinYears', 'experienceMaxYears', 'department',
   'tags',
   'description', 'responsibilities', 'requirements', 'niceToHaves', 'benefits',
+  'interviewProcess',
   'openings', 'deadline', 'status',
 ];
 const pickJobFields = (body = {}) =>
   Object.fromEntries(JOB_WRITE_FIELDS.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
+
+// List fields accept arrays (preferred) or raw strings — the form sends
+// arrays, but direct API callers may send the textarea text as-is and the
+// smart splitter (lib/lists.js) normalizes it on sanitize.
+const listRule = (field, label) =>
+  body(field).optional().custom((v) => {
+    if (typeof v === 'string') {
+      if (v.length > 10000) throw new Error(`${label} too long`);
+      return true;
+    }
+    if (Array.isArray(v)) {
+      if (v.length > 30) throw new Error(`${label} must have at most 30 items`);
+      return true;
+    }
+    throw new Error(`${label} must be an array`);
+  });
 
 export const jobRules = [
   body('title').trim().notEmpty().withMessage('Title is required'),
@@ -44,9 +61,10 @@ export const jobRules = [
   body('status').optional().isIn(['open', 'closed', 'draft']).withMessage('Invalid status'),
   body('tags').optional().isArray({ max: 20 }).withMessage('Tags must be an array'),
   body('description').optional().isString().isLength({ max: 10000 }).withMessage('Description too long'),
-  body('responsibilities').optional().isArray({ max: 30 }).withMessage('Responsibilities must be an array'),
-  body('requirements').optional().isArray({ max: 30 }).withMessage('Requirements must be an array'),
-  body('benefits').optional().isArray({ max: 30 }).withMessage('Benefits must be an array'),
+  listRule('responsibilities', 'Responsibilities'),
+  listRule('requirements', 'Requirements'),
+  listRule('benefits', 'Benefits'),
+  listRule('interviewProcess', 'Interview process'),
   body('openings').optional({ nullable: true }).toInt().isInt({ min: 1, max: 10000 }).withMessage('Openings must be at least 1'),
   body('deadline').optional({ nullable: true }).isISO8601().withMessage('Deadline must be a valid date'),
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
@@ -61,7 +79,7 @@ export const jobRules = [
       return true;
     }),
   body('department').optional({ nullable: true }).isString().trim().isLength({ max: 80 }).withMessage('Department too long'),
-  body('niceToHaves').optional().isArray({ max: 30 }).withMessage('Nice to haves must be an array'),
+  listRule('niceToHaves', 'Nice to haves'),
 ];
 
 // Partial-update rules: every field optional so PATCH-style PUTs
@@ -83,9 +101,10 @@ export const jobUpdateRules = [
   body('status').optional().isIn(['open', 'closed', 'draft']).withMessage('Invalid status'),
   body('tags').optional().isArray({ max: 20 }).withMessage('Tags must be an array'),
   body('description').optional().isString().isLength({ max: 10000 }).withMessage('Description too long'),
-  body('responsibilities').optional().isArray({ max: 30 }).withMessage('Responsibilities must be an array'),
-  body('requirements').optional().isArray({ max: 30 }).withMessage('Requirements must be an array'),
-  body('benefits').optional().isArray({ max: 30 }).withMessage('Benefits must be an array'),
+  listRule('responsibilities', 'Responsibilities'),
+  listRule('requirements', 'Requirements'),
+  listRule('benefits', 'Benefits'),
+  listRule('interviewProcess', 'Interview process'),
   body('openings').optional({ nullable: true }).toInt().isInt({ min: 1, max: 10000 }).withMessage('Openings must be at least 1'),
   body('deadline').optional({ nullable: true }).isISO8601().withMessage('Deadline must be a valid date'),
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
@@ -100,7 +119,7 @@ export const jobUpdateRules = [
       return true;
     }),
   body('department').optional({ nullable: true }).isString().trim().isLength({ max: 80 }).withMessage('Department too long'),
-  body('niceToHaves').optional().isArray({ max: 30 }).withMessage('Nice to haves must be an array'),
+  listRule('niceToHaves', 'Nice to haves'),
 ];
 
 // Resolve which managed company a job belongs to (User → Company → Job).
