@@ -18,8 +18,10 @@ const check = (req, res) => {
 // (postedBy, _id, timestamps, ...) is never taken from the request body.
 const JOB_WRITE_FIELDS = [
   'title', 'company', 'companySlug', 'location', 'salary', 'salaryMin', 'salaryMax',
-  'type', 'remote', 'workMode', 'experienceLevel', 'tags',
-  'description', 'responsibilities', 'requirements', 'benefits',
+  'type', 'remote', 'workMode', 'experienceLevel',
+  'experienceMinYears', 'experienceMaxYears', 'department',
+  'tags',
+  'description', 'responsibilities', 'requirements', 'niceToHaves', 'benefits',
   'openings', 'deadline', 'status',
 ];
 const pickJobFields = (body = {}) =>
@@ -49,6 +51,17 @@ export const jobRules = [
   body('deadline').optional({ nullable: true }).isISO8601().withMessage('Deadline must be a valid date'),
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
+  body('experienceMinYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Min experience must be 0–50 years'),
+  body('experienceMaxYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Max experience must be 0–50 years')
+    .custom((v, { req }) => {
+      const min = req.body?.experienceMinYears;
+      if (min != null && min !== '' && v != null && v !== '' && Number(v) < Number(min)) {
+        throw new Error('Max experience must be >= min experience');
+      }
+      return true;
+    }),
+  body('department').optional({ nullable: true }).isString().trim().isLength({ max: 80 }).withMessage('Department too long'),
+  body('niceToHaves').optional().isArray({ max: 30 }).withMessage('Nice to haves must be an array'),
 ];
 
 // Partial-update rules: every field optional so PATCH-style PUTs
@@ -77,6 +90,17 @@ export const jobUpdateRules = [
   body('deadline').optional({ nullable: true }).isISO8601().withMessage('Deadline must be a valid date'),
   body('workMode').optional().isIn(['', 'Remote', 'Hybrid', 'On-site']).withMessage('Invalid work mode'),
   body('experienceLevel').optional().isIn(['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive']).withMessage('Invalid experience level'),
+  body('experienceMinYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Min experience must be 0–50 years'),
+  body('experienceMaxYears').optional({ nullable: true }).toFloat().isFloat({ min: 0, max: 50 }).withMessage('Max experience must be 0–50 years')
+    .custom((v, { req }) => {
+      const min = req.body?.experienceMinYears;
+      if (min != null && min !== '' && v != null && v !== '' && Number(v) < Number(min)) {
+        throw new Error('Max experience must be >= min experience');
+      }
+      return true;
+    }),
+  body('department').optional({ nullable: true }).isString().trim().isLength({ max: 80 }).withMessage('Department too long'),
+  body('niceToHaves').optional().isArray({ max: 30 }).withMessage('Nice to haves must be an array'),
 ];
 
 // Resolve which managed company a job belongs to (User → Company → Job).
@@ -210,11 +234,14 @@ export const getJob = asyncHandler(async (req, res) => {
 export const createJob = asyncHandler(async (req, res) => {
   check(req, res);
   const body = pickJobFields(req.body);
-  for (const k of ['salaryMin', 'salaryMax']) {
+  for (const k of ['salaryMin', 'salaryMax', 'experienceMinYears', 'experienceMaxYears']) {
     if (body[k] === '' || body[k] === undefined) body[k] = null;
   }
-  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags']) {
+  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags', 'niceToHaves']) {
     if (Array.isArray(body[k])) body[k] = body[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  }
+  if (body.department !== undefined && body.department !== null) {
+    body.department = String(body.department).trim().slice(0, 80);
   }
   if (body.openings === '' || body.openings === undefined || body.openings === null) body.openings = 1;
   else body.openings = Math.max(1, Number(body.openings) || 1);
@@ -274,8 +301,14 @@ export const updateJob = asyncHandler(async (req, res) => {
     throw new Error('Not your job to edit');
   }
   const patch = pickJobFields(req.body);
-  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags']) {
+  for (const k of ['requirements', 'benefits', 'responsibilities', 'tags', 'niceToHaves']) {
     if (Array.isArray(patch[k])) patch[k] = patch[k].map((s) => String(s).trim()).filter(Boolean).slice(0, 30);
+  }
+  for (const k of ['experienceMinYears', 'experienceMaxYears']) {
+    if (patch[k] === '') patch[k] = null;
+  }
+  if (patch.department !== undefined && patch.department !== null) {
+    patch.department = String(patch.department).trim().slice(0, 80);
   }
   if (patch.openings === '') patch.openings = 1;
   if (patch.deadline === '') patch.deadline = null;
