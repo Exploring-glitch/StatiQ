@@ -175,7 +175,14 @@ export default function JobsManagePage() {
                     </span>
                   </p>
                   <p className="mt-0.5 text-xs text-neutral-500">
-                    {j.company} · {j.location} · {j.applicantCount ?? '…'} applicants
+                    {j.company} · {j.location}
+                    {j.department ? ` · ${j.department}` : ''}
+                    {(j.experienceMinYears != null || j.experienceMaxYears != null)
+                      ? ` · ${j.experienceMinYears != null && j.experienceMaxYears != null
+                        ? `${j.experienceMinYears}–${j.experienceMaxYears} yrs`
+                        : j.experienceMinYears != null ? `${j.experienceMinYears}+ yrs` : `Up to ${j.experienceMaxYears} yrs`}`
+                      : ''}
+                    {' '}· {j.applicantCount ?? '…'} applicants
                     {j.createdAt ? ` · ${timeAgo(j.createdAt, 'Posted', now).toLowerCase()}` : ''}
                     {j.deadline ? ` · apply by ${new Date(j.deadline).toLocaleDateString()}` : ''}
                   </p>
