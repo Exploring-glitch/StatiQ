@@ -138,7 +138,7 @@ function PersonPhotoField({ id, value, onChange, uploading, onUpload, onRemove }
           onClick={() => inputRef.current?.click()}
           className="w-full rounded-md border border-dashed border-white/20 bg-panel2 px-3 py-4 text-center text-sm text-neutral-300 hover:border-accent disabled:opacity-60"
         >
-          {uploading ? 'Uploading…' : '📷 Click to upload a photo'}
+          {uploading ? 'Uploading…' : 'Click to upload a photo'}
         </button>
       )}
       <details className="mt-2">
