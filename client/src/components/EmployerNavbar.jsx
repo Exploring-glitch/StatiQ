@@ -79,17 +79,17 @@ export default function EmployerNavbar() {
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">Hire</p>
-          <NavLink to="/dashboard" end className={sideLink}>📊 Dashboard</NavLink>
-          <NavLink to="/jobs/manage" className={sideLink}>💼 Jobs</NavLink>
+          <NavLink to="/dashboard" end className={sideLink}>Dashboard</NavLink>
+          <NavLink to="/jobs/manage" className={sideLink}>Jobs</NavLink>
           <NavLink to="/post-job" className={sideLink}>＋ Post a job</NavLink>
-          <NavLink to="/applicants" className={sideLink}>📨 Applicants</NavLink>
-          <NavLink to="/jobs" className={sideLink}>👁 Preview listings <span className="text-[11px] text-neutral-600">live</span></NavLink>
+          <NavLink to="/applicants" className={sideLink}>Applicants</NavLink>
+          <NavLink to="/jobs" className={sideLink}>Preview listings <span className="text-[11px] text-neutral-600">live</span></NavLink>
           <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">Company</p>
-          <NavLink to="/company/manage" className={sideLink}>🏢 Company profile</NavLink>
+          <NavLink to="/company/manage" className={sideLink}>Company profile</NavLink>
           <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">Account</p>
-          <NavLink to="/profile" className={sideLink}>👤 My profile <span className="text-[11px] text-neutral-600">personal</span></NavLink>
-          <NavLink to="/notifications" className={sideLink}>🔔 Notifications</NavLink>
-          <NavLink to="/settings" className={sideLink}>⚙ Settings</NavLink>
+          <NavLink to="/profile" className={sideLink}>My profile <span className="text-[11px] text-neutral-600">personal</span></NavLink>
+          <NavLink to="/notifications" className={sideLink}>Notifications</NavLink>
+          <NavLink to="/settings" className={sideLink}>Settings</NavLink>
           <NavLink to="/logout" className={sideLogoutLink}>↩ Log out</NavLink>
         </nav>
 
@@ -141,15 +141,15 @@ export default function EmployerNavbar() {
                 <p className="truncate text-xs text-neutral-500">{user?.name || ''} · Owner</p>
               </div>
             </div>
-            <NavLink to="/dashboard" end onClick={() => setOpen(false)} className="block text-neutral-200">📊 Dashboard</NavLink>
-            <NavLink to="/jobs/manage" onClick={() => setOpen(false)} className="block text-neutral-200">💼 Jobs</NavLink>
+            <NavLink to="/dashboard" end onClick={() => setOpen(false)} className="block text-neutral-200">Dashboard</NavLink>
+            <NavLink to="/jobs/manage" onClick={() => setOpen(false)} className="block text-neutral-200">Jobs</NavLink>
             <NavLink to="/post-job" onClick={() => setOpen(false)} className="block text-neutral-200">＋ Post a job</NavLink>
-            <NavLink to="/applicants" onClick={() => setOpen(false)} className="block text-neutral-200">📨 Applicants</NavLink>
-            <NavLink to="/jobs" onClick={() => setOpen(false)} className="block text-neutral-200">👁 Preview listings</NavLink>
-            <NavLink to="/company/manage" onClick={() => setOpen(false)} className="block text-neutral-200">🏢 Company profile</NavLink>
-            <NavLink to="/profile" onClick={() => setOpen(false)} className="block text-neutral-200">👤 My profile</NavLink>
-            <NavLink to="/notifications" onClick={() => setOpen(false)} className="block text-neutral-200">🔔 Notifications</NavLink>
-            <NavLink to="/settings" onClick={() => setOpen(false)} className="block text-neutral-200">⚙ Settings</NavLink>
+            <NavLink to="/applicants" onClick={() => setOpen(false)} className="block text-neutral-200">Applicants</NavLink>
+            <NavLink to="/jobs" onClick={() => setOpen(false)} className="block text-neutral-200">Preview listings</NavLink>
+            <NavLink to="/company/manage" onClick={() => setOpen(false)} className="block text-neutral-200">Company profile</NavLink>
+            <NavLink to="/profile" onClick={() => setOpen(false)} className="block text-neutral-200">My profile</NavLink>
+            <NavLink to="/notifications" onClick={() => setOpen(false)} className="block text-neutral-200">Notifications</NavLink>
+            <NavLink to="/settings" onClick={() => setOpen(false)} className="block text-neutral-200">Settings</NavLink>
             <Link to="/logout" onClick={() => setOpen(false)} className="block text-red-400">↩ Log out</Link>
           </div>
         )}
