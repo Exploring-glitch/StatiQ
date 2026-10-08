@@ -157,7 +157,7 @@ export default function ApplicantsPage() {
                         className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400"
                         title={new Date(a.createdAt).toLocaleString()}
                       >
-                        🕒 {timeAgo(a.createdAt, 'Applied', now)}
+                        {timeAgo(a.createdAt, 'Applied', now)}
                       </span>
                     )}
                     {a.mark && (
@@ -180,7 +180,7 @@ export default function ApplicantsPage() {
                   <p className="mt-1 text-xs text-neutral-400">
                     {c.title || 'Candidate'} · {c.location || '—'} · {c.email}
                     {(c.educationDegree || c.educationInstitution) && (
-                      <> · 🎓 {[c.educationDegree, c.educationInstitution, c.graduationYear].filter(Boolean).join(', ')}</>
+                      <> · {[c.educationDegree, c.educationInstitution, c.graduationYear].filter(Boolean).join(', ')}</>
                     )}
                   </p>
                   {c.bio && <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-neutral-400">{c.bio}</p>}
@@ -188,7 +188,7 @@ export default function ApplicantsPage() {
                     <div className="mt-2 space-y-1.5">
                       {jobs.slice(0, 3).map((w, i) => (
                         <p key={i} className="text-xs text-neutral-400">
-                          🏢 <span className="font-medium text-neutral-200">{[w.title, w.company].filter(Boolean).join(' @ ') || 'Role'}</span>
+                          <span className="font-medium text-neutral-200">{[w.title, w.company].filter(Boolean).join(' @ ') || 'Role'}</span>
                           {(w.startDate || w.endDate || w.current) && (
                             <span className="text-neutral-500"> · {w.startDate || '?'} – {w.current ? 'Present' : w.endDate || '?'}</span>
                           )}
