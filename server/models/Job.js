@@ -50,6 +50,8 @@ const jobSchema = new mongoose.Schema(
     // 3.3 Nice-to-haves: optional bonus skills, kept separate from hard requirements.
     niceToHaves: { type: [String], default: [] },
     benefits: { type: [String], default: [] },
+    // 3.4 Interview process: hiring steps/rounds shown in order on the role page.
+    interviewProcess: { type: [String], default: [] },
     openings: { type: Number, min: 1, default: 1 },
     deadline: { type: Date, default: null },
     // Drafts are employer-visible only; the public board lists `open` jobs.
