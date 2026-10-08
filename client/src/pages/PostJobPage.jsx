@@ -10,7 +10,8 @@ const empty = {
   workMode: 'On-site', experienceLevel: '',
   experienceMinYears: '', experienceMaxYears: '', department: '',
   tags: '', description: '', responsibilities: '',
-  requirements: '', niceToHaves: '', benefits: '', openings: '1', deadline: '',
+  requirements: '', niceToHaves: '', benefits: '', interviewProcess: '',
+  openings: '1', deadline: '',
 };
 
 const DEPARTMENTS = [
@@ -74,7 +75,7 @@ export default function PostJobPage() {
           tags: (j.tags || []).join(', '),
           description: j.description || '', responsibilities: lines(j.responsibilities),
           requirements: lines(j.requirements), niceToHaves: lines(j.niceToHaves),
-          benefits: lines(j.benefits),
+          benefits: lines(j.benefits), interviewProcess: lines(j.interviewProcess),
           openings: num(j.openings ?? 1),
           deadline: j.deadline ? String(j.deadline).slice(0, 10) : '',
         });
@@ -132,6 +133,7 @@ export default function PostJobPage() {
         requirements: form.requirements.split('\n').map((r) => r.trim()).filter(Boolean),
         niceToHaves: form.niceToHaves.split('\n').map((r) => r.trim()).filter(Boolean),
         benefits: form.benefits.split('\n').map((r) => r.trim()).filter(Boolean),
+        interviewProcess: form.interviewProcess.split('\n').map((r) => r.trim()).filter(Boolean),
       };
       const created = editId
         ? await api.updateJob(editId, payload)
@@ -243,6 +245,10 @@ export default function PostJobPage() {
           <textarea value={form.requirements} onChange={set('requirements')} placeholder="Requirements (one per line: 3+ yrs React, etc.)" rows={3} className={`${input} resize-y`} />
           <textarea value={form.niceToHaves} onChange={set('niceToHaves')} placeholder="Nice to haves (one per line: open-source, GraphQL, mentoring)" rows={3} className={`${input} resize-y`} />
           <textarea value={form.benefits} onChange={set('benefits')} placeholder="Benefits (one per line: health, equity, PTO)" rows={3} className={`${input} resize-y`} />
+          <div>
+            <span className={label}>Interview process</span>
+            <textarea value={form.interviewProcess} onChange={set('interviewProcess')} placeholder="Rounds in order — e.g. 1. Recruiter screen 2. Take-home 3. Onsite" rows={3} className={`${input} resize-y`} />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div><span className={label}>Openings</span>
               <input type="number" min="1" value={form.openings} onChange={set('openings')} placeholder="1" className={input} />
