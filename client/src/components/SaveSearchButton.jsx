@@ -48,7 +48,7 @@ export default function SaveSearchButton({ getQuery, buttonClass }) {
         }}
         className={buttonClass || 'rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent hover:bg-accent/20'}
       >
-        🔔 Save search
+        Save search
       </button>
       {open && (
         <div className="absolute right-0 top-11 z-50 w-72 rounded-lg border border-white/10 bg-panel2 p-3 shadow-2xl">
