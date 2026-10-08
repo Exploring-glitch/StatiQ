@@ -8,6 +8,7 @@ const empty = {
   title: '', company: '', location: '', salary: '',
   salaryMin: '', salaryMax: '', type: 'Full-time',
   workMode: 'On-site', experienceLevel: '',
+  experienceMinYears: '', experienceMaxYears: '',
   tags: '', description: '', responsibilities: '',
   requirements: '', benefits: '', openings: '1', deadline: '',
 };
@@ -61,7 +62,9 @@ export default function PostJobPage() {
           title: j.title || '', company: j.company || '', location: j.location || '',
           salary: j.salary || '', salaryMin: num(j.salaryMin), salaryMax: num(j.salaryMax),
           type: j.type || 'Full-time', workMode: j.workMode || 'On-site',
-          experienceLevel: j.experienceLevel || '', tags: (j.tags || []).join(', '),
+          experienceLevel: j.experienceLevel || '',
+          experienceMinYears: num(j.experienceMinYears), experienceMaxYears: num(j.experienceMaxYears),
+          tags: (j.tags || []).join(', '),
           description: j.description || '', responsibilities: lines(j.responsibilities),
           requirements: lines(j.requirements), benefits: lines(j.benefits),
           openings: num(j.openings ?? 1),
@@ -102,6 +105,8 @@ export default function PostJobPage() {
         companyId: selected ? String(selected._id || selected.id) : undefined,
         salaryMin: form.salaryMin === '' ? null : Number(form.salaryMin),
         salaryMax: form.salaryMax === '' ? null : Number(form.salaryMax),
+        experienceMinYears: form.experienceMinYears === '' ? null : Number(form.experienceMinYears),
+        experienceMaxYears: form.experienceMaxYears === '' ? null : Number(form.experienceMaxYears),
         openings: form.openings === '' ? 1 : Math.max(1, Number(form.openings) || 1),
         deadline: form.deadline === '' ? null : new Date(form.deadline).toISOString(),
         remote: form.workMode === 'Remote',
@@ -195,6 +200,14 @@ export default function PostJobPage() {
                 <option value="lead">Lead / Staff</option>
                 <option value="executive">Executive</option>
               </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><span className={label}>Min experience (years)</span>
+              <input type="number" min="0" max="50" step="0.5" value={form.experienceMinYears} onChange={set('experienceMinYears')} placeholder="e.g. 2" className={input} />
+            </div>
+            <div><span className={label}>Max experience (years)</span>
+              <input type="number" min="0" max="50" step="0.5" value={form.experienceMaxYears} onChange={set('experienceMaxYears')} placeholder="e.g. 5" className={input} />
             </div>
           </div>
           <input value={form.tags} onChange={set('tags')} placeholder="Tags (comma separated: AI, Fintech)" className={input} />
