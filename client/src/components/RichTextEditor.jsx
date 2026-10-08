@@ -82,7 +82,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Tell ca
         {sep}
         <button type="button" className={btn} title="Align left" onClick={() => cmd('justifyLeft')}>⇤</button>
         <button type="button" className={btn} title="Align center" onClick={() => cmd('justifyCenter')}>⇔</button>
-        <button type="button" className={btn} title="Add link" onClick={addLink}>🔗</button>
+        <button type="button" className={btn} title="Add link" onClick={addLink}>Link</button>
         <button type="button" className={btn} title="Clear formatting" onClick={() => cmd('removeFormat')}>✕</button>
       </div>
       <div
