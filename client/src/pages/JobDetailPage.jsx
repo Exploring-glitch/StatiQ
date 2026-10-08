@@ -187,8 +187,8 @@ export default function JobDetailPage() {
       {isEmployer && (
         <p className="mt-3 rounded-lg border border-accent/30 bg-accent/10 p-3 text-xs text-accent">
           {isDraft
-            ? '📝 Draft preview — only you can see this. Publish it from Jobs when ready.'
-            : '👁 Hiring-mode preview — seekers see an '}
+            ? 'Draft preview — only you can see this. Publish it from Jobs when ready.'
+            : 'Hiring-mode preview — seekers see an '}
           {!isDraft && <><strong>Apply now</strong> button here. You see applicant actions below.</>}
         </p>
       )}
