@@ -38,10 +38,17 @@ const jobSchema = new mongoose.Schema(
       enum: ['', 'fresher', 'entry', 'mid', 'senior', 'lead', 'executive'],
       default: '',
     },
+    // 3.1 Experience years: numeric range shown as "2–5 yrs" / "3+ yrs".
+    experienceMinYears: { type: Number, min: 0, max: 50, default: null },
+    experienceMaxYears: { type: Number, min: 0, max: 50, default: null },
+    // 3.2 Department owning the role (e.g. Engineering, Product, Design).
+    department: { type: String, trim: true, maxlength: 80, default: '' },
     tags: { type: [String], default: [] },
     description: { type: String, default: '' },
     responsibilities: { type: [String], default: [] },
     requirements: { type: [String], default: [] },
+    // 3.3 Nice-to-haves: optional bonus skills, kept separate from hard requirements.
+    niceToHaves: { type: [String], default: [] },
     benefits: { type: [String], default: [] },
     openings: { type: Number, min: 1, default: 1 },
     deadline: { type: Date, default: null },
@@ -78,6 +85,8 @@ jobSchema.pre('save', function (next) {
 
 jobSchema.index({ title: 'text', company: 'text', location: 'text', tags: 'text' });
 jobSchema.index({ salaryMax: 1, createdAt: -1 });
+jobSchema.index({ department: 1, createdAt: -1 });
+jobSchema.index({ experienceMinYears: 1, experienceMaxYears: 1 });
 jobSchema.index({ companyId: 1, status: 1 });
 jobSchema.index({ postedBy: 1, createdAt: -1 });
 
