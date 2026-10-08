@@ -6,7 +6,7 @@ import { timeAgo, useNow } from '../lib/time';
 import { greetingFor, jobStatusBadge, jobStatusLabel } from '../lib/employer';
 import { Skeleton } from '../components/Skeleton';
 
-// Employer home: Good evening, Sreeja 👋 / Lupira + Active jobs,
+// Employer home: Good evening, Sreeja / Lupira + Active jobs,
 // Applications, New + Recent applications + quick Post a job / company access.
 // Role management lives under Jobs (/jobs/manage); per-job applicant detail
 // under Applicants (/jobs/:id/applicants).
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     <section className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Employer dashboard</p>
       <h1 className="mt-2 text-3xl font-bold text-white">
-        {greetingFor()}, {firstName} 👋
+        {greetingFor()}, {firstName}
       </h1>
       {company?.name && (
         <div className="mt-3 flex items-center gap-3">
