@@ -71,6 +71,7 @@ export function normalizeJob(j) {
     requirements: j.requirements || [],
     niceToHaves: j.niceToHaves || [],
     benefits: j.benefits || [],
+    interviewProcess: j.interviewProcess || [],
     openings: j.openings ?? 1,
     deadline: j.deadline || null,
     description: j.description || '',
