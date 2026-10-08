@@ -96,7 +96,7 @@ export default function ApplicantProfilePage() {
             )}
             {app.createdAt && (
               <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-neutral-400" title={new Date(app.createdAt).toLocaleString()}>
-                🕒 {timeAgo(app.createdAt, 'Applied', now)}
+                {timeAgo(app.createdAt, 'Applied', now)}
               </span>
             )}
           </div>
@@ -106,10 +106,10 @@ export default function ApplicantProfilePage() {
           </p>
 
           <div className="mt-4 grid gap-1 text-xs text-neutral-300">
-            {c.email && <p>✉️ {c.email}</p>}
-            {c.phone && <p>📞 {c.phone}</p>}
+            {c.email && <p>{c.email}</p>}
+            {c.phone && <p>{c.phone}</p>}
             {(c.educationDegree || c.educationInstitution) && (
-              <p>🎓 {[c.educationDegree, c.educationInstitution, c.graduationYear].filter(Boolean).join(', ')}</p>
+              <p>{[c.educationDegree, c.educationInstitution, c.graduationYear].filter(Boolean).join(', ')}</p>
             )}
           </div>
 
