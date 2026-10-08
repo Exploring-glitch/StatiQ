@@ -8,10 +8,16 @@ const empty = {
   title: '', company: '', location: '', salary: '',
   salaryMin: '', salaryMax: '', type: 'Full-time',
   workMode: 'On-site', experienceLevel: '',
-  experienceMinYears: '', experienceMaxYears: '',
+  experienceMinYears: '', experienceMaxYears: '', department: '',
   tags: '', description: '', responsibilities: '',
   requirements: '', benefits: '', openings: '1', deadline: '',
 };
+
+const DEPARTMENTS = [
+  '', 'Engineering', 'Product', 'Design', 'Data',
+  'Marketing', 'Sales', 'Customer Success',
+  'Finance', 'HR / People', 'Operations', 'Legal', 'Other',
+];
 
 export default function PostJobPage() {
   const { user } = useAuth();
@@ -64,6 +70,7 @@ export default function PostJobPage() {
           type: j.type || 'Full-time', workMode: j.workMode || 'On-site',
           experienceLevel: j.experienceLevel || '',
           experienceMinYears: num(j.experienceMinYears), experienceMaxYears: num(j.experienceMaxYears),
+          department: j.department || '',
           tags: (j.tags || []).join(', '),
           description: j.description || '', responsibilities: lines(j.responsibilities),
           requirements: lines(j.requirements), benefits: lines(j.benefits),
@@ -211,6 +218,15 @@ export default function PostJobPage() {
             </div>
           </div>
           <input value={form.tags} onChange={set('tags')} placeholder="Tags (comma separated: AI, Fintech)" className={input} />
+          <div>
+            <span className={label}>Department</span>
+            <input value={form.department} onChange={set('department')} placeholder="Department (e.g. Engineering)" list="statiq-departments" className={input} />
+            <datalist id="statiq-departments">
+              {DEPARTMENTS.filter(Boolean).map((d) => (
+                <option key={d} value={d} />
+              ))}
+            </datalist>
+          </div>
           <textarea value={form.description} onChange={set('description')} placeholder="Role description" rows={4} className={`${input} resize-y`} />
           <textarea value={form.responsibilities} onChange={set('responsibilities')} placeholder="Responsibilities (one per line)" rows={3} className={`${input} resize-y`} />
           <textarea value={form.requirements} onChange={set('requirements')} placeholder="Requirements (one per line: 3+ yrs React, etc.)" rows={3} className={`${input} resize-y`} />
