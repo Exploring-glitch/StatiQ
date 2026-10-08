@@ -270,6 +270,16 @@ export default function JobDetailPage() {
               </ul>
             </>
           )}
+          {(job.interviewProcess?.length > 0) && (
+            <>
+              <h2 className="mt-6 text-sm font-bold text-white">Interview process</h2>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-neutral-400">
+                {job.interviewProcess.map((r, i) => (
+                  <li key={`${r}-${i}`}>{r}</li>
+                ))}
+              </ol>
+            </>
+          )}
         </div>
         <aside className="h-fit rounded-xl border border-white/10 bg-panel p-6">
           <CompanyLogo logoUrl={job.logoUrl} name={job.company} className="h-12 w-12 rounded-md text-xl" />
