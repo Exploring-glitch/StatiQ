@@ -38,6 +38,15 @@ export function formatSalaryRange(min, max, fallback = '') {
   return fallback || '';
 }
 
+// "2–5 yrs", "3+ yrs", "Up to 1 yr", "" when unknown.
+export function formatExperienceYears(min, max) {
+  const fmt = (n) => `${Number(n)} ${Number(n) === 1 ? 'yr' : 'yrs'}`;
+  if (min != null && max != null) return min === max ? `${fmt(min)} exp` : `${fmt(min)}–${fmt(max)} exp`;
+  if (min != null) return `${fmt(min)}+ exp`;
+  if (max != null) return `Up to ${fmt(max)} exp`;
+  return '';
+}
+
 export function normalizeJob(j) {
   const id = j._id || j.id;
   const range = j.salaryMin != null || j.salaryMax != null
@@ -60,10 +69,15 @@ export function normalizeJob(j) {
     note: j.note || 'Posted on StatiQ',
     responsibilities: j.responsibilities || [],
     requirements: j.requirements || [],
+    niceToHaves: j.niceToHaves || [],
     benefits: j.benefits || [],
     openings: j.openings ?? 1,
     deadline: j.deadline || null,
     description: j.description || '',
+    department: j.department || '',
+    experienceMinYears: j.experienceMinYears ?? null,
+    experienceMaxYears: j.experienceMaxYears ?? null,
+    experienceDisplay: formatExperienceYears(j.experienceMinYears, j.experienceMaxYears),
     salaryMin: range.min,
     salaryMax: range.max,
     salaryDisplay: formatSalaryRange(range.min, range.max, j.salary),
