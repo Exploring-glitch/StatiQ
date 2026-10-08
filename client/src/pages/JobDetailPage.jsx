@@ -213,6 +213,8 @@ export default function JobDetailPage() {
           <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
             {job.workMode && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">{job.workMode}</span>}
             {job.experienceLevel && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300 capitalize">{job.experienceLevel}</span>}
+            {job.experienceDisplay && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">{job.experienceDisplay}</span>}
+            {job.department && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">{job.department}</span>}
             {job.openings > 1 && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">{job.openings} openings</span>}
             {job.deadline && <span className="rounded-full border border-white/10 bg-panel2 px-2 py-0.5 text-neutral-300">Apply by {new Date(job.deadline).toLocaleDateString()}</span>}
           </div>
@@ -243,6 +245,16 @@ export default function JobDetailPage() {
               <h2 className="mt-6 text-sm font-bold text-white">Requirements</h2>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
                 {job.requirements.map((r, i) => (
+                  <li key={`${r}-${i}`}>{r}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {(job.niceToHaves?.length > 0) && (
+            <>
+              <h2 className="mt-6 text-sm font-bold text-white">Nice to haves</h2>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
+                {job.niceToHaves.map((r, i) => (
                   <li key={`${r}-${i}`}>{r}</li>
                 ))}
               </ul>
