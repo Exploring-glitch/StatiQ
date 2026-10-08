@@ -212,7 +212,7 @@ export default function JobsPage() {
     <section className="mx-auto max-w-6xl px-4 py-10">
       {isEmployer && (
         <p className="mb-4 rounded-lg border border-accent/30 bg-accent/10 p-3 text-xs text-accent">
-          👁 You&apos;re in <strong>hiring mode</strong> — this is how seekers see live listings. Manage your roles from the{' '}
+          You&apos;re in <strong>hiring mode</strong> — this is how seekers see live listings. Manage your roles from the{' '}
           <a href="/dashboard" className="font-semibold underline">Dashboard</a>.
         </p>
       )}
