@@ -38,7 +38,9 @@ export default function NotificationBell({ compact = false }) {
         aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
         className={`relative rounded-full border border-white/15 px-3 py-1.5 text-sm text-white hover:border-accent ${compact ? '!px-2' : ''}`}
       >
-        🔔
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="inline-block h-4 w-4 align-middle">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.3V11a6 6 0 10-12 0v3.3c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
         {unread > 0 && (
           <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-accent px-1 text-center text-[11px] font-bold leading-5 text-white">
             {unread > 9 ? '9+' : unread}
