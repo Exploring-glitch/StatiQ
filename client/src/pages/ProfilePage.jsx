@@ -1039,7 +1039,7 @@ export default function ProfilePage() {
                         onClick={() => fileInput.current?.click()}
                         className="w-full rounded-md border border-dashed border-white/20 bg-panel2 px-3 py-4 text-center text-sm text-neutral-300 hover:border-accent disabled:opacity-60"
                       >
-                        {uploadBusy ? 'Uploading…' : '📎 Click to choose your résumé file'}
+                        {uploadBusy ? 'Uploading…' : 'Click to choose your résumé file'}
                       </button>
                     )}
                     {secMsg.__resume?.text && (
@@ -1126,20 +1126,20 @@ export default function ProfilePage() {
             </div>
             {form.bio && <p className="mt-3 line-clamp-4 text-xs leading-relaxed text-neutral-400">{form.bio}</p>}
             <div className="mt-3 space-y-1 text-xs text-neutral-400">
-              {headerLocation && <p>📍 {headerLocation}{!isEmployer && form.desiredLocation ? ` · wants ${form.desiredLocation}` : ''}</p>}
+              {headerLocation && <p>{headerLocation}{!isEmployer && form.desiredLocation ? ` · wants ${form.desiredLocation}` : ''}</p>}
               {latestExp && (
-                <p>🏢 {[latestExp.title, latestExp.company].filter(Boolean).join(' @ ')}
+                <p>{[latestExp.title, latestExp.company].filter(Boolean).join(' @ ')}
                   {(latestExp.startDate || latestExp.endDate || latestExp.current) && (
                     <> · {latestExp.startDate || '?'} – {latestExp.current ? 'Present' : latestExp.endDate || '?'}</>
                   )}
                 </p>
               )}
               {(form.experienceYears !== '' || form.experienceLevel) && (
-                <p>💼 {form.experienceYears !== '' ? `${form.experienceYears} yrs` : ''}{form.experienceLevel ? ` · ${form.experienceLevel}` : ''}</p>
+                <p>{form.experienceYears !== '' ? `${form.experienceYears} yrs` : ''}{form.experienceLevel ? ` · ${form.experienceLevel}` : ''}</p>
               )}
-              {form.availability && <p>🕒 {AVAIL.find((a) => a.v === form.availability)?.l}</p>}
+              {form.availability && <p>{AVAIL.find((a) => a.v === form.availability)?.l}</p>}
               {(form.expectedSalaryMin !== '' || form.expectedSalaryMax !== '') && (
-                <p>💰 {form.expectedSalaryMin || '?'} – {form.expectedSalaryMax || '?'} expected</p>
+                <p>{form.expectedSalaryMin || '?'} – {form.expectedSalaryMax || '?'} expected</p>
               )}
             </div>
             {skillsList.length > 0 && (
