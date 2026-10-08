@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
+import { splitListItems, joinListItems } from '../lib/lists';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 
@@ -64,7 +65,9 @@ export default function PostJobPage() {
       .then((j) => {
         if (!alive || !j) return;
         const num = (v) => (v === null || v === undefined ? '' : String(v));
-        const lines = (v) => (Array.isArray(v) ? v.join('\n') : '');
+        // Stored bullets re-join with blank lines so multi-line items
+        // round-trip through the gap rule on the next save.
+        const lines = (v) => joinListItems(v);
         setForm({
           title: j.title || '', company: j.company || '', location: j.location || '',
           salary: j.salary || '', salaryMin: num(j.salaryMin), salaryMax: num(j.salaryMax),
@@ -129,11 +132,13 @@ export default function PostJobPage() {
         deadline: form.deadline === '' ? null : new Date(form.deadline).toISOString(),
         remote: form.workMode === 'Remote',
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
-        responsibilities: form.responsibilities.split('\n').map((r) => r.trim()).filter(Boolean),
-        requirements: form.requirements.split('\n').map((r) => r.trim()).filter(Boolean),
-        niceToHaves: form.niceToHaves.split('\n').map((r) => r.trim()).filter(Boolean),
-        benefits: form.benefits.split('\n').map((r) => r.trim()).filter(Boolean),
-        interviewProcess: form.interviewProcess.split('\n').map((r) => r.trim()).filter(Boolean),
+        // Smart split: blank lines, "1. 2. 3." numbers, or • bullets all
+        // become dot-bullets on the role page; an item may span lines.
+        responsibilities: splitListItems(form.responsibilities),
+        requirements: splitListItems(form.requirements),
+        niceToHaves: splitListItems(form.niceToHaves),
+        benefits: splitListItems(form.benefits),
+        interviewProcess: splitListItems(form.interviewProcess),
       };
       const created = editId
         ? await api.updateJob(editId, payload)
@@ -241,10 +246,11 @@ export default function PostJobPage() {
             </datalist>
           </div>
           <textarea value={form.description} onChange={set('description')} placeholder="Role description" rows={4} className={`${input} resize-y`} />
-          <textarea value={form.responsibilities} onChange={set('responsibilities')} placeholder="Responsibilities (one per line)" rows={3} className={`${input} resize-y`} />
-          <textarea value={form.requirements} onChange={set('requirements')} placeholder="Requirements (one per line: 3+ yrs React, etc.)" rows={3} className={`${input} resize-y`} />
-          <textarea value={form.niceToHaves} onChange={set('niceToHaves')} placeholder="Nice to haves (one per line: open-source, GraphQL, mentoring)" rows={3} className={`${input} resize-y`} />
-          <textarea value={form.benefits} onChange={set('benefits')} placeholder="Benefits (one per line: health, equity, PTO)" rows={3} className={`${input} resize-y`} />
+          <p className="-mt-1 text-[11px] text-neutral-500">Tip: separate points with a blank line, or 1. 2. 3. / • — a point may span lines. They show as dots.</p>
+          <textarea value={form.responsibilities} onChange={set('responsibilities')} placeholder="Responsibilities — e.g. Own the API end to end, including webhooks. Blank line, then next point…" rows={4} className={`${input} resize-y`} />
+          <textarea value={form.requirements} onChange={set('requirements')} placeholder="Requirements — e.g. 1. 3+ yrs React 2. Node.js…" rows={4} className={`${input} resize-y`} />
+          <textarea value={form.niceToHaves} onChange={set('niceToHaves')} placeholder="Nice to haves — e.g. open-source, GraphQL, mentoring…" rows={3} className={`${input} resize-y`} />
+          <textarea value={form.benefits} onChange={set('benefits')} placeholder="Benefits — e.g. health, equity, PTO…" rows={3} className={`${input} resize-y`} />
           <div>
             <span className={label}>Interview process</span>
             <textarea value={form.interviewProcess} onChange={set('interviewProcess')} placeholder="Rounds in order — e.g. 1. Recruiter screen 2. Take-home 3. Onsite" rows={3} className={`${input} resize-y`} />
