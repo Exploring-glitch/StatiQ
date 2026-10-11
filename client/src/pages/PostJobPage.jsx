@@ -12,7 +12,7 @@ const empty = {
   workMode: 'On-site', experienceLevel: '',
   experienceMinYears: '', experienceMaxYears: '', department: '',
   tags: '', description: '', responsibilities: [],
-  requirements: '', niceToHaves: '', benefits: '', interviewProcess: '',
+  requirements: [], niceToHaves: '', benefits: '', interviewProcess: '',
   openings: '1', deadline: '',
 };
 
@@ -81,7 +81,7 @@ export default function PostJobPage() {
           department: j.department || '',
           tags: (j.tags || []).join(', '),
           description: j.description || '', responsibilities: toArr(j.responsibilities),
-          requirements: lines(j.requirements), niceToHaves: lines(j.niceToHaves),
+          requirements: toArr(j.requirements), niceToHaves: lines(j.niceToHaves),
           benefits: lines(j.benefits), interviewProcess: lines(j.interviewProcess),
           openings: num(j.openings ?? 1),
           deadline: j.deadline ? String(j.deadline).slice(0, 10) : '',
@@ -277,10 +277,14 @@ export default function PostJobPage() {
             placeholder="e.g. Own the payments API end to end — one point, then Add"
             hint="Press Enter or click Add — each point shows as its own bullet."
           />
-          <div>
-            <label htmlFor="pj-requirements" className={label}>Requirements</label>
-            <textarea id="pj-requirements" value={form.requirements} onChange={set('requirements')} placeholder="e.g. 1. 3+ yrs React 2. Node.js…" rows={4} className={`${input} resize-y`} />
-          </div>
+          <BulletEditor
+            id="pj-requirements"
+            label="Requirements"
+            items={form.requirements}
+            onChange={(items) => setForm((f) => ({ ...f, requirements: items }))}
+            placeholder="e.g. 3+ years of React — one point, then Add"
+            hint="Press Enter or click Add — each point shows as its own bullet."
+          />
           <div>
             <label htmlFor="pj-nice" className={label}>Nice to haves</label>
             <textarea id="pj-nice" value={form.niceToHaves} onChange={set('niceToHaves')} placeholder="e.g. open-source, GraphQL, mentoring…" rows={3} className={`${input} resize-y`} />
