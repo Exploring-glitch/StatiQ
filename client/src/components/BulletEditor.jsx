@@ -6,7 +6,7 @@ const labelCls = 'mb-1 block text-xs font-semibold uppercase tracking-wide text-
 
 // A headed group: bold heading with its own indented bullets, an inline row
 // to add more points under it, and per-point Edit / Remove.
-function GroupCard({ group, canAdd, onChange, onDelete }) {
+function GroupCard({ group, canAdd, onChange, onDelete, onEditHeading }) {
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);
 
@@ -33,6 +33,14 @@ function GroupCard({ group, canAdd, onChange, onDelete }) {
         <p className="min-w-0 flex-1 truncate text-sm font-semibold text-white" title={group.heading}>
           {group.heading}
         </p>
+        <button
+          type="button"
+          onClick={onEditHeading}
+          title="Edit this heading and its points"
+          className="shrink-0 text-xs text-neutral-500 hover:text-accent"
+        >
+          Edit
+        </button>
         <button
           type="button"
           onClick={onDelete}
@@ -147,10 +155,17 @@ export default function BulletEditor({
     setBulk('');
   };
 
-  // Headed-group composer helpers (create mode).
+  // Headed-group composer helpers (create + edit modes).
   const openComposer = () => {
     if (full) return;
-    setComposer({ heading: '', points: [], draft: '' });
+    setComposer({ heading: '', points: [], draft: '', editIndex: null });
+  };
+  // Load an existing group back into the composer to rename it or
+  // rework its points.
+  const editGroup = (i) => {
+    const g = items[i];
+    if (!g || typeof g === 'string') return;
+    setComposer({ heading: g.heading, points: [...g.points], draft: '', editIndex: i });
   };
   const addStaged = () => {
     if (!composer) return;
@@ -163,10 +178,21 @@ export default function BulletEditor({
     const heading = composer.heading.trim().replace(/\s+/g, ' ');
     if (!heading) return;
     const need = 1 + composer.points.length;
-    if (total + need > max) return;
-    onChange([...items, { heading, points: composer.points }]);
+    if (composer.editIndex == null) {
+      if (total + need > max) return;
+      onChange([...items, { heading, points: composer.points }]);
+    } else {
+      const oldLines = countListItems([items[composer.editIndex]]);
+      if (total - oldLines + need > max) return;
+      onChange(items.map((x, j) => (j === composer.editIndex ? { heading, points: composer.points } : x)));
+    }
     setComposer(null);
   };
+  const composerFull =
+    composer &&
+    (composer.editIndex == null
+      ? total + 1 + composer.points.length > max
+      : total - countListItems([items[composer.editIndex]]) + 1 + composer.points.length > max);
 
   const inputId = `${id}-input`;
 
@@ -218,7 +244,9 @@ export default function BulletEditor({
         </button>
       ) : (
         <div className="mt-1.5 rounded-lg border border-accent/40 bg-accent/5 p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-accent">New headed group</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-accent">
+            {composer.editIndex == null ? 'New headed group' : 'Edit headed group'}
+          </p>
           <input
             value={composer.heading}
             onChange={(e) => setComposer({ ...composer, heading: e.target.value })}
@@ -280,8 +308,8 @@ export default function BulletEditor({
             <button
               type="button"
               onClick={saveComposer}
-              disabled={!composer.heading.trim() || total + 1 + composer.points.length > max}
-              title={total + 1 + composer.points.length > max ? `Only ${max - total} more lines fit (30 max)` : 'Save this headed group'}
+              disabled={!composer.heading.trim() || composerFull}
+              title={composerFull ? `Only ${max - total} more lines fit (30 max)` : 'Save this headed group'}
               className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accentHover disabled:opacity-40"
             >
               Save group
@@ -345,6 +373,7 @@ export default function BulletEditor({
                 canAdd={!full}
                 onChange={(next) => onChange(items.map((x, j) => (j === i ? next : x)))}
                 onDelete={() => removeAt(i)}
+                onEditHeading={() => editGroup(i)}
               />
             ),
           )}
