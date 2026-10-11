@@ -4,6 +4,7 @@ import { api, fileUrl } from '../lib/api';
 import { sanitizeHtml } from '../lib/companies';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import ImageEditorModal from '../components/ImageEditorModal';
 import RichTextEditor from '../components/RichTextEditor';
 
 const input = 'w-full rounded-lg border border-white/10 bg-panel2 px-3.5 py-2.5 text-sm text-white placeholder:text-neutral-500 outline-none transition focus:border-accent/70 focus:ring-2 focus:ring-accent/20';
@@ -93,8 +94,41 @@ function Row({ k, v, link }) {
 // collapsed "paste a link instead" fallback for external https:// portraits.
 function PersonPhotoField({ id, value, onChange, uploading, onUpload, onRemove }) {
   const inputRef = useRef(null);
+  const [editor, setEditor] = useState(null);
   const preview = value ? fileUrl(value) : '';
   const isUpload = value?.startsWith('/uploads/');
+  const closeEditor = () => {
+    if (editor?.objectUrl) {
+      try { URL.revokeObjectURL(editor.objectUrl); } catch { /* ignore */ }
+    }
+    setEditor(null);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+  // New file → edit (crop/rotate/zoom) first, upload on Save.
+  const openForFile = (file) => {
+    if (!file) return;
+    if (!/\.(jpe?g|png|webp)$/i.test(file.name) || file.size > 10 * 1024 * 1024) {
+      // Let the parent surface the typed error toast.
+      onUpload(file);
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+    if (editor?.objectUrl) {
+      try { URL.revokeObjectURL(editor.objectUrl); } catch { /* ignore */ }
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setEditor({ src: objectUrl, fileName: file.name, objectUrl });
+    if (inputRef.current) inputRef.current.value = '';
+  };
+  // Existing photo → re-edit it.
+  const openForCurrent = () => {
+    if (!value || uploading) return;
+    if (editor?.objectUrl) {
+      try { URL.revokeObjectURL(editor.objectUrl); } catch { /* ignore */ }
+    }
+    const ext = String(value.split('.').pop() || 'jpg').split('?')[0];
+    setEditor({ src: preview, fileName: `photo.${ext}` });
+  };
   return (
     <div>
       <span className={label}>Photo — upload image (JPG, PNG, WebP · max 2 MB)</span>
@@ -103,7 +137,7 @@ function PersonPhotoField({ id, value, onChange, uploading, onUpload, onRemove }
         type="file"
         accept=".jpg,.jpeg,.png,.webp"
         className="hidden"
-        onChange={(e) => { onUpload(e.target.files?.[0]); e.target.value = ''; }}
+        onChange={(e) => openForFile(e.target.files?.[0])}
       />
       {value ? (
         <div className="flex flex-wrap items-center gap-3 rounded-md border border-white/10 bg-panel2 px-3 py-2">
@@ -114,6 +148,15 @@ function PersonPhotoField({ id, value, onChange, uploading, onUpload, onRemove }
             <p className="truncate text-sm font-medium text-white">{isUpload ? value.split('/').pop() : value}</p>
             <p className="truncate text-[11px] text-neutral-500">{isUpload ? 'Uploaded image' : 'External link'}</p>
           </div>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={openForCurrent}
+            title="Crop, rotate, zoom & fix lighting"
+            className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:opacity-90 disabled:opacity-60"
+          >
+            Edit
+          </button>
           <button
             type="button"
             disabled={uploading}
@@ -153,6 +196,16 @@ function PersonPhotoField({ id, value, onChange, uploading, onUpload, onRemove }
           className={`${input} mt-2`}
         />
       </details>
+      {editor && (
+        <ImageEditorModal
+          src={editor.src}
+          fileName={editor.fileName}
+          shape="circle"
+          title="Edit photo"
+          onCancel={closeEditor}
+          onSave={(file) => { closeEditor(); onUpload(file); }}
+        />
+      )}
     </div>
   );
 }
@@ -165,6 +218,8 @@ export default function CompanyManagePage() {
   const [loading, setLoading] = useState(true);
   const [secBusy, setSecBusy] = useState('');
   const [uploading, setUploading] = useState(false);
+  // Pending logo for the crop/rotate/zoom editor. { src, fileName, objectUrl? }
+  const [logoEditor, setLogoEditor] = useState(null);
   const [slug, setSlug] = useState('');
   // Per-section edit mode. Every card starts collapsed in view mode with
   // an Edit button; clicking Edit makes that card's fields editable.
@@ -300,23 +355,59 @@ export default function CompanyManagePage() {
     />
   );
 
-  const onLogoFile = async (e) => {
+  const onLogoFile = (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (!/\.(jpe?g|png|webp)$/i.test(file.name)) {
+      toast?.notify('Only JPG, PNG or WebP images are allowed.', 'error');
+      return;
+    }
+    // Open the crop/rotate/zoom editor — upload happens on Save.
+    if (logoEditor?.objectUrl) {
+      try { URL.revokeObjectURL(logoEditor.objectUrl); } catch { /* ignore */ }
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setLogoEditor({ src: objectUrl, fileName: file.name, objectUrl });
+  };
+
+  const closeLogoEditor = () => {
+    if (logoEditor?.objectUrl) {
+      try { URL.revokeObjectURL(logoEditor.objectUrl); } catch { /* ignore */ }
+    }
+    setLogoEditor(null);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const editCurrentLogo = () => {
+    if (!form.logoUrl || uploading) return;
+    if (logoEditor?.objectUrl) {
+      try { URL.revokeObjectURL(logoEditor.objectUrl); } catch { /* ignore */ }
+    }
+    const ext = String(form.logoUrl.split('.').pop() || 'png').split('?')[0];
+    setLogoEditor({ src: fileUrl(form.logoUrl), fileName: `logo.${ext}` });
+  };
+
+  const saveEditedLogo = async (editedFile) => {
+    if (!editedFile) return;
+    if (editedFile.size > 2 * 1024 * 1024) {
+      toast?.notify('Edited logo is still too big — max 2 MB. Try zooming out.', 'error');
+      return;
+    }
     setUploading(true);
     try {
-      const saved = await api.uploadCompanyLogo(file);
+      const saved = await api.uploadCompanyLogo(editedFile);
       setForm((f) => ({ ...f, logoUrl: saved.logoUrl || '' }));
       // Logos upload immediately (even before Save) — mirror into the
       // snapshot so Cancel basics doesn't revert the new logo.
       if (snapshot.current) snapshot.current = { ...snapshot.current, logoUrl: saved.logoUrl || '' };
       try { window.dispatchEvent(new CustomEvent('statiq:company-updated')); } catch { /* ignore */ }
       toast?.notify('Logo uploaded', 'success');
+      closeLogoEditor();
     } catch (err) {
       toast?.notify(err.message, 'error');
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   };
 
@@ -330,8 +421,10 @@ export default function CompanyManagePage() {
       toast?.notify('Only JPG, PNG or WebP images are allowed.', 'error');
       return false;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast?.notify('Image is too big — max 2 MB.', 'error');
+    // Generous pre-edit cap — the editor exports a compressed 512px file
+    // that must fit the 2 MB server limit.
+    if (file.size > 10 * 1024 * 1024) {
+      toast?.notify('Image is too big — max 10 MB before editing.', 'error');
       return false;
     }
     return true;
@@ -424,6 +517,15 @@ export default function CompanyManagePage() {
                 >
                   {uploading ? 'Uploading…' : 'Upload logo'}
                 </button>
+                {logo ? (
+                  <button
+                    type="button" onClick={editCurrentLogo} disabled={uploading}
+                    title="Crop, rotate, zoom & fix lighting"
+                    className="rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-semibold text-accent hover:opacity-90 disabled:opacity-60"
+                  >
+                    Edit logo
+                  </button>
+                ) : null}
                 <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onLogoFile} />
                 <input
                   value={form.logoUrl} onChange={(e) => set('logoUrl', e.target.value)}
@@ -824,6 +926,16 @@ export default function CompanyManagePage() {
           </div>
         )}
       </div>
+      {logoEditor && (
+        <ImageEditorModal
+          src={logoEditor.src}
+          fileName={logoEditor.fileName}
+          shape="square"
+          title="Edit company logo"
+          onCancel={closeLogoEditor}
+          onSave={saveEditedLogo}
+        />
+      )}
     </section>
   );
 }
