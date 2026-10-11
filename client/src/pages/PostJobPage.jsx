@@ -175,7 +175,10 @@ export default function PostJobPage() {
       )}
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <form onSubmit={submit} className="space-y-3 rounded-xl border border-white/10 bg-panel p-6">
-          <input value={form.title} onChange={set('title')} required placeholder="Job title *" className={input} />
+          <div>
+            <label htmlFor="pj-title" className={label}>Job title *</label>
+            <input id="pj-title" value={form.title} onChange={set('title')} required placeholder="e.g. Senior Backend Engineer" className={input} />
+          </div>
           {companies.length > 1 ? (
             <div>
               <span className={label}>Company *</span>
@@ -190,11 +193,20 @@ export default function PostJobPage() {
               </select>
             </div>
           ) : (
-            <input value={form.company} onChange={set('company')} required placeholder="Company *" className={input} />
+            <div>
+              <label htmlFor="pj-company" className={label}>Company *</label>
+              <input id="pj-company" value={form.company} onChange={set('company')} required placeholder="e.g. Acme Inc." className={input} />
+            </div>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <input value={form.location} onChange={set('location')} required placeholder="Location *" className={input} />
-            <input value={form.salary} onChange={set('salary')} placeholder="Salary label (e.g. $150K – $190K)" className={input} />
+            <div>
+              <label htmlFor="pj-location" className={label}>Location *</label>
+              <input id="pj-location" value={form.location} onChange={set('location')} required placeholder="e.g. Bengaluru / Remote" className={input} />
+            </div>
+            <div>
+              <label htmlFor="pj-salary" className={label}>Salary label</label>
+              <input id="pj-salary" value={form.salary} onChange={set('salary')} placeholder="e.g. $150K – $190K" className={input} />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><span className={label}>Min salary (annual)</span>
@@ -235,7 +247,10 @@ export default function PostJobPage() {
               <input type="number" min="0" max="50" step="0.5" value={form.experienceMaxYears} onChange={set('experienceMaxYears')} placeholder="e.g. 5" className={input} />
             </div>
           </div>
-          <input value={form.tags} onChange={set('tags')} placeholder="Tags (comma separated: AI, Fintech)" className={input} />
+          <div>
+            <label htmlFor="pj-tags" className={label}>Tags</label>
+            <input id="pj-tags" value={form.tags} onChange={set('tags')} placeholder="Comma separated: AI, Fintech" className={input} />
+          </div>
           <div>
             <span className={label}>Department</span>
             <input value={form.department} onChange={set('department')} placeholder="Department (e.g. Engineering)" list="statiq-departments" className={input} />
