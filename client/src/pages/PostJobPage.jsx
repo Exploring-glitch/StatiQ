@@ -12,7 +12,7 @@ const empty = {
   workMode: 'On-site', experienceLevel: '',
   experienceMinYears: '', experienceMaxYears: '', department: '',
   tags: '', description: '', responsibilities: [],
-  requirements: [], niceToHaves: [], benefits: '', interviewProcess: '',
+  requirements: [], niceToHaves: [], benefits: [], interviewProcess: '',
   openings: '1', deadline: '',
 };
 
@@ -82,7 +82,7 @@ export default function PostJobPage() {
           tags: (j.tags || []).join(', '),
           description: j.description || '', responsibilities: toArr(j.responsibilities),
           requirements: toArr(j.requirements), niceToHaves: toArr(j.niceToHaves),
-          benefits: lines(j.benefits), interviewProcess: lines(j.interviewProcess),
+          benefits: toArr(j.benefits), interviewProcess: lines(j.interviewProcess),
           openings: num(j.openings ?? 1),
           deadline: j.deadline ? String(j.deadline).slice(0, 10) : '',
         });
@@ -293,10 +293,14 @@ export default function PostJobPage() {
             placeholder="e.g. GraphQL experience — one point, then Add"
             hint="Press Enter or click Add — each point shows as its own bullet."
           />
-          <div>
-            <label htmlFor="pj-benefits" className={label}>Benefits</label>
-            <textarea id="pj-benefits" value={form.benefits} onChange={set('benefits')} placeholder="e.g. health, equity, PTO…" rows={3} className={`${input} resize-y`} />
-          </div>
+          <BulletEditor
+            id="pj-benefits"
+            label="Benefits"
+            items={form.benefits}
+            onChange={(items) => setForm((f) => ({ ...f, benefits: items }))}
+            placeholder="e.g. Health insurance — one point, then Add"
+            hint="Press Enter or click Add — each point shows as its own bullet."
+          />
           <div>
             <span className={label}>Interview process</span>
             <textarea value={form.interviewProcess} onChange={set('interviewProcess')} placeholder="Rounds in order — e.g. 1. Recruiter screen 2. Take-home 3. Onsite" rows={3} className={`${input} resize-y`} />
