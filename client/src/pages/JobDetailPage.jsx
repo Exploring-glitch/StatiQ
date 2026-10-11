@@ -252,21 +252,13 @@ export default function JobDetailPage() {
           {(job.benefits?.length > 0) && (
             <>
               <h2 className="mt-6 text-sm font-bold text-white">Benefits</h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
-                {job.benefits.map((r, i) => (
-                  <li key={`${r}-${i}`}>{r}</li>
-                ))}
-              </ul>
+              <JobBullets items={job.benefits} />
             </>
           )}
           {(job.interviewProcess?.length > 0) && (
             <>
               <h2 className="mt-6 text-sm font-bold text-white">Interview process</h2>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-neutral-400">
-                {job.interviewProcess.map((r, i) => (
-                  <li key={`${r}-${i}`}>{r}</li>
-                ))}
-              </ol>
+              <JobBullets items={job.interviewProcess} ordered />
             </>
           )}
         </div>
