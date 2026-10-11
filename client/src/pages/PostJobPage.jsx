@@ -4,13 +4,14 @@ import { api } from '../lib/api';
 import { splitListItems, joinListItems } from '../lib/lists';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import BulletEditor from '../components/BulletEditor';
 
 const empty = {
   title: '', company: '', location: '', salary: '',
   salaryMin: '', salaryMax: '', type: 'Full-time',
   workMode: 'On-site', experienceLevel: '',
   experienceMinYears: '', experienceMaxYears: '', department: '',
-  tags: '', description: '', responsibilities: '',
+  tags: '', description: '', responsibilities: [],
   requirements: '', niceToHaves: '', benefits: '', interviewProcess: '',
   openings: '1', deadline: '',
 };
@@ -68,6 +69,9 @@ export default function PostJobPage() {
         // Stored bullets re-join with blank lines so multi-line items
         // round-trip through the gap rule on the next save.
         const lines = (v) => joinListItems(v);
+        // BulletEditor fields store arrays; legacy strings split the same
+        // way the old textareas did so nothing is lost on edit.
+        const toArr = (v) => (Array.isArray(v) ? v.map((x) => String(x)).filter((s) => s.trim()) : splitListItems(v));
         setForm({
           title: j.title || '', company: j.company || '', location: j.location || '',
           salary: j.salary || '', salaryMin: num(j.salaryMin), salaryMax: num(j.salaryMax),
@@ -76,7 +80,7 @@ export default function PostJobPage() {
           experienceMinYears: num(j.experienceMinYears), experienceMaxYears: num(j.experienceMaxYears),
           department: j.department || '',
           tags: (j.tags || []).join(', '),
-          description: j.description || '', responsibilities: lines(j.responsibilities),
+          description: j.description || '', responsibilities: toArr(j.responsibilities),
           requirements: lines(j.requirements), niceToHaves: lines(j.niceToHaves),
           benefits: lines(j.benefits), interviewProcess: lines(j.interviewProcess),
           openings: num(j.openings ?? 1),
@@ -265,10 +269,14 @@ export default function PostJobPage() {
             <textarea id="pj-description" value={form.description} onChange={set('description')} placeholder="What this role is about in 2–4 lines…" rows={4} className={`${input} resize-y`} />
           </div>
           <p className="-mt-1 text-[11px] text-neutral-500">Tip: separate points with a blank line, or 1. 2. 3. / • — a point may span lines. They show as dots.</p>
-          <div>
-            <label htmlFor="pj-responsibilities" className={label}>Responsibilities</label>
-            <textarea id="pj-responsibilities" value={form.responsibilities} onChange={set('responsibilities')} placeholder="e.g. Own the API end to end, including webhooks. Blank line, then next point…" rows={4} className={`${input} resize-y`} />
-          </div>
+          <BulletEditor
+            id="pj-responsibilities"
+            label="Responsibilities"
+            items={form.responsibilities}
+            onChange={(items) => setForm((f) => ({ ...f, responsibilities: items }))}
+            placeholder="e.g. Own the payments API end to end — one point, then Add"
+            hint="Press Enter or click Add — each point shows as its own bullet."
+          />
           <div>
             <label htmlFor="pj-requirements" className={label}>Requirements</label>
             <textarea id="pj-requirements" value={form.requirements} onChange={set('requirements')} placeholder="e.g. 1. 3+ yrs React 2. Node.js…" rows={4} className={`${input} resize-y`} />
