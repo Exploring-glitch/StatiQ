@@ -133,13 +133,14 @@ export default function PostJobPage() {
         deadline: form.deadline === '' ? null : new Date(form.deadline).toISOString(),
         remote: form.workMode === 'Remote',
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
-        // Smart split: blank lines, "1. 2. 3." numbers, or • bullets all
-        // become dot-bullets on the role page; an item may span lines.
-        responsibilities: splitListItems(form.responsibilities),
-        requirements: splitListItems(form.requirements),
-        niceToHaves: splitListItems(form.niceToHaves),
-        benefits: splitListItems(form.benefits),
-        interviewProcess: splitListItems(form.interviewProcess),
+        // Grouped items flatten to "Heading:" + points (plain string
+        // arrays for the API); the smart splitter then normalizes each
+        // line exactly as it did for the old textareas.
+        responsibilities: splitListItems(flattenListItems(form.responsibilities)),
+        requirements: splitListItems(flattenListItems(form.requirements)),
+        niceToHaves: splitListItems(flattenListItems(form.niceToHaves)),
+        benefits: splitListItems(flattenListItems(form.benefits)),
+        interviewProcess: splitListItems(flattenListItems(form.interviewProcess)),
       };
       const created = editId
         ? await api.updateJob(editId, payload)
