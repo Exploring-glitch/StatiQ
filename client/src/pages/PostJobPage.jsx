@@ -260,7 +260,10 @@ export default function PostJobPage() {
               ))}
             </datalist>
           </div>
-          <textarea value={form.description} onChange={set('description')} placeholder="Role description" rows={4} className={`${input} resize-y`} />
+          <div>
+            <label htmlFor="pj-description" className={label}>Role description</label>
+            <textarea id="pj-description" value={form.description} onChange={set('description')} placeholder="What this role is about in 2–4 lines…" rows={4} className={`${input} resize-y`} />
+          </div>
           <p className="-mt-1 text-[11px] text-neutral-500">Tip: separate points with a blank line, or 1. 2. 3. / • — a point may span lines. They show as dots.</p>
           <textarea value={form.responsibilities} onChange={set('responsibilities')} placeholder="Responsibilities — e.g. Own the API end to end, including webhooks. Blank line, then next point…" rows={4} className={`${input} resize-y`} />
           <textarea value={form.requirements} onChange={set('requirements')} placeholder="Requirements — e.g. 1. 3+ yrs React 2. Node.js…" rows={4} className={`${input} resize-y`} />
