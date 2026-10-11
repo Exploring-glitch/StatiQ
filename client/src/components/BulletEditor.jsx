@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { splitListItems } from '../lib/lists';
 
 const inputCls = 'w-full rounded-md border border-white/10 bg-panel2 px-3 py-2 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-accent/60';
 const labelCls = 'mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-500';
@@ -18,6 +19,7 @@ export default function BulletEditor({
   max = 30,
 }) {
   const [draft, setDraft] = useState('');
+  const [bulk, setBulk] = useState('');
 
   const add = () => {
     const v = draft.trim().replace(/\s+/g, ' ');
@@ -27,6 +29,16 @@ export default function BulletEditor({
   };
 
   const removeAt = (i) => onChange(items.filter((_, j) => j !== i));
+
+  // Pasting a whole JD: split on blank lines, numbers or bullets and
+  // append everything that fits.
+  const addBulk = () => {
+    const parts = splitListItems(bulk, max);
+    if (!parts.length) return;
+    const room = Math.max(0, max - items.length);
+    onChange([...items, ...parts.slice(0, room)]);
+    setBulk('');
+  };
 
   const inputId = `${id}-input`;
 
@@ -65,6 +77,26 @@ export default function BulletEditor({
         </button>
       </div>
       {hint ? <p className="mt-1 text-[11px] text-neutral-500">{hint}</p> : null}
+      <details className="mt-1.5">
+        <summary className="cursor-pointer text-[11px] text-neutral-500 hover:text-white">
+          …or paste many points at once
+        </summary>
+        <textarea
+          value={bulk}
+          onChange={(e) => setBulk(e.target.value)}
+          placeholder={'Paste lines, 1. 2. 3. or • bullets — each becomes its own point'}
+          rows={3}
+          className={`${inputCls} mt-1.5 resize-y`}
+        />
+        <button
+          type="button"
+          onClick={addBulk}
+          disabled={!bulk.trim() || items.length >= max}
+          className="mt-1.5 rounded-md border border-white/15 px-3 py-1.5 text-xs text-white hover:border-accent disabled:opacity-40"
+        >
+          Add all
+        </button>
+      </details>
       {items.length > 0 ? (
         <ul className="mt-2 space-y-1.5">
           {items.map((item, i) => (
