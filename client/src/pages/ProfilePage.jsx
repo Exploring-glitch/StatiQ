@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api, fileUrl } from '../lib/api';
+import ImageEditorModal from '../components/ImageEditorModal';
 import { displayLocation, formatLocation, resolveLocationParts } from '../lib/location';
 import ResumeLink from '../components/ResumeLink';
 
@@ -218,6 +219,8 @@ export default function ProfilePage() {
   const fileInput = useRef(null);
   const avatarInput = useRef(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  // Pending image for the crop/rotate/zoom editor. { src, fileName, objectUrl? }
+  const [avatarEditor, setAvatarEditor] = useState(null);
   const draftKey = `statiq_profile_draft_${user?.id || 'guest'}`;
   // Tracks which account the form was last synced from. Auth loads async,
   // so the first render usually snapshots user=null — see sync effect below.
@@ -454,27 +457,61 @@ export default function ProfilePage() {
     }
   };
 
+  // File chosen → open the crop/rotate/zoom editor instead of uploading
+  // raw. The editor compresses to 512px so large phone photos still fit
+  // the 2 MB server limit after editing.
   const pickAvatar = async (file) => {
     if (!file) return;
     flashMsg('__avatar', '');
     if (!/\.(jpe?g|png|webp)$/i.test(file.name)) {
       flashMsg('__avatar', 'Only JPG, PNG or WebP images are allowed.', true);
+      if (avatarInput.current) avatarInput.current.value = '';
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      flashMsg('__avatar', 'Image is too big — max 2 MB.', true);
+    if (avatarEditor?.objectUrl) {
+      try { URL.revokeObjectURL(avatarEditor.objectUrl); } catch { /* ignore */ }
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setAvatarEditor({ src: objectUrl, fileName: file.name, objectUrl });
+    if (avatarInput.current) avatarInput.current.value = '';
+  };
+
+  const closeAvatarEditor = () => {
+    if (avatarEditor?.objectUrl) {
+      try { URL.revokeObjectURL(avatarEditor.objectUrl); } catch { /* ignore */ }
+    }
+    setAvatarEditor(null);
+    if (avatarInput.current) avatarInput.current.value = '';
+  };
+
+  // Re-edit the CURRENT photo (fetched from its URL into the editor).
+  const editCurrentAvatar = () => {
+    if (!user?.avatarUrl || avatarBusy) return;
+    flashMsg('__avatar', '');
+    if (avatarEditor?.objectUrl) {
+      try { URL.revokeObjectURL(avatarEditor.objectUrl); } catch { /* ignore */ }
+    }
+    const ext = (user.avatarUrl.split('.').pop() || 'jpg').split('?')[0];
+    setAvatarEditor({ src: fileUrl(user.avatarUrl), fileName: `avatar.${ext}` });
+  };
+
+  // Editor output → upload.
+  const saveEditedAvatar = async (editedFile) => {
+    if (!editedFile) return;
+    if (editedFile.size > 2 * 1024 * 1024) {
+      flashMsg('__avatar', 'Edited image is still too big — max 2 MB. Try zooming out.', true);
       return;
     }
     setAvatarBusy(true);
     try {
-      await api.uploadAvatar(file);
+      await api.uploadAvatar(editedFile);
       await refresh();
       flashMsg('__avatar', 'Photo updated.');
+      closeAvatarEditor();
     } catch (err) {
       flashMsg('__avatar', err.message, true);
     } finally {
       setAvatarBusy(false);
-      if (avatarInput.current) avatarInput.current.value = '';
     }
   };
 
@@ -612,9 +649,15 @@ export default function ProfilePage() {
             )}
           </button>
           {user?.avatarUrl ? (
-            <button type="button" onClick={removeAvatar} disabled={avatarBusy} className="text-[11px] text-neutral-500 hover:text-red-400 disabled:opacity-60">
-              Remove
-            </button>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={editCurrentAvatar} disabled={avatarBusy} className="text-[11px] font-semibold text-accent hover:underline disabled:opacity-60">
+                Edit
+              </button>
+              <span className="text-[11px] text-neutral-700">·</span>
+              <button type="button" onClick={removeAvatar} disabled={avatarBusy} className="text-[11px] text-neutral-500 hover:text-red-400 disabled:opacity-60">
+                Remove
+              </button>
+            </div>
           ) : (
             <span className="text-[11px] text-neutral-600">Add photo</span>
           )}
@@ -1185,6 +1228,16 @@ export default function ProfilePage() {
           )}
         </aside>
       </div>
+      {avatarEditor && (
+        <ImageEditorModal
+          src={avatarEditor.src}
+          fileName={avatarEditor.fileName}
+          shape="circle"
+          title="Edit profile photo"
+          onCancel={closeAvatarEditor}
+          onSave={saveEditedAvatar}
+        />
+      )}
     </section>
   );
 }
