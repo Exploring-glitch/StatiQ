@@ -240,21 +240,13 @@ export default function JobDetailPage() {
           {(job.requirements?.length > 0) && (
             <>
               <h2 className="mt-6 text-sm font-bold text-white">Requirements</h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
-                {job.requirements.map((r, i) => (
-                  <li key={`${r}-${i}`}>{r}</li>
-                ))}
-              </ul>
+              <JobBullets items={job.requirements} />
             </>
           )}
           {(job.niceToHaves?.length > 0) && (
             <>
               <h2 className="mt-6 text-sm font-bold text-white">Nice to haves</h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
-                {job.niceToHaves.map((r, i) => (
-                  <li key={`${r}-${i}`}>{r}</li>
-                ))}
-              </ul>
+              <JobBullets items={job.niceToHaves} />
             </>
           )}
           {(job.benefits?.length > 0) && (
