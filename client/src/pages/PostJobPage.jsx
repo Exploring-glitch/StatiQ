@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
-import { splitListItems, joinListItems } from '../lib/lists';
+import { splitListItems } from '../lib/lists';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import BulletEditor from '../components/BulletEditor';
@@ -12,7 +12,7 @@ const empty = {
   workMode: 'On-site', experienceLevel: '',
   experienceMinYears: '', experienceMaxYears: '', department: '',
   tags: '', description: '', responsibilities: [],
-  requirements: [], niceToHaves: [], benefits: [], interviewProcess: '',
+  requirements: [], niceToHaves: [], benefits: [], interviewProcess: [],
   openings: '1', deadline: '',
 };
 
@@ -66,9 +66,6 @@ export default function PostJobPage() {
       .then((j) => {
         if (!alive || !j) return;
         const num = (v) => (v === null || v === undefined ? '' : String(v));
-        // Stored bullets re-join with blank lines so multi-line items
-        // round-trip through the gap rule on the next save.
-        const lines = (v) => joinListItems(v);
         // BulletEditor fields store arrays; legacy strings split the same
         // way the old textareas did so nothing is lost on edit.
         const toArr = (v) => (Array.isArray(v) ? v.map((x) => String(x)).filter((s) => s.trim()) : splitListItems(v));
@@ -82,7 +79,7 @@ export default function PostJobPage() {
           tags: (j.tags || []).join(', '),
           description: j.description || '', responsibilities: toArr(j.responsibilities),
           requirements: toArr(j.requirements), niceToHaves: toArr(j.niceToHaves),
-          benefits: toArr(j.benefits), interviewProcess: lines(j.interviewProcess),
+          benefits: toArr(j.benefits), interviewProcess: toArr(j.interviewProcess),
           openings: num(j.openings ?? 1),
           deadline: j.deadline ? String(j.deadline).slice(0, 10) : '',
         });
@@ -268,7 +265,6 @@ export default function PostJobPage() {
             <label htmlFor="pj-description" className={label}>Role description</label>
             <textarea id="pj-description" value={form.description} onChange={set('description')} placeholder="What this role is about in 2–4 lines…" rows={4} className={`${input} resize-y`} />
           </div>
-          <p className="-mt-1 text-[11px] text-neutral-500">Tip: separate points with a blank line, or 1. 2. 3. / • — a point may span lines. They show as dots.</p>
           <BulletEditor
             id="pj-responsibilities"
             label="Responsibilities"
@@ -301,10 +297,14 @@ export default function PostJobPage() {
             placeholder="e.g. Health insurance — one point, then Add"
             hint="Press Enter or click Add — each point shows as its own bullet."
           />
-          <div>
-            <span className={label}>Interview process</span>
-            <textarea value={form.interviewProcess} onChange={set('interviewProcess')} placeholder="Rounds in order — e.g. 1. Recruiter screen 2. Take-home 3. Onsite" rows={3} className={`${input} resize-y`} />
-          </div>
+          <BulletEditor
+            id="pj-interview"
+            label="Interview process"
+            items={form.interviewProcess}
+            onChange={(items) => setForm((f) => ({ ...f, interviewProcess: items }))}
+            placeholder="e.g. Take-home assignment — one round, then Add"
+            hint="Press Enter or click Add — each round shows as its own bullet."
+          />
           <div className="grid grid-cols-2 gap-3">
             <div><span className={label}>Openings</span>
               <input type="number" min="1" value={form.openings} onChange={set('openings')} placeholder="1" className={input} />
