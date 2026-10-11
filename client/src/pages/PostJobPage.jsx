@@ -12,7 +12,7 @@ const empty = {
   workMode: 'On-site', experienceLevel: '',
   experienceMinYears: '', experienceMaxYears: '', department: '',
   tags: '', description: '', responsibilities: [],
-  requirements: [], niceToHaves: '', benefits: '', interviewProcess: '',
+  requirements: [], niceToHaves: [], benefits: '', interviewProcess: '',
   openings: '1', deadline: '',
 };
 
@@ -81,7 +81,7 @@ export default function PostJobPage() {
           department: j.department || '',
           tags: (j.tags || []).join(', '),
           description: j.description || '', responsibilities: toArr(j.responsibilities),
-          requirements: toArr(j.requirements), niceToHaves: lines(j.niceToHaves),
+          requirements: toArr(j.requirements), niceToHaves: toArr(j.niceToHaves),
           benefits: lines(j.benefits), interviewProcess: lines(j.interviewProcess),
           openings: num(j.openings ?? 1),
           deadline: j.deadline ? String(j.deadline).slice(0, 10) : '',
@@ -285,10 +285,14 @@ export default function PostJobPage() {
             placeholder="e.g. 3+ years of React — one point, then Add"
             hint="Press Enter or click Add — each point shows as its own bullet."
           />
-          <div>
-            <label htmlFor="pj-nice" className={label}>Nice to haves</label>
-            <textarea id="pj-nice" value={form.niceToHaves} onChange={set('niceToHaves')} placeholder="e.g. open-source, GraphQL, mentoring…" rows={3} className={`${input} resize-y`} />
-          </div>
+          <BulletEditor
+            id="pj-nice"
+            label="Nice to haves"
+            items={form.niceToHaves}
+            onChange={(items) => setForm((f) => ({ ...f, niceToHaves: items }))}
+            placeholder="e.g. GraphQL experience — one point, then Add"
+            hint="Press Enter or click Add — each point shows as its own bullet."
+          />
           <div>
             <label htmlFor="pj-benefits" className={label}>Benefits</label>
             <textarea id="pj-benefits" value={form.benefits} onChange={set('benefits')} placeholder="e.g. health, equity, PTO…" rows={3} className={`${input} resize-y`} />
