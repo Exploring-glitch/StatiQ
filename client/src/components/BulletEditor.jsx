@@ -1,14 +1,110 @@
 import { useRef, useState } from 'react';
-import { splitListItems } from '../lib/lists';
+import { countListItems, flattenListItems, groupListItems, splitListItems } from '../lib/lists';
 
 const inputCls = 'w-full rounded-md border border-white/10 bg-panel2 px-3 py-2 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-accent/60';
 const labelCls = 'mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-500';
 
+// A headed group: bold heading with its own indented bullets, an inline row
+// to add more points under it, and per-point Edit / Remove.
+function GroupCard({ group, canAdd, onChange, onDelete }) {
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef(null);
+
+  const addSub = () => {
+    const v = draft.trim().replace(/\s+/g, ' ');
+    if (!v || !canAdd) return;
+    onChange({ ...group, points: [...group.points, v] });
+    setDraft('');
+  };
+  const removeSub = (i) => onChange({ ...group, points: group.points.filter((_, j) => j !== i) });
+  // Fix a typo: load the point back into this card's input for re-adding.
+  const editSub = (i) => {
+    setDraft(group.points[i] || '');
+    removeSub(i);
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div className="rounded-lg border border-accent/25 bg-panel2">
+      <div className="flex items-center gap-2 px-3 pt-2.5">
+        <span className="shrink-0 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+          Heading
+        </span>
+        <p className="min-w-0 flex-1 truncate text-sm font-semibold text-white" title={group.heading}>
+          {group.heading}
+        </p>
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label={`Delete ${group.heading} and its points`}
+          title="Delete this heading and its points"
+          className="shrink-0 text-xs text-neutral-500 hover:text-red-400"
+        >
+          ✕
+        </button>
+      </div>
+      {group.points.length > 0 && (
+        <ul className="space-y-1.5 px-3 py-2">
+          {group.points.map((p, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm">
+              <span aria-hidden="true" className="mt-0.5 font-bold text-accent">•</span>
+              <span className="min-w-0 flex-1 break-words text-neutral-200">{p}</span>
+              <button
+                type="button"
+                onClick={() => editSub(i)}
+                aria-label={`Edit point ${i + 1} under ${group.heading}`}
+                title="Edit this point"
+                className="shrink-0 text-xs text-neutral-500 hover:text-accent"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => removeSub(i)}
+                aria-label={`Remove point ${i + 1} under ${group.heading}`}
+                title="Remove this point"
+                className="shrink-0 text-xs text-neutral-500 hover:text-red-400"
+              >
+                ✕
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex gap-2 px-3 pb-3 pt-1">
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addSub();
+            }
+          }}
+          placeholder="Add a point under this heading…"
+          maxLength={500}
+          aria-label={`Add a point under ${group.heading}`}
+          className={`${inputCls} py-1.5 text-[13px]`}
+        />
+        <button
+          type="button"
+          onClick={addSub}
+          disabled={!draft.trim() || !canAdd}
+          className="shrink-0 rounded-md border border-white/15 px-3 text-xs text-white hover:border-accent disabled:opacity-40"
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // One-by-one bullet editor for job-post list fields (responsibilities,
-// requirements, nice-to-haves, benefits, interview rounds). The employer
-// types a single point into the input box, clicks Add (or presses Enter),
-// and each point appears below as its own bullet with a remove option.
-// Items are kept as an array; the parent serialises them on save.
+// requirements, nice-to-haves, benefits, interview rounds). Two flavours:
+// plain points (input + Add, each its own bullet) and headed groups
+// ("Compensation & Equity:" + sub-bullets). Items are kept grouped; the
+// parent flattens them for the API on save.
 export default function BulletEditor({
   id,
   label,
@@ -21,10 +117,12 @@ export default function BulletEditor({
   const [draft, setDraft] = useState('');
   const [bulk, setBulk] = useState('');
   const inputRef = useRef(null);
+  const total = countListItems(items);
+  const full = total >= max;
 
   const add = () => {
     const v = draft.trim().replace(/\s+/g, ' ');
-    if (!v || items.length >= max) return;
+    if (!v || full) return;
     onChange([...items, v]);
     setDraft('');
   };
@@ -33,18 +131,17 @@ export default function BulletEditor({
 
   // Fix a typo: load the point back into the input for re-adding.
   const editAt = (i) => {
-    setDraft(items[i] || '');
+    setDraft(String(items[i] ?? ''));
     onChange(items.filter((_, j) => j !== i));
     inputRef.current?.focus();
   };
 
-  // Pasting a whole JD: split on blank lines, numbers or bullets and
-  // append everything that fits.
+  // Pasting a whole JD: split on blank lines, numbers or bullets. Lines
+  // ending in ":" become headings with the lines below them as sub-points.
   const addBulk = () => {
-    const parts = splitListItems(bulk, max);
-    if (!parts.length) return;
-    const room = Math.max(0, max - items.length);
-    onChange([...items, ...parts.slice(0, room)]);
+    const additions = groupListItems(splitListItems(bulk, max), max);
+    if (!additions.length) return;
+    onChange(groupListItems(flattenListItems([...items, ...additions], max), max));
     setBulk('');
   };
 
@@ -54,9 +151,9 @@ export default function BulletEditor({
     <div>
       <label htmlFor={inputId} className={labelCls}>
         {label}
-        {items.length > 0 && (
+        {total > 0 && (
           <span className="ml-2 font-normal normal-case tracking-normal text-neutral-500">
-            · {items.length} point{items.length === 1 ? '' : 's'}
+            · {total} point{total === 1 ? '' : 's'}
           </span>
         )}
       </label>
@@ -79,7 +176,7 @@ export default function BulletEditor({
         <button
           type="button"
           onClick={add}
-          disabled={!draft.trim() || items.length >= max}
+          disabled={!draft.trim() || full}
           className="shrink-0 rounded-md bg-accent px-4 text-sm font-semibold text-white hover:bg-accentHover disabled:opacity-40"
         >
           Add
@@ -88,7 +185,7 @@ export default function BulletEditor({
       {hint ? <p className="mt-1 text-[11px] text-neutral-500">{hint}</p> : null}
       <details className="mt-1.5">
         <summary className="cursor-pointer text-[11px] text-neutral-500 hover:text-white">
-          …or paste many points at once
+          …or paste many points at once (lines ending with : become headings)
         </summary>
         <textarea
           value={bulk}
@@ -100,42 +197,52 @@ export default function BulletEditor({
         <button
           type="button"
           onClick={addBulk}
-          disabled={!bulk.trim() || items.length >= max}
+          disabled={!bulk.trim() || full}
           className="mt-1.5 rounded-md border border-white/15 px-3 py-1.5 text-xs text-white hover:border-accent disabled:opacity-40"
         >
           Add all
         </button>
       </details>
       {items.length > 0 ? (
-        <ul className="mt-2 space-y-1.5">
-          {items.map((item, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-2 rounded-md border border-white/10 bg-panel2 px-3 py-2 text-sm"
-            >
-              <span aria-hidden="true" className="mt-0.5 font-bold text-accent">•</span>
-              <span className="min-w-0 flex-1 break-words text-neutral-200">{item}</span>
-              <button
-                type="button"
-                onClick={() => editAt(i)}
-                aria-label={`Edit point ${i + 1}`}
-                title="Edit this point"
-                className="shrink-0 text-xs text-neutral-500 hover:text-accent"
+        <div className="mt-2 space-y-1.5">
+          {items.map((item, i) =>
+            typeof item === 'string' ? (
+              <div
+                key={i}
+                className="flex items-start gap-2 rounded-md border border-white/10 bg-panel2 px-3 py-2 text-sm"
               >
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => removeAt(i)}
-                aria-label={`Remove point ${i + 1}`}
-                title="Remove this point"
-                className="shrink-0 text-xs text-neutral-500 hover:text-red-400"
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
+                <span aria-hidden="true" className="mt-0.5 font-bold text-accent">•</span>
+                <span className="min-w-0 flex-1 break-words text-neutral-200">{item}</span>
+                <button
+                  type="button"
+                  onClick={() => editAt(i)}
+                  aria-label={`Edit point ${i + 1}`}
+                  title="Edit this point"
+                  className="shrink-0 text-xs text-neutral-500 hover:text-accent"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeAt(i)}
+                  aria-label={`Remove point ${i + 1}`}
+                  title="Remove this point"
+                  className="shrink-0 text-xs text-neutral-500 hover:text-red-400"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <GroupCard
+                key={i}
+                group={item}
+                canAdd={!full}
+                onChange={(next) => onChange(items.map((x, j) => (j === i ? next : x)))}
+                onDelete={() => removeAt(i)}
+              />
+            ),
+          )}
+        </div>
       ) : (
         <p className="mt-1.5 text-[11px] text-neutral-600">No points yet — add them one by one above.</p>
       )}
