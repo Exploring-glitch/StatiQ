@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { splitListItems } from '../lib/lists';
 
 const inputCls = 'w-full rounded-md border border-white/10 bg-panel2 px-3 py-2 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-accent/60';
@@ -20,6 +20,7 @@ export default function BulletEditor({
 }) {
   const [draft, setDraft] = useState('');
   const [bulk, setBulk] = useState('');
+  const inputRef = useRef(null);
 
   const add = () => {
     const v = draft.trim().replace(/\s+/g, ' ');
@@ -29,6 +30,13 @@ export default function BulletEditor({
   };
 
   const removeAt = (i) => onChange(items.filter((_, j) => j !== i));
+
+  // Fix a typo: load the point back into the input for re-adding.
+  const editAt = (i) => {
+    setDraft(items[i] || '');
+    onChange(items.filter((_, j) => j !== i));
+    inputRef.current?.focus();
+  };
 
   // Pasting a whole JD: split on blank lines, numbers or bullets and
   // append everything that fits.
@@ -55,6 +63,7 @@ export default function BulletEditor({
       <div className="flex gap-2">
         <input
           id={inputId}
+          ref={inputRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -106,6 +115,15 @@ export default function BulletEditor({
             >
               <span aria-hidden="true" className="mt-0.5 font-bold text-accent">•</span>
               <span className="min-w-0 flex-1 break-words text-neutral-200">{item}</span>
+              <button
+                type="button"
+                onClick={() => editAt(i)}
+                aria-label={`Edit point ${i + 1}`}
+                title="Edit this point"
+                className="shrink-0 text-xs text-neutral-500 hover:text-accent"
+              >
+                Edit
+              </button>
               <button
                 type="button"
                 onClick={() => removeAt(i)}
