@@ -273,8 +273,14 @@ export default function PostJobPage() {
             <label htmlFor="pj-requirements" className={label}>Requirements</label>
             <textarea id="pj-requirements" value={form.requirements} onChange={set('requirements')} placeholder="e.g. 1. 3+ yrs React 2. Node.js…" rows={4} className={`${input} resize-y`} />
           </div>
-          <textarea value={form.niceToHaves} onChange={set('niceToHaves')} placeholder="Nice to haves — e.g. open-source, GraphQL, mentoring…" rows={3} className={`${input} resize-y`} />
-          <textarea value={form.benefits} onChange={set('benefits')} placeholder="Benefits — e.g. health, equity, PTO…" rows={3} className={`${input} resize-y`} />
+          <div>
+            <label htmlFor="pj-nice" className={label}>Nice to haves</label>
+            <textarea id="pj-nice" value={form.niceToHaves} onChange={set('niceToHaves')} placeholder="e.g. open-source, GraphQL, mentoring…" rows={3} className={`${input} resize-y`} />
+          </div>
+          <div>
+            <label htmlFor="pj-benefits" className={label}>Benefits</label>
+            <textarea id="pj-benefits" value={form.benefits} onChange={set('benefits')} placeholder="e.g. health, equity, PTO…" rows={3} className={`${input} resize-y`} />
+          </div>
           <div>
             <span className={label}>Interview process</span>
             <textarea value={form.interviewProcess} onChange={set('interviewProcess')} placeholder="Rounds in order — e.g. 1. Recruiter screen 2. Take-home 3. Onsite" rows={3} className={`${input} resize-y`} />
