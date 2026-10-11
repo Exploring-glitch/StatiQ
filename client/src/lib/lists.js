@@ -48,3 +48,66 @@ export function splitListItems(input, max = 30) {
 export function joinListItems(arr) {
   return Array.isArray(arr) ? arr.join('\n\n') : '';
 }
+
+// Headed groups: an item ending in ":" is a heading, and the plain items
+// after it (until the next heading or the end) are its sub-points. This lets
+// employers write e.g. "Compensation & Equity:" + bullets while the server
+// keeps storing plain string arrays — zero schema change, and posts saved
+// before headings existed render exactly as before.
+export const isHeadingItem = (s) => {
+  const t = String(s ?? '').trim();
+  return t.length > 1 && /:\s*$/.test(t);
+};
+
+const stripTrailingColons = (s) => String(s ?? '').trim().replace(/:+\s*$/, '');
+
+// Flat strings (or a raw pasted blob) → Array<string | { heading, points }>.
+export function groupListItems(input, max = 30) {
+  const flat = Array.isArray(input)
+    ? input.map((x) => String(x ?? '').trim()).filter(Boolean)
+    : splitListItems(input, max);
+  const out = [];
+  let i = 0;
+  while (i < flat.length) {
+    const cur = flat[i];
+    if (isHeadingItem(cur)) {
+      const heading = stripTrailingColons(cur);
+      const points = [];
+      i++;
+      while (i < flat.length && !isHeadingItem(flat[i])) {
+        points.push(flat[i]);
+        i++;
+      }
+      if (heading) out.push({ heading, points });
+    } else {
+      out.push(cur);
+      i++;
+    }
+  }
+  return out.slice(0, max);
+}
+
+// Grouped items → flat strings for the API ("Heading:" + its points).
+// A group with an empty heading degrades to its plain points — nothing lost.
+export function flattenListItems(items, max = 30) {
+  const out = [];
+  for (const it of Array.isArray(items) ? items : []) {
+    if (it && typeof it === 'object') {
+      const heading = String(it.heading ?? '').trim().replace(/\s+/g, ' ');
+      if (heading) out.push(`${heading}:`);
+      for (const p of Array.isArray(it.points) ? it.points : []) {
+        const s = String(p ?? '').trim().replace(/\s+/g, ' ');
+        if (s) out.push(s);
+      }
+    } else {
+      const s = String(it ?? '').trim().replace(/\s+/g, ' ');
+      if (s) out.push(s);
+    }
+  }
+  return out.slice(0, max);
+}
+
+// Total storable lines (heading + sub-points each count toward the 30 max).
+export function countListItems(items) {
+  return flattenListItems(items, Infinity).length;
+}
