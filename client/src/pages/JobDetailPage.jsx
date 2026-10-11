@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import ApplyModal from '../components/ApplyModal';
 import CompanyLogo from '../components/CompanyLogo';
+import JobBullets from '../components/JobBullets';
 import JobCard from '../components/JobCard';
 
 export default function JobDetailPage() {
@@ -233,11 +234,7 @@ export default function JobDetailPage() {
           {job.responsibilities.length > 0 && (
             <>
               <h2 className="mt-6 text-sm font-bold text-white">What you&apos;ll do</h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400">
-                {job.responsibilities.map((r, i) => (
-                  <li key={`${r}-${i}`}>{r}</li>
-                ))}
-              </ul>
+              <JobBullets items={job.responsibilities} />
             </>
           )}
           {(job.requirements?.length > 0) && (
