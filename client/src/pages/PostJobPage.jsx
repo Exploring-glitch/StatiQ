@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
-import { splitListItems } from '../lib/lists';
+import { splitListItems, groupListItems, flattenListItems } from '../lib/lists';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import BulletEditor from '../components/BulletEditor';
@@ -66,9 +66,9 @@ export default function PostJobPage() {
       .then((j) => {
         if (!alive || !j) return;
         const num = (v) => (v === null || v === undefined ? '' : String(v));
-        // BulletEditor fields store arrays; legacy strings split the same
-        // way the old textareas did so nothing is lost on edit.
-        const toArr = (v) => (Array.isArray(v) ? v.map((x) => String(x)).filter((s) => s.trim()) : splitListItems(v));
+        // BulletEditor fields store grouped items; saved "Heading:" lines
+        // parse back into groups so editing never flattens them.
+        const toArr = (v) => groupListItems(v);
         setForm({
           title: j.title || '', company: j.company || '', location: j.location || '',
           salary: j.salary || '', salaryMin: num(j.salaryMin), salaryMax: num(j.salaryMax),
